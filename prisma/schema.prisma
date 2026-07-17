@@ -163,6 +163,14 @@ model Shipment {
   notes         String?
   signature     String?  // base64 or url
 
+  // Vietnam container trucking fields
+  trailerNumber   String?  // Số Mooc
+  containerNumber String?  // Số Cont
+  salePerson      String?  // SALE
+  dispatcher      String?  // DP (điều phối)
+  tripDate        String?  // Ngày khởi hành
+  customerCode    String?  // Mã khách hàng (vd: GTVD)
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

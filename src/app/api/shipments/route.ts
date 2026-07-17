@@ -84,6 +84,12 @@ export async function POST(req: NextRequest) {
     cost,
     insurance,
     notes,
+    trailerNumber,
+    containerNumber,
+    salePerson,
+    dispatcher,
+    tripDate,
+    customerCode,
   } = body;
 
   if (!senderId || !receiverId || !originAddress || !destinationAddress) {
@@ -119,6 +125,12 @@ export async function POST(req: NextRequest) {
       insurance: Number(insurance) || 0,
       estimatedDelivery: estimatedDelivery || null,
       notes: notes || null,
+      trailerNumber: trailerNumber || null,
+      containerNumber: containerNumber || null,
+      salePerson: salePerson || null,
+      dispatcher: dispatcher || null,
+      tripDate: tripDate || null,
+      customerCode: customerCode || null,
     },
     include: SHIPMENT_INCLUDE,
   });

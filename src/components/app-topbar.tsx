@@ -1,12 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { Menu, Search, Plus, Command, Settings as SettingsIcon } from "lucide-react";
+import { Menu, Search, Plus, Command, Settings as SettingsIcon, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { NotificationsButton } from "@/components/notifications-button";
 import { SettingsDialog } from "@/components/settings-dialog";
 import { KeyboardShortcutsDialog } from "@/components/keyboard-shortcuts-dialog";
+import { QuickTripDialog } from "@/components/quick-trip-dialog";
 import { useAppStore, type ViewKey } from "@/lib/store";
 import {
   DropdownMenu,
@@ -38,6 +39,7 @@ export function AppTopbar() {
   const meta = VIEW_TITLES[view];
   const [settingsOpen, setSettingsOpen] = React.useState(false);
   const [shortcutsOpen, setShortcutsOpen] = React.useState(false);
+  const [quickTripOpen, setQuickTripOpen] = React.useState(false);
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b bg-background/80 px-4 backdrop-blur-md md:px-6">
@@ -89,18 +91,29 @@ export function AppTopbar() {
 
       <ThemeToggle />
 
-      {/* New shipment */}
+      {/* Quick trip — prominent action */}
       <Button
         size="sm"
+        className="gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
+        onClick={() => setQuickTripOpen(true)}
+      >
+        <Zap className="h-4 w-4" />
+        <span className="hidden sm:inline">Tạo chuyến nhanh</span>
+        <span className="sm:hidden">Tạo chuyến</span>
+      </Button>
+
+      {/* New shipment (full form) */}
+      <Button
+        size="sm"
+        variant="outline"
         className="hidden gap-1.5 lg:flex"
         onClick={() => {
           setView("shipments");
-          // Trigger new-shipment dialog via custom event
           window.dispatchEvent(new CustomEvent("open-new-shipment"));
         }}
       >
         <Plus className="h-4 w-4" />
-        New Shipment
+        Tạo đơn hàng
       </Button>
 
       {/* Settings */}
@@ -151,6 +164,14 @@ export function AppTopbar() {
 
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
       <KeyboardShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
+      <QuickTripDialog
+        open={quickTripOpen}
+        onOpenChange={setQuickTripOpen}
+        onCreated={(id) => {
+          setView("shipments");
+          window.dispatchEvent(new CustomEvent("open-shipment-detail", { detail: id }));
+        }}
+      />
     </header>
   );
 }

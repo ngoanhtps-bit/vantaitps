@@ -33,19 +33,20 @@ import {
   Package, Search, Plus, Filter, Download, ArrowRight, MapPin, Truck,
   User, Calendar, DollarSign, Weight, Box, ChevronLeft, ChevronRight,
   X, Clock, CheckCircle2, AlertTriangle, PackageCheck, XCircle, RotateCcw,
-  Pencil, Trash2, Printer,
+  Pencil, Trash2, Printer, Zap, Container, UserCheck, Headphones, Building2,
 } from "lucide-react";
 import {
   SHIPMENT_STATUSES, SHIPMENT_STATUS_META, PRIORITIES, PRIORITY_META,
   SERVICE_TYPES, SERVICE_META, VIETNAM_CITIES,
 } from "@/lib/constants";
 import {
-  formatCurrency, formatRelativeTime, formatDateTime, formatWeight, initials,
+  formatCurrency, formatRelativeTime, formatDateTime, formatDate, formatWeight, initials,
 } from "@/lib/format";
 import { useAppStore } from "@/lib/store";
 import { toast } from "sonner";
 import { avatarColorClass } from "@/components/avatar-color";
 import { PrintLabelDialog } from "@/components/print-label-dialog";
+import { QuickTripDialog } from "@/components/quick-trip-dialog";
 import { cn } from "@/lib/utils";
 
 type ShipmentListItem = {
@@ -83,6 +84,13 @@ type ShipmentDetail = ShipmentListItem & {
   currentLng: number | null;
   originWarehouse: { id: string; name: string; city: string } | null;
   destinationWarehouse: { id: string; name: string; city: string } | null;
+  // Vietnam trucking fields
+  trailerNumber: string | null;
+  containerNumber: string | null;
+  salePerson: string | null;
+  dispatcher: string | null;
+  tripDate: string | null;
+  customerCode: string | null;
   trackingEvents: Array<{
     id: string; status: string; location: string | null; note: string | null;
     lat: number | null; lng: number | null; timestamp: string;
@@ -107,6 +115,7 @@ export function ShipmentsView() {
   const [createOpen, setCreateOpen] = React.useState(false);
   const [detailOpen, setDetailOpen] = React.useState(false);
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
+  const [quickTripOpen, setQuickTripOpen] = React.useState(false);
 
   // React to external "open-new-shipment" event
   React.useEffect(() => {
@@ -114,6 +123,19 @@ export function ShipmentsView() {
     window.addEventListener("open-new-shipment", handler);
     return () => window.removeEventListener("open-new-shipment", handler);
   }, []);
+
+  // React to external "open-shipment-detail" event (from quick trip creation)
+  React.useEffect(() => {
+    const handler = (e: Event) => {
+      const id = (e as CustomEvent).detail as string;
+      if (id) {
+        setSelectedShipmentId(id);
+        setDetailOpen(true);
+      }
+    };
+    window.addEventListener("open-shipment-detail", handler);
+    return () => window.removeEventListener("open-shipment-detail", handler);
+  }, [setSelectedShipmentId]);
 
   // Open detail when a shipment is selected
   React.useEffect(() => {
@@ -280,8 +302,16 @@ export function ShipmentsView() {
                   <X className="h-3.5 w-3.5" /> Xóa
                 </Button>
               )}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setQuickTripOpen(true)}
+                className="gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950"
+              >
+                <Zap className="h-4 w-4" /> Tạo chuyến nhanh
+              </Button>
               <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
-                <Plus className="h-4 w-4" /> Tạo mới
+                <Plus className="h-4 w-4" /> Tạo đơn hàng
               </Button>
             </div>
           </div>
@@ -446,6 +476,18 @@ export function ShipmentsView() {
         qc.invalidateQueries({ queryKey: ["dashboard"] });
         toast.success("Đã tạo đơn hàng", { description: s.trackingNumber });
       }} />
+
+      {/* Quick trip dialog */}
+      <QuickTripDialog
+        open={quickTripOpen}
+        onOpenChange={setQuickTripOpen}
+        onCreated={(id) => {
+          setSelectedShipmentId(id);
+          setDetailOpen(true);
+          qc.invalidateQueries({ queryKey: ["shipments"] });
+          qc.invalidateQueries({ queryKey: ["dashboard"] });
+        }}
+      />
 
       {/* Detail drawer */}
       <ShipmentDetailDrawer
@@ -852,6 +894,35 @@ function ShipmentDetailDrawer({
               </div>
             </div>
 
+            {/* Vietnam trucking info — Mooc, Cont, SALE, DP, trip date */}
+            {(shipment.trailerNumber || shipment.containerNumber || shipment.salePerson || shipment.dispatcher || shipment.tripDate || shipment.customerCode) && (
+              <div>
+                <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold">
+                  <Truck className="h-4 w-4 text-emerald-500" /> Thông tin chuyến xe container
+                </h4>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {shipment.tripDate && (
+                    <InfoTile label="Ngày khởi hành" value={formatDate(shipment.tripDate)} icon={Calendar} accent="sky" />
+                  )}
+                  {shipment.customerCode && (
+                    <InfoTile label="Mã khách hàng" value={shipment.customerCode} icon={Building2} accent="emerald" mono />
+                  )}
+                  {shipment.trailerNumber && (
+                    <InfoTile label="Số Mooc" value={shipment.trailerNumber} icon={Truck} accent="violet" mono />
+                  )}
+                  {shipment.containerNumber && (
+                    <InfoTile label="Số Cont" value={shipment.containerNumber} icon={Box} accent="teal" mono />
+                  )}
+                  {shipment.salePerson && (
+                    <InfoTile label="SALE" value={shipment.salePerson} icon={UserCheck} accent="orange" />
+                  )}
+                  {shipment.dispatcher && (
+                    <InfoTile label="DP (Điều phối)" value={shipment.dispatcher} icon={Headphones} accent="amber" />
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Tracking timeline */}
             <div>
               <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold">
@@ -1102,6 +1173,37 @@ function Stat({ label, value, icon: Icon }: { label: string; value: string; icon
         <Icon className="h-3 w-3" /> {label}
       </p>
       <p className="text-sm font-semibold tabular-nums">{value}</p>
+    </div>
+  );
+}
+
+const ACCENT_STYLES: Record<string, string> = {
+  emerald: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 ring-emerald-500/20",
+  sky: "bg-sky-500/10 text-sky-600 dark:text-sky-400 ring-sky-500/20",
+  violet: "bg-violet-500/10 text-violet-600 dark:text-violet-400 ring-violet-500/20",
+  teal: "bg-teal-500/10 text-teal-600 dark:text-teal-400 ring-teal-500/20",
+  orange: "bg-orange-500/10 text-orange-600 dark:text-orange-400 ring-orange-500/20",
+  amber: "bg-amber-500/10 text-amber-600 dark:text-amber-400 ring-amber-500/20",
+};
+
+function InfoTile({
+  label, value, icon: Icon, accent = "emerald", mono,
+}: {
+  label: string;
+  value: string;
+  icon: React.ElementType;
+  accent?: string;
+  mono?: boolean;
+}) {
+  return (
+    <div className="rounded-lg border p-2.5">
+      <p className="mb-1 flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+        <span className={cn("flex h-4 w-4 items-center justify-center rounded", ACCENT_STYLES[accent] || ACCENT_STYLES.emerald)}>
+          <Icon className="h-2.5 w-2.5" />
+        </span>
+        {label}
+      </p>
+      <p className={cn("text-sm font-semibold", mono && "font-mono")}>{value}</p>
     </div>
   );
 }

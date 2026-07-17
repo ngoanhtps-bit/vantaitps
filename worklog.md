@@ -767,3 +767,85 @@ Task: Việt hóa toàn bộ ứng dụng Logistics App V2 sang tiếng Việt
 2. Việt hóa thông báo lỗi API
 3. Thêm dữ liệu mẫu tên người/công ty tiếng Việt
 4. Hỗ trợ đa ngôn ngữ (chuyển đổi EN/VI)
+
+---
+Task ID: QUICK-TRIP-FINAL
+Agent: main
+Task: Hoàn thiện tính năng "Tạo chuyến nhanh" — dán tin nhắn, tự động tách trường, tạo chuyến
+
+## Mô tả trạng thái dự án
+Tính năng "Tạo chuyến nhanh" đã được xây dựng qua nhiều bước: thêm trường Vietnam trucking vào schema, tạo API quick-trip, tạo component QuickTripDialog với ô dán tin nhắn + regex tách trường, tích hợp vào topbar và shipments view, thêm section hiển thị thông tin container trong drawer chi tiết. Lần này hoàn thiện và verify end-to-end.
+
+## Các thay đổi đã hoàn thành
+
+### 1. Schema: Thêm trường Vietnam container trucking
+- Thêm vào model Shipment: `trailerNumber` (Số Mooc), `containerNumber` (Số Cont), `salePerson` (SALE), `dispatcher` (DP), `tripDate` (Ngày khởi hành), `customerCode` (Mã KH)
+- Push schema thành công
+
+### 2. API: `/api/shipments/quick-trip` (POST)
+- Nhận thông tin: route, tripDate, plateNumber, trailerNumber, containerNumber, driverName, driverPhone, customerCode, salePerson, dispatcher, notes
+- Tự động: tìm/tạo tài xế theo SĐT, tìm/tạo xe theo biển số, tìm/tạo khách hàng theo mã KH
+- Parse route "BẮC NINH - HCM" → originCity + destinationCity
+- Parse tripDate "dd/mm/yyyy" → ISO
+- Tạo shipment với status="in_transit", priority="high", serviceType="freight"
+- Tự động tạo 3 tracking events: pending, picked_up, in_transit
+- Trả về shipment đầy đủ
+
+### 3. Component: QuickTripDialog (`quick-trip-dialog.tsx`)
+- **2 tab**: "Dán tin nhắn" và "Chỉnh sửa"
+- **Tab Dán tin nhắn**: 
+  - Ô textarea lớn để dán toàn bộ form tin nhắn
+  - Nút "Mẫu" điền dữ liệu mẫu (Lộ Trình, Ngày, Biển Số, Số Mooc, Số Cont, Tên LX, SĐT LX, KH, SALE, DP)
+  - **Tự động tách trường real-time** (debounce 500ms) khi dán nội dung
+  - Preview "Đã nhận diện" hiển thị các trường đã tách
+  - Nút "Tách thông tin & sang bước chỉnh sửa"
+- **Tab Chỉnh sửa**: form đầy đủ 12 trường với icons và labels tiếng Việt
+  - Lộ trình (preview badges: BẮC NINH → HCM)
+  - Ngày khởi hành, Biển số, Số Mooc, Số Cont
+  - Tên tài xế, SĐT tài xế
+  - Mã KH, Tên khách hàng
+  - SALE, DP (Điều phối), Ghi chú
+  - Preview "Thông tin chuyến" trước khi tạo
+- **Hàm parsePastedMessage**: 
+  - `removeDiacritics()` — bỏ dấu tiếng Việt (Lộ Trình → Lo Trinh)
+  - 10 regex patterns khớp label không dấu + separator (: -) + value
+  - Trích xuất value từ dòng gốc (giữ dấu tiếng Việt trong giá trị)
+  - Xử lý separator đầu tiên đúng cách (không bị nhầm với "-" trong "BẮC NINH - HCM")
+
+### 4. Tích hợp vào topbar + shipments view
+- Topbar: nút "Tạo chuyến nhanh" gradient emerald-teal nổi bật + nút "Tạo đơn hàng" outline
+- Shipments view: nút "Tạo chuyến nhanh" trong filter bar + render QuickTripDialog
+- Event `open-shipment-detail` để mở drawer chi tiết sau khi tạo
+
+### 5. Drawer chi tiết: Section "Thông tin chuyến xe container"
+- Hiển thị khi có ít nhất 1 trường Vietnam trucking
+- Grid 2-3 cột với InfoTile components (icon + label + value)
+- Các trường: Ngày khởi hành, Mã KH, Số Mooc, Số Cont, SALE, DP
+- Component InfoTile với accent colors (emerald, sky, violet, teal, orange, amber)
+
+### 6. Fix bugs
+- **Prisma client cache**: Turbopack cache Prisma client cũ không có trường `trailerNumber`. Fixed bằng cách check `shipment.fields.trailerNumber` trong db.ts và discard cached client nếu thiếu.
+- **Missing import**: `formatDate` chưa import trong shipments-view → ReferenceError khi mở drawer. Fixed bằng cách thêm vào import.
+
+## Kết quả kiểm tra
+- **Lint**: 0 lỗi (1 cảnh báo có sẵn trong seed.ts)
+- **Browser QA**: 
+  - Mở dialog "Tạo chuyến nhanh" từ topbar ✓
+  - Dán dữ liệu mẫu → tự động tách 10/10 trường đúng ✓
+  - Chuyển tab chỉnh sửa → form điền đầy đủ ✓
+  - Ấn "Tạo chuyến" → tạo thành công, toast hiện, chuyển sang trang Đơn hàng ✓
+  - Đơn hàng mới xuất hiện đầu danh sách (LG78548388326) ✓
+  - Mở drawer chi tiết → section "Thông tin chuyến xe container" hiển thị đầy đủ ✓
+  - Tracking timeline có 3 events tự động ✓
+- **VLM đánh giá**: Tab dán 7/10, tab chỉnh sửa 8/10
+- **Tất cả 11 trang**: render không lỗi
+
+## Vấn đề chưa giải quyết
+- VLM gợi ý nhóm trường logic hơn trong form (có thể cải thiện UX sau)
+- Nút "Tách thông tin" có thể rõ ràng hơn về hành động tiếp theo
+
+## Khuyến nghị giai đoạn tiếp theo
+1. Cải thiện UX: nhóm trường theo nhóm logic (Xe, Tài xế, Khách hàng, Nội bộ)
+2. Thêm validation: kiểm tra biển số trùng, SĐT định dạng
+3. Thêm nút "Tạo chuyến tiếp" sau khi tạo thành công (tạo nhanh chuyến khác)
+4. Lưu lịch sử dán gần đây để tái sử dụng
