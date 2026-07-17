@@ -12,6 +12,7 @@ import {
   BarChart3,
   Zap,
   Route as RouteIcon,
+  Receipt,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppStore, type ViewKey } from "@/lib/store";
@@ -30,6 +31,7 @@ const NAV: {
   { key: "customers", label: "Customers", icon: Users },
   { key: "warehouses", label: "Warehouses", icon: Warehouse },
   { key: "routes", label: "Route Planning", icon: RouteIcon },
+  { key: "invoices", label: "Invoices", icon: Receipt },
   { key: "analytics", label: "Analytics", icon: BarChart3 },
 ];
 

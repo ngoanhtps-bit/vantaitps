@@ -356,3 +356,71 @@ The Logistics App V2 was stable from the previous round with 8 views, all render
 3. **Invoice/billing module** — generate invoices from delivered shipments, track payments.
 4. **WebSocket mini-service** for true real-time tracking (push-based instead of polling).
 5. **Dashboard widgets customization** — drag-and-drop widget arrangement.
+
+---
+Task ID: CRON-REVIEW-3
+Agent: main (cron-triggered web dev review)
+Task: QA assessment + new features (Settings dialog, Invoice/Billing module) + Prisma client cache fix
+
+## Current Project Status Assessment
+The Logistics App V2 was stable from the previous round with 9 views (Dashboard, Shipments, Live Tracking, Drivers, Fleet, Customers, Warehouses, Route Planning, Analytics), all rendering without errors. QA via agent-browser confirmed all views clean. The project was ready for the priority recommendations: Settings dialog and Invoice/Billing module.
+
+## Completed Modifications
+
+### Bug Fixes
+- **Prisma client cache issue**: When adding the Invoice model to the Prisma schema and running `db:push` + `db:generate`, the Turbopack dev server kept using the old cached PrismaClient instance that didn't know about the Invoice model (`db.invoice` was undefined). Fixed by:
+  1. Importing PrismaClient directly from the generated output path (`node_modules/.prisma/client/index.js`) instead of the `@prisma/client` package re-export.
+  2. Adding a cache-bust check in `db.ts` that detects if the cached client is missing the `invoice` model and forces creation of a new instance.
+  This ensures schema changes are picked up without requiring a dev server restart.
+
+### New Features
+1. **Settings Dialog** (`settings-dialog.tsx` + `settings-store.ts`):
+   - Created a persistent settings store using Zustand with `persist` middleware (saves to localStorage).
+   - Settings include:
+     - **Appearance**: Theme (light/dark/system via segmented control), hero banner toggle, compact tables toggle.
+     - **Data Refresh**: Configurable auto-refresh intervals for Live Tracking, Notifications, and Dashboard (Off / 15s / 30s / 1min).
+     - **Default Filters**: Default shipment status filter, shipments per page (8/12/20/50).
+     - **Route Planning**: Show progress bars toggle.
+   - Settings dialog accessible via a new gear icon button in the topbar AND via the user dropdown menu.
+   - All refresh intervals are wired into their respective views (tracking, notifications, dashboard) — changes take effect immediately.
+   - Hero banner visibility is conditionally rendered based on the setting.
+   - Tracking view's "auto-refresh" text is now dynamic based on the setting.
+   - Reset button restores all defaults.
+
+2. **Invoice/Billing Module** (10th view — `invoices-view.tsx` + `/api/invoices` + `/api/invoices/[id]`):
+   - Added `Invoice` model to Prisma schema (invoiceNumber, customerId, status, issueDate, dueDate, periodStart/End, subtotal, taxRate, taxAmount, total, notes, paidAt).
+   - Added `invoices` relation to Customer model.
+   - Added `INVOICE_STATUSES` and `INVOICE_STATUS_META` constants.
+   - Created API endpoints:
+     - `GET /api/invoices` — list with search and status filter.
+     - `POST /api/invoices` — generate invoice from delivered shipments in a billing period (auto-calculates subtotal, tax, total from matching shipments).
+     - `GET /api/invoices/[id]` — invoice detail with line items (delivered shipments in the period).
+     - `PATCH /api/invoices/[id]` — update status (mark as sent/paid/overdue/cancelled), update tax rate (recalculates totals).
+     - `DELETE /api/invoices/[id]`.
+   - Built `InvoicesView` component with:
+     - 5 KPI cards (Total Invoices, Paid, Outstanding, Overdue, Avg Invoice value).
+     - Filter bar (search + status select + Generate button).
+     - Invoice table (invoice #, customer, status badge, period, due/paid date, total, issued).
+     - **Generate Invoice dialog**: customer select, period start/end date pickers, due date, tax rate select, live preview showing count of matching delivered shipments and total amount, notes field. Generate button disabled if no matching shipments.
+     - **Invoice detail drawer**: full invoice layout with branded header, Bill To section, billing period, line items table (tracking #, destination, amount), subtotal/tax/total breakdown, payment status actions (Mark as Sent/Paid/Overdue/Cancel), print button (uses the same `@media print` CSS as shipment labels).
+   - Wired "invoices" into ViewKey, sidebar nav (Receipt icon), topbar title, command palette, and page.tsx.
+
+## Verification Results
+- **Lint**: 0 errors (1 pre-existing warning in seed.ts).
+- **Browser QA**: All 10 views (including new Invoices) render with zero console/runtime errors.
+- **Settings dialog**: Opens from topbar gear icon and user dropdown, all sections render, theme toggle works, refresh interval selects work, hero banner toggle works, settings persist.
+- **Invoice generation**: Selected Bamboo Tech customer → preview showed "✓ 1 delivered shipment found, $791" → clicked Generate → invoice created (INV-6291548137), detail drawer opened with Draft status, line items, and totals. "Mark as Sent" button available.
+- **Invoice detail**: Shows branded invoice layout with Bill To, period, line items table, subtotal/tax/total breakdown, print button.
+- **Prisma client**: Invoice model accessible via `db.invoice` after the cache-bust fix.
+
+## Unresolved Issues / Risks
+- **Settings persistence**: Settings are stored in localStorage via Zustand persist — if the user clears browser storage, settings reset to defaults (expected behavior).
+- **Invoice line items**: Line items are computed dynamically from delivered shipments at query time (not stored as separate records). This means if a shipment's status changes from "delivered" after invoice creation, the line items could change. For production, consider storing invoice line items as a separate model.
+- **Route optimization algorithm**: Still not implemented — routes show stops but don't suggest optimal ordering.
+
+## Priority Recommendations for Next Phase
+1. **Route optimization** — implement a nearest-neighbor algorithm to suggest optimal stop ordering.
+2. **Dashboard widgets customization** — drag-and-drop widget arrangement.
+3. **Invoice line items model** — persist line items as separate records for immutable invoices.
+4. **WebSocket mini-service** for true real-time tracking (push-based instead of polling).
+5. **Reports/exports** — PDF reports for management (weekly/monthly summaries).

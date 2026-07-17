@@ -28,6 +28,7 @@ model Customer {
 
   shipmentsAsSender   Shipment[] @relation("SenderShipments")
   shipmentsAsReceiver Shipment[] @relation("ReceiverShipments")
+  invoices            Invoice[]
 
   @@index([status])
   @@index([city])
@@ -205,4 +206,29 @@ model Route {
   updatedAt   DateTime @updatedAt
 
   @@index([status])
+}
+
+model Invoice {
+  id            String   @id @default(cuid())
+  invoiceNumber String   @unique
+  customerId    String
+  customer      Customer @relation(fields: [customerId], references: [id])
+  status        String   @default("draft") // "draft" | "sent" | "paid" | "overdue" | "cancelled"
+  issueDate     DateTime @default(now())
+  dueDate       String
+  periodStart   String
+  periodEnd     String
+  subtotal      Float    @default(0)
+  taxRate       Float    @default(0.1)
+  taxAmount     Float    @default(0)
+  total         Float    @default(0)
+  currency      String   @default("USD")
+  notes         String?
+  paidAt        String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([status])
+  @@index([issueDate])
 }

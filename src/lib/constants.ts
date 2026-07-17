@@ -210,3 +210,35 @@ export const ROUTE_STATUS_META: Record<RouteStatus, { label: string; badge: stri
   },
 };
 
+export const INVOICE_STATUSES = ["draft", "sent", "paid", "overdue", "cancelled"] as const;
+export type InvoiceStatus = (typeof INVOICE_STATUSES)[number];
+
+export const INVOICE_STATUS_META: Record<InvoiceStatus, { label: string; badge: string; dot: string }> = {
+  draft: {
+    label: "Draft",
+    badge: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-700",
+    dot: "bg-slate-400",
+  },
+  sent: {
+    label: "Sent",
+    badge: "bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300 border-sky-200 dark:border-sky-900",
+    dot: "bg-sky-500",
+  },
+  paid: {
+    label: "Paid",
+    badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900",
+    dot: "bg-emerald-500",
+  },
+  overdue: {
+    label: "Overdue",
+    badge: "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border-rose-200 dark:border-rose-900",
+    dot: "bg-rose-500",
+  },
+  cancelled: {
+    label: "Cancelled",
+    badge: "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-700 line-through",
+    dot: "bg-slate-400",
+  },
+};
+
+

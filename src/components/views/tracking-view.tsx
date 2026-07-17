@@ -19,6 +19,7 @@ import { formatRelativeTime, formatDateTime, initials } from "@/lib/format";
 import { SHIPMENT_STATUS_META } from "@/lib/constants";
 import { avatarColorClass } from "@/components/avatar-color";
 import { useAppStore } from "@/lib/store";
+import { useSettingsStore } from "@/lib/settings-store";
 import { cn } from "@/lib/utils";
 
 type TrackingData = {
@@ -42,10 +43,11 @@ type TrackingData = {
 };
 
 export function TrackingView() {
+  const trackingRefresh = useSettingsStore((s) => s.trackingRefreshInterval);
   const { data, isLoading, refetch, isFetching, dataUpdatedAt } = useQuery<TrackingData>({
     queryKey: ["tracking"],
     queryFn: () => api.get("/api/tracking"),
-    refetchInterval: 15000,
+    refetchInterval: Number(trackingRefresh) || false,
   });
   const { setSelectedShipmentId, setView } = useAppStore();
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
@@ -98,7 +100,9 @@ export function TrackingView() {
           <p className="text-sm">
             <span className="font-semibold">{data?.count ?? "—"}</span>
             <span className="text-muted-foreground"> shipments live · </span>
-            <span className="text-muted-foreground">auto-refresh 15s</span>
+            <span className="text-muted-foreground">
+              {Number(trackingRefresh) > 0 ? `auto-refresh ${Number(trackingRefresh) / 1000}s` : "auto-refresh off"}
+            </span>
             {lastUpdated && (
               <span className="ml-1 text-muted-foreground/70">· updated {formatRelativeTime(new Date(lastUpdated))}</span>
             )}

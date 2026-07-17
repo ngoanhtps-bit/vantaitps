@@ -21,6 +21,7 @@ import {
   BarChart, Bar, PieChart, Pie, Cell, Legend,
 } from "recharts";
 import { useAppStore } from "@/lib/store";
+import { useSettingsStore } from "@/lib/settings-store";
 import {
   formatCurrency, formatNumber, formatRelativeTime, formatCompact, initials,
 } from "@/lib/format";
@@ -73,10 +74,12 @@ const STATUS_COLORS: Record<string, string> = {
 
 export function DashboardView() {
   const { setView, setSelectedShipmentId } = useAppStore();
+  const dashboardRefresh = useSettingsStore((s) => s.dashboardRefreshInterval);
+  const showHeroBanner = useSettingsStore((s) => s.showHeroBanner);
   const { data, isLoading } = useQuery<DashboardData>({
     queryKey: ["dashboard"],
     queryFn: () => api.get("/api/dashboard"),
-    refetchInterval: 30000,
+    refetchInterval: Number(dashboardRefresh) || false,
   });
 
   if (isLoading || !data) {
@@ -120,6 +123,7 @@ export function DashboardView() {
   return (
     <div className="space-y-5">
       {/* Hero banner */}
+      {showHeroBanner && (
       <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 p-6 text-white shadow-lg shadow-emerald-500/20 sm:p-7">
         {/* decorative shapes */}
         <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
@@ -182,6 +186,7 @@ export function DashboardView() {
           </button>
         </div>
       </div>
+      )}
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">

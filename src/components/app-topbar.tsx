@@ -1,10 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { Menu, Search, Plus, Command } from "lucide-react";
+import { Menu, Search, Plus, Command, Settings as SettingsIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { NotificationsButton } from "@/components/notifications-button";
+import { SettingsDialog } from "@/components/settings-dialog";
 import { useAppStore, type ViewKey } from "@/lib/store";
 import {
   DropdownMenu,
@@ -26,12 +27,14 @@ const VIEW_TITLES: Record<ViewKey, { title: string; subtitle: string }> = {
   customers: { title: "Customers", subtitle: "Customer directory and history" },
   warehouses: { title: "Warehouses", subtitle: "Distribution centers and capacity" },
   routes: { title: "Route Planning", subtitle: "Optimize delivery routes and stops" },
+  invoices: { title: "Invoices", subtitle: "Billing and payment management" },
   analytics: { title: "Analytics", subtitle: "Insights and performance reports" },
 };
 
 export function AppTopbar() {
   const { view, setSidebarOpen, setCommandOpen, setView } = useAppStore();
   const meta = VIEW_TITLES[view];
+  const [settingsOpen, setSettingsOpen] = React.useState(false);
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b bg-background/80 px-4 backdrop-blur-md md:px-6">
@@ -97,6 +100,17 @@ export function AppTopbar() {
         New Shipment
       </Button>
 
+      {/* Settings */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="rounded-full"
+        aria-label="Settings"
+        onClick={() => setSettingsOpen(true)}
+      >
+        <SettingsIcon className="h-[1.15rem] w-[1.15rem]" />
+      </Button>
+
       {/* User */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -117,8 +131,10 @@ export function AppTopbar() {
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
+            <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
+              <SettingsIcon className="mr-2 h-4 w-4" /> Settings
+            </DropdownMenuItem>
             <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Settings</DropdownMenuItem>
             <DropdownMenuItem>Keyboard shortcuts</DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
@@ -127,6 +143,8 @@ export function AppTopbar() {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </header>
   );
 }

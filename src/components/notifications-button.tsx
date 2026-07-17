@@ -18,6 +18,7 @@ import {
   Clock, CheckCircle2, Package, ArrowRight,
 } from "lucide-react";
 import { useAppStore, type ViewKey } from "@/lib/store";
+import { useSettingsStore } from "@/lib/settings-store";
 import { formatRelativeTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -71,6 +72,7 @@ const SEVERITY_STYLE: Record<string, { bg: string; text: string; ring: string; d
 
 export function NotificationsButton() {
   const { setView, setSelectedShipmentId } = useAppStore();
+  const notifRefresh = useSettingsStore((s) => s.notificationsRefreshInterval);
 
   const { data } = useQuery<{
     notifications: Notification[];
@@ -78,7 +80,7 @@ export function NotificationsButton() {
   }>({
     queryKey: ["notifications"],
     queryFn: () => api.get("/api/notifications"),
-    refetchInterval: 60000,
+    refetchInterval: Number(notifRefresh) || false,
   });
 
   const notifs = data?.notifications ?? [];
