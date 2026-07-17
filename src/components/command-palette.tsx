@@ -14,6 +14,7 @@ import {
   ArrowRight,
   Route as RouteIcon,
   Receipt,
+  FileBarChart,
 } from "lucide-react";
 import {
   CommandDialog,
@@ -45,6 +46,7 @@ const NAV_ITEMS: { key: ViewKey; label: string; icon: React.ElementType; desc: s
   { key: "warehouses", label: "Warehouses", icon: Warehouse, desc: "Distribution centers" },
   { key: "routes", label: "Route Planning", icon: RouteIcon, desc: "Delivery routes" },
   { key: "invoices", label: "Invoices", icon: Receipt, desc: "Billing" },
+  { key: "reports", label: "Reports", icon: FileBarChart, desc: "Exports" },
   { key: "analytics", label: "Analytics", icon: BarChart3, desc: "Reports" },
 ];
 

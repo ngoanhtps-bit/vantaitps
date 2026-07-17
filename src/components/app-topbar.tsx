@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { NotificationsButton } from "@/components/notifications-button";
 import { SettingsDialog } from "@/components/settings-dialog";
+import { KeyboardShortcutsDialog } from "@/components/keyboard-shortcuts-dialog";
 import { useAppStore, type ViewKey } from "@/lib/store";
 import {
   DropdownMenu,
@@ -28,6 +29,7 @@ const VIEW_TITLES: Record<ViewKey, { title: string; subtitle: string }> = {
   warehouses: { title: "Warehouses", subtitle: "Distribution centers and capacity" },
   routes: { title: "Route Planning", subtitle: "Optimize delivery routes and stops" },
   invoices: { title: "Invoices", subtitle: "Billing and payment management" },
+  reports: { title: "Reports", subtitle: "Generate and export operational reports" },
   analytics: { title: "Analytics", subtitle: "Insights and performance reports" },
 };
 
@@ -35,6 +37,7 @@ export function AppTopbar() {
   const { view, setSidebarOpen, setCommandOpen, setView } = useAppStore();
   const meta = VIEW_TITLES[view];
   const [settingsOpen, setSettingsOpen] = React.useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = React.useState(false);
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b bg-background/80 px-4 backdrop-blur-md md:px-6">
@@ -135,7 +138,9 @@ export function AppTopbar() {
               <SettingsIcon className="mr-2 h-4 w-4" /> Settings
             </DropdownMenuItem>
             <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Keyboard shortcuts</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setShortcutsOpen(true)}>
+              <Command className="mr-2 h-4 w-4" /> Keyboard shortcuts
+            </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuItem className="text-rose-600 focus:text-rose-700">
@@ -145,6 +150,7 @@ export function AppTopbar() {
       </DropdownMenu>
 
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <KeyboardShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
     </header>
   );
 }

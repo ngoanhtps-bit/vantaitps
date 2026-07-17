@@ -12,6 +12,7 @@ export type ViewKey =
   | "warehouses"
   | "routes"
   | "invoices"
+  | "reports"
   | "analytics";
 
 interface AppState {

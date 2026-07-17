@@ -6,6 +6,7 @@ import { useAppStore, type ViewKey } from "@/lib/store";
 import { AppSidebar } from "@/components/app-sidebar";
 import { AppTopbar } from "@/components/app-topbar";
 import { CommandPalette } from "@/components/command-palette";
+import { KeyboardShortcutsDialog } from "@/components/keyboard-shortcuts-dialog";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import {
   LayoutDashboard, Package, MapPin, Truck, BarChart3,
@@ -22,7 +23,52 @@ const MOBILE_NAV: { key: ViewKey; label: string; icon: React.ElementType }[] = [
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { sidebarOpen, setSidebarOpen, view } = useAppStore();
+  const { sidebarOpen, setSidebarOpen, view, setView, setCommandOpen } = useAppStore();
+  const [shortcutsOpen, setShortcutsOpen] = React.useState(false);
+
+  // Global keyboard shortcuts
+  React.useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const isTyping = target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable;
+
+      // ? to open shortcuts help (not when typing)
+      if (e.key === "?" && !isTyping && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        setShortcutsOpen(true);
+        return;
+      }
+
+      // N for new shipment (not when typing)
+      if (e.key === "n" && !isTyping && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        setView("shipments");
+        window.dispatchEvent(new CustomEvent("open-new-shipment"));
+        return;
+      }
+
+      // G + letter for navigation (not when typing)
+      if (e.key === "g" && !isTyping && !e.metaKey && !e.ctrlKey) {
+        const onKeyup = (e2: KeyboardEvent) => {
+          const map: Record<string, ViewKey> = {
+            d: "dashboard", s: "shipments", t: "tracking",
+            r: "reports", a: "analytics",
+          };
+          const v = map[e2.key.toLowerCase()];
+          if (v) {
+            e2.preventDefault();
+            setView(v);
+          }
+          window.removeEventListener("keyup", onKeyup);
+        };
+        window.addEventListener("keyup", onKeyup, { once: true });
+        setTimeout(() => window.removeEventListener("keyup", onKeyup), 1000);
+        return;
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [setView]);
 
   return (
     <div className="flex min-h-screen flex-col bg-muted/30">
@@ -111,6 +157,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </nav>
 
       <CommandPalette />
+      <KeyboardShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
     </div>
   );
 }

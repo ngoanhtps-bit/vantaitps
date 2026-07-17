@@ -12,6 +12,7 @@ import { CustomersView } from "@/components/views/customers-view";
 import { WarehousesView } from "@/components/views/warehouses-view";
 import { RoutesView } from "@/components/views/routes-view";
 import { InvoicesView } from "@/components/views/invoices-view";
+import { ReportsView } from "@/components/views/reports-view";
 import { AnalyticsView } from "@/components/views/analytics-view";
 
 export default function Home() {
@@ -28,6 +29,7 @@ export default function Home() {
       {view === "warehouses" && <WarehousesView />}
       {view === "routes" && <RoutesView />}
       {view === "invoices" && <InvoicesView />}
+      {view === "reports" && <ReportsView />}
       {view === "analytics" && <AnalyticsView />}
     </AppShell>
   );
