@@ -183,3 +183,30 @@ export const VIETNAM_CITIES = [
   "Hue",
   "Vung Tau",
 ];
+
+export const ROUTE_STATUSES = ["planned", "active", "completed", "cancelled"] as const;
+export type RouteStatus = (typeof ROUTE_STATUSES)[number];
+
+export const ROUTE_STATUS_META: Record<RouteStatus, { label: string; badge: string; dot: string }> = {
+  planned: {
+    label: "Planned",
+    badge: "bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300 border-sky-200 dark:border-sky-900",
+    dot: "bg-sky-500",
+  },
+  active: {
+    label: "Active",
+    badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900",
+    dot: "bg-emerald-500",
+  },
+  completed: {
+    label: "Completed",
+    badge: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-700",
+    dot: "bg-slate-400",
+  },
+  cancelled: {
+    label: "Cancelled",
+    badge: "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border-rose-200 dark:border-rose-900",
+    dot: "bg-rose-500",
+  },
+};
+

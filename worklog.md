@@ -286,3 +286,73 @@ The Logistics App V2 was in a stable, production-ready state with 8 views (Dashb
 3. **Add WebSocket mini-service** for true real-time tracking (push-based instead of polling).
 4. **Add data export/print** for shipment labels (PDF generation with tracking number, barcode, addresses).
 5. **Add user settings page** — preferences for notifications, theme, language, dashboard layout.
+
+---
+Task ID: CRON-REVIEW-2
+Agent: main (cron-triggered web dev review)
+Task: QA assessment + new features (Route Planning, Print Labels) + styling polish (animations, mobile nav)
+
+## Current Project Status Assessment
+The Logistics App V2 was stable from the previous round with 8 views, all rendering without errors. QA via agent-browser confirmed all views clean on desktop (1440x900). The project was ready for new feature development per the priority recommendations in the previous worklog.
+
+## Completed Modifications
+
+### New Features
+1. **Route Planning View** (new 9th view):
+   - Created `/api/routes` and `/api/routes/[id]` API endpoints with driver/vehicle includes and stop aggregation (fetches active shipments per driver).
+   - Added `ROUTE_STATUSES` and `ROUTE_STATUS_META` constants to `constants.ts`.
+   - Added "routes" to `ViewKey` in store, sidebar nav, topbar titles, command palette, and page.tsx switch.
+   - Built `RoutesView` component (`routes-view.tsx`) with:
+     - 5 KPI cards (Total Routes, Active, Planned, Completed, Total Distance).
+     - Filter bar (search + status select).
+     - Route cards grid (responsive 1/2 cols) with: route name, status badge with pulsing dot for active, stats tiles (stops/distance/duration/cargo), driver avatar + vehicle plate, progress bar for active routes, expandable stops timeline with numbered stop markers and status indicators.
+     - Route status actions: Start (planned→active), Complete (active→completed), Cancel.
+     - Detail drawer with full route info, 4-stat grid, driver/vehicle panels, and delivery sequence timeline with per-stop cards (tracking number, address, receiver, weight/pieces/ETA).
+   - Fixed Prisma include bug: Route model has no `shipments` relation, removed `_count` from include.
+
+2. **Shipment Label Printing** (`print-label-dialog.tsx`):
+   - New `PrintLabelDialog` component with a print-friendly shipping label layout:
+     - LOGISTICS V2 branded header with status badge and service type.
+     - Large tracking number with a CSS-generated pseudo-barcode (deterministic pattern from tracking number chars).
+     - Barcode with human-readable text below.
+     - From/To address panels with sender/receiver details and phone numbers.
+     - 4-column cargo grid (weight, pieces, distance, priority).
+     - Estimated delivery + print timestamp footer.
+     - Decorative QR-code-style square generated from tracking number hash.
+   - Added `@media print` CSS to globals.css: hides everything except `.print-area`, positions label at top of page, hides dialog chrome.
+   - "Label" button added to shipment detail drawer header (next to Edit/Delete).
+   - Uses `window.print()` for printing.
+   - Updated `ShipmentDetail` type to include `phone` field for sender/receiver.
+
+### Styling Polish
+3. **Page Transition Animations** (app-shell.tsx):
+   - Added Framer Motion `AnimatePresence` with `mode="wait"` for smooth view transitions.
+   - Each view transition: fade in + slide up (8px), fade out + slide up (-4px), 200ms ease-out.
+   - Keyed by `view` from Zustand store so each view animates independently.
+
+4. **Mobile Bottom Navigation** (app-shell.tsx):
+   - Fixed bottom nav bar on mobile (md:hidden) with 5 key destinations: Home, Shipments, Tracking, Routes, Stats.
+   - Active item highlighted in emerald with scale-110 icon and an animated top indicator bar (Framer Motion `layoutId`).
+   - Footer hidden on mobile (replaced by bottom nav) to save vertical space.
+   - Added `pb-24` padding on mobile main to prevent content from being hidden behind bottom nav.
+   - Version bumped to v2.1.0.
+
+## Verification Results
+- **Lint**: 0 errors (1 pre-existing warning in seed.ts).
+- **Browser QA**: All 9 views (including new Route Planning) render with zero console/runtime errors.
+- **Route Planning**: Cards display with stats, driver/vehicle, expandable stops (20 stops visible when expanded), status actions work (Start/Complete/Cancel).
+- **Print Label**: Dialog opens from shipment drawer "Label" button, shows full label with barcode, From/To addresses, cargo grid, QR-style square. Print button triggers `window.print()`.
+- **Page transitions**: Smooth fade+slide animations between all views.
+- **Mobile bottom nav**: Renders on 390px viewport, 5 items with active state highlighting.
+
+## Unresolved Issues / Risks
+- **Settings dialog**: Not implemented this round (deprioritized in favor of Route Planning and Print Labels which had higher user impact).
+- **WebSocket mini-service**: Still using polling (15s/60s) — works well at current scale.
+- **Route optimization algorithm**: The Route Planning view shows routes and stops but doesn't include an actual optimization algorithm (nearest-neighbor, time windows). This could be a future enhancement.
+
+## Priority Recommendations for Next Phase
+1. **Settings dialog** — user preferences for notification refresh intervals, default filters, theme.
+2. **Route optimization** — implement a nearest-neighbor algorithm to suggest optimal stop ordering.
+3. **Invoice/billing module** — generate invoices from delivered shipments, track payments.
+4. **WebSocket mini-service** for true real-time tracking (push-based instead of polling).
+5. **Dashboard widgets customization** — drag-and-drop widget arrangement.

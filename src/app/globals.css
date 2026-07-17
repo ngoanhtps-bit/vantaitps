@@ -183,3 +183,26 @@
   100% { transform: translateX(100%); }
 }
 
+/* Print styles for shipment labels */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-area, .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: none;
+  }
+  .print\:hidden {
+    display: none !important;
+  }
+  @page {
+    margin: 0.5in;
+  }
+}
+

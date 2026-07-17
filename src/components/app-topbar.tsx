@@ -25,6 +25,7 @@ const VIEW_TITLES: Record<ViewKey, { title: string; subtitle: string }> = {
   vehicles: { title: "Fleet", subtitle: "Vehicles and maintenance status" },
   customers: { title: "Customers", subtitle: "Customer directory and history" },
   warehouses: { title: "Warehouses", subtitle: "Distribution centers and capacity" },
+  routes: { title: "Route Planning", subtitle: "Optimize delivery routes and stops" },
   analytics: { title: "Analytics", subtitle: "Insights and performance reports" },
 };
 

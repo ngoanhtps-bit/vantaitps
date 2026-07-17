@@ -33,7 +33,7 @@ import {
   Package, Search, Plus, Filter, Download, ArrowRight, MapPin, Truck,
   User, Calendar, DollarSign, Weight, Box, ChevronLeft, ChevronRight,
   X, Clock, CheckCircle2, AlertTriangle, PackageCheck, XCircle, RotateCcw,
-  Pencil, Trash2,
+  Pencil, Trash2, Printer,
 } from "lucide-react";
 import {
   SHIPMENT_STATUSES, SHIPMENT_STATUS_META, PRIORITIES, PRIORITY_META,
@@ -45,6 +45,7 @@ import {
 import { useAppStore } from "@/lib/store";
 import { toast } from "sonner";
 import { avatarColorClass } from "@/components/avatar-color";
+import { PrintLabelDialog } from "@/components/print-label-dialog";
 import { cn } from "@/lib/utils";
 
 type ShipmentListItem = {
@@ -64,8 +65,8 @@ type ShipmentListItem = {
   createdAt: string;
   estimatedDelivery: string | null;
   progress: number;
-  sender: { id: string; name: string; city: string };
-  receiver: { id: string; name: string; city: string };
+  sender: { id: string; name: string; city: string; phone?: string };
+  receiver: { id: string; name: string; city: string; phone?: string };
   driver: { id: string; name: string; avatarColor: string; status: string } | null;
   vehicle: { id: string; plateNumber: string; model: string; type: string } | null;
 };
@@ -691,6 +692,7 @@ function ShipmentDetailDrawer({
 
   const [editOpen, setEditOpen] = React.useState(false);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
+  const [printOpen, setPrintOpen] = React.useState(false);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -709,6 +711,9 @@ function ShipmentDetailDrawer({
             </span>
             {shipment && (
               <span className="flex shrink-0 items-center gap-1">
+                <Button size="sm" variant="ghost" className="h-8 gap-1.5 px-2 text-xs" onClick={() => setPrintOpen(true)}>
+                  <Printer className="h-3.5 w-3.5" /> Label
+                </Button>
                 <Button size="sm" variant="ghost" className="h-8 gap-1.5 px-2 text-xs" onClick={() => setEditOpen(true)}>
                   <Pencil className="h-3.5 w-3.5" /> Edit
                 </Button>
@@ -893,6 +898,28 @@ function ShipmentDetailDrawer({
           }}
         />
       )}
+
+      {/* Print label dialog */}
+      <PrintLabelDialog
+        open={printOpen}
+        onOpenChange={setPrintOpen}
+        shipment={shipment ? {
+          trackingNumber: shipment.trackingNumber,
+          status: shipment.status,
+          priority: shipment.priority,
+          serviceType: shipment.serviceType,
+          originAddress: shipment.originAddress,
+          originCity: shipment.originCity,
+          destinationAddress: shipment.destinationAddress,
+          destinationCity: shipment.destinationCity,
+          weightKg: shipment.weightKg,
+          pieces: shipment.pieces,
+          distanceKm: shipment.distanceKm,
+          sender: { name: shipment.sender.name, city: shipment.sender.city, phone: shipment.sender.phone },
+          receiver: { name: shipment.receiver.name, city: shipment.receiver.city, phone: shipment.receiver.phone },
+          estimatedDelivery: shipment.estimatedDelivery,
+        } : null}
+      />
 
       {/* Delete confirmation */}
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
