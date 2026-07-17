@@ -95,9 +95,9 @@ export function RoutesView() {
       api.patch(`/api/routes/${id}`, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["routes"] });
-      toast.success("Route updated");
+      toast.success("Đã cập nhật tuyến");
     },
-    onError: (e: Error) => toast.error("Update failed", { description: e.message }),
+    onError: (e: Error) => toast.error("Cập nhật thất bại", { description: e.message }),
   });
 
   const routes = data?.items ?? [];
@@ -113,11 +113,11 @@ export function RoutesView() {
     <div className="space-y-4">
       {/* KPI cards */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        <KpiCard title="Total Routes" value={formatNumber(total)} icon={RouteIcon} accent="emerald" />
-        <KpiCard title="Active" value={formatNumber(active)} icon={Play} accent="emerald" />
-        <KpiCard title="Planned" value={formatNumber(planned)} icon={Clock} accent="sky" />
-        <KpiCard title="Completed" value={formatNumber(completed)} icon={CheckCircle2} accent="teal" />
-        <KpiCard title="Total Distance" value={formatDistance(totalDistance)} icon={Navigation} accent="violet" />
+        <KpiCard title="Tổng tuyến" value={formatNumber(total)} icon={RouteIcon} accent="emerald" />
+        <KpiCard title="Đang chạy" value={formatNumber(active)} icon={Play} accent="emerald" />
+        <KpiCard title="Đã lên kế hoạch" value={formatNumber(planned)} icon={Clock} accent="sky" />
+        <KpiCard title="Hoàn thành" value={formatNumber(completed)} icon={CheckCircle2} accent="teal" />
+        <KpiCard title="Tổng quãng đường" value={formatDistance(totalDistance)} icon={Navigation} accent="violet" />
       </div>
 
       {/* Filter bar */}
@@ -127,16 +127,16 @@ export function RoutesView() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search route name, driver, vehicle…"
+                placeholder="Tìm tên tuyến, tài xế, phương tiện…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9"
               />
             </div>
             <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="w-full sm:w-[160px]"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-[160px]"><SelectValue placeholder="Trạng thái" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="all">Tất cả trạng thái</SelectItem>
                 {ROUTE_STATUSES.map((s) => (
                   <SelectItem key={s} value={s}>{ROUTE_STATUS_META[s].label}</SelectItem>
                 ))}
@@ -158,8 +158,8 @@ export function RoutesView() {
               <RouteIcon className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-sm font-medium">No routes found</p>
-              <p className="text-xs text-muted-foreground">Try adjusting filters.</p>
+              <p className="text-sm font-medium">Không tìm thấy tuyến</p>
+              <p className="text-xs text-muted-foreground">Thử điều chỉnh bộ lọc.</p>
             </div>
           </CardContent>
         </Card>
@@ -228,13 +228,13 @@ function RouteCard({
             {route.status === "planned" && (
               <Button size="sm" variant="outline" className="h-7 gap-1 px-2 text-xs" disabled={updating}
                 onClick={() => onUpdate({ status: "active", startedAt: new Date().toISOString() })}>
-                <Play className="h-3 w-3" /> Start
+                <Play className="h-3 w-3" /> Bắt đầu
               </Button>
             )}
             {route.status === "active" && (
               <Button size="sm" variant="outline" className="h-7 gap-1 px-2 text-xs text-emerald-600" disabled={updating}
                 onClick={() => onUpdate({ status: "completed", endedAt: new Date().toISOString() })}>
-                <CheckCircle2 className="h-3 w-3" /> Complete
+                <CheckCircle2 className="h-3 w-3" /> Hoàn thành
               </Button>
             )}
             {(route.status === "planned" || route.status === "active") && (
@@ -248,10 +248,10 @@ function RouteCard({
 
         {/* Stats grid */}
         <div className="grid grid-cols-4 gap-px bg-border">
-          <StatTile icon={MapPin} label="Stops" value={String(route.stopsCount || stops.length)} />
-          <StatTile icon={Navigation} label="Distance" value={formatDistance(route.distanceKm)} />
-          <StatTile icon={Clock} label="Duration" value={`${Math.floor(route.durationMin / 60)}h ${route.durationMin % 60}m`} />
-          <StatTile icon={Weight} label="Cargo" value={formatWeight(route.totalWeight)} />
+          <StatTile icon={MapPin} label="Trạm dừng" value={String(route.stopsCount || stops.length)} />
+          <StatTile icon={Navigation} label="Quãng đường" value={formatDistance(route.distanceKm)} />
+          <StatTile icon={Clock} label="Thời gian" value={`${Math.floor(route.durationMin / 60)}h ${route.durationMin % 60}m`} />
+          <StatTile icon={Weight} label="Hàng hóa" value={formatWeight(route.totalWeight)} />
         </div>
 
         {/* Driver / Vehicle */}
@@ -270,7 +270,7 @@ function RouteCard({
                 </div>
               </>
             ) : (
-              <p className="text-xs text-muted-foreground">Unassigned driver</p>
+              <p className="text-xs text-muted-foreground">Chưa gán tài xế</p>
             )}
           </div>
           <div className="flex items-center gap-2 bg-card p-3">
@@ -285,7 +285,7 @@ function RouteCard({
                 </div>
               </>
             ) : (
-              <p className="text-xs text-muted-foreground">Unassigned vehicle</p>
+              <p className="text-xs text-muted-foreground">Chưa gán phương tiện</p>
             )}
           </div>
         </div>
@@ -295,9 +295,9 @@ function RouteCard({
           <div className="border-t px-4 py-3">
             <div className="mb-1 flex items-center justify-between text-xs">
               <span className="flex items-center gap-1 text-muted-foreground">
-                <Gauge className="h-3 w-3" /> Route Progress
+                <Gauge className="h-3 w-3" /> Tiến độ tuyến
               </span>
-              <span className="font-semibold tabular-nums">{completedStops}/{stops.length} stops · {progressPct}%</span>
+              <span className="font-semibold tabular-nums">{completedStops}/{stops.length} trạm dừng · {progressPct}%</span>
             </div>
             <Progress value={progressPct} className="h-1.5" />
           </div>
@@ -312,11 +312,11 @@ function RouteCard({
             >
               <span className="flex items-center gap-1.5">
                 <CircleDot className="h-3.5 w-3.5 text-muted-foreground" />
-                {stops.length} stops
+                {stops.length} trạm dừng
               </span>
               <span className="flex items-center gap-1 text-muted-foreground">
                 {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                {expanded ? "Hide" : "Show"} stops
+                {expanded ? "Ẩn" : "Hiển thị"} trạm dừng
               </span>
             </button>
             {expanded && (
@@ -344,7 +344,7 @@ function RouteCard({
                   ))}
                 </div>
                 <Button size="sm" variant="ghost" className="mt-3 w-full gap-1 text-xs" onClick={onViewDetails}>
-                  View full details <ArrowRight className="h-3.5 w-3.5" />
+                  Xem chi tiết đầy đủ <ArrowRight className="h-3.5 w-3.5" />
                 </Button>
               </div>
             )}
@@ -354,7 +354,7 @@ function RouteCard({
         {stops.length === 0 && (
           <div className="border-t px-4 py-3">
             <Button size="sm" variant="ghost" className="w-full gap-1 text-xs" onClick={onViewDetails}>
-              View details <ArrowRight className="h-3.5 w-3.5" />
+              Xem chi tiết <ArrowRight className="h-3.5 w-3.5" />
             </Button>
           </div>
         )}
@@ -390,14 +390,14 @@ function RouteDetailDrawer({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto custom-scroll p-0">
         <SheetHeader className="border-b px-5 py-4">
-          <SheetDescription className="sr-only">Route details</SheetDescription>
+          <SheetDescription className="sr-only">Chi tiết tuyến</SheetDescription>
           <SheetTitle className="flex items-center gap-2 text-base">
             {route ? (
               <>
                 <RouteIcon className="h-5 w-5 text-emerald-500" />
                 <span className="truncate">{route.name}</span>
               </>
-            ) : "Loading…"}
+            ) : "Đang tải…"}
           </SheetTitle>
         </SheetHeader>
 
@@ -427,10 +427,10 @@ function RouteDetailContent({ route }: { route: RouteItem }) {
           {statusMeta.label}
         </span>
         {route.startedAt && (
-          <span className="text-xs text-muted-foreground">Started {formatDateTime(route.startedAt)}</span>
+          <span className="text-xs text-muted-foreground">Bắt đầu {formatDateTime(route.startedAt)}</span>
         )}
         {route.endedAt && (
-          <span className="text-xs text-muted-foreground">· Ended {formatDateTime(route.endedAt)}</span>
+          <span className="text-xs text-muted-foreground">· Kết thúc {formatDateTime(route.endedAt)}</span>
         )}
       </div>
 
@@ -439,29 +439,29 @@ function RouteDetailContent({ route }: { route: RouteItem }) {
         <div className="rounded-lg border p-3 text-center">
           <MapPin className="mx-auto mb-1 h-4 w-4 text-emerald-500" />
           <p className="text-sm font-bold">{route.stopsCount || stops.length}</p>
-          <p className="text-[10px] text-muted-foreground">Stops</p>
+          <p className="text-[10px] text-muted-foreground">Trạm dừng</p>
         </div>
         <div className="rounded-lg border p-3 text-center">
           <Navigation className="mx-auto mb-1 h-4 w-4 text-sky-500" />
           <p className="text-sm font-bold">{formatDistance(route.distanceKm)}</p>
-          <p className="text-[10px] text-muted-foreground">Distance</p>
+          <p className="text-[10px] text-muted-foreground">Quãng đường</p>
         </div>
         <div className="rounded-lg border p-3 text-center">
           <Clock className="mx-auto mb-1 h-4 w-4 text-amber-500" />
           <p className="text-sm font-bold">{Math.floor(route.durationMin / 60)}h {route.durationMin % 60}m</p>
-          <p className="text-[10px] text-muted-foreground">Duration</p>
+          <p className="text-[10px] text-muted-foreground">Thời gian</p>
         </div>
         <div className="rounded-lg border p-3 text-center">
           <Weight className="mx-auto mb-1 h-4 w-4 text-violet-500" />
           <p className="text-sm font-bold">{formatWeight(route.totalWeight)}</p>
-          <p className="text-[10px] text-muted-foreground">Cargo</p>
+          <p className="text-[10px] text-muted-foreground">Hàng hóa</p>
         </div>
       </div>
 
       {/* Driver & Vehicle */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="rounded-lg border p-3">
-          <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">Assigned Driver</p>
+          <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">Tài xế được gán</p>
           {route.driver ? (
             <div className="flex items-center gap-2">
               <Avatar className="h-9 w-9">
@@ -476,10 +476,10 @@ function RouteDetailContent({ route }: { route: RouteItem }) {
                 </p>
               </div>
             </div>
-          ) : <p className="text-xs text-muted-foreground">Unassigned</p>}
+          ) : <p className="text-xs text-muted-foreground">Chưa gán</p>}
         </div>
         <div className="rounded-lg border p-3">
-          <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">Vehicle</p>
+          <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">Phương tiện</p>
           {route.vehicle ? (
             <div className="flex items-center gap-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400">
@@ -490,7 +490,7 @@ function RouteDetailContent({ route }: { route: RouteItem }) {
                 <p className="text-[10px] text-muted-foreground capitalize">{route.vehicle.model} · {route.vehicle.type}</p>
               </div>
             </div>
-          ) : <p className="text-xs text-muted-foreground">Unassigned</p>}
+          ) : <p className="text-xs text-muted-foreground">Chưa gán</p>}
         </div>
       </div>
 
@@ -498,7 +498,7 @@ function RouteDetailContent({ route }: { route: RouteItem }) {
       {stops.length > 0 ? (
         <div>
           <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold">
-            <Flag className="h-4 w-4 text-muted-foreground" /> Delivery Sequence ({stops.length} stops)
+            <Flag className="h-4 w-4 text-muted-foreground" /> Thứ tự giao hàng ({stops.length} trạm dừng)
           </h4>
           <div className="relative space-y-3 border-l-2 border-muted pl-5">
             {stops.map((stop, i) => {
@@ -536,7 +536,7 @@ function RouteDetailContent({ route }: { route: RouteItem }) {
                     </div>
                     <div className="mt-1 flex items-center gap-3 text-[10px] text-muted-foreground">
                       <span className="flex items-center gap-0.5"><Weight className="h-2.5 w-2.5" /> {formatWeight(stop.weightKg)}</span>
-                      <span className="flex items-center gap-0.5"><Box className="h-2.5 w-2.5" /> {stop.pieces} pcs</span>
+                      <span className="flex items-center gap-0.5"><Box className="h-2.5 w-2.5" /> {stop.pieces} kiện</span>
                       {stop.estimatedDelivery && (
                         <span className="flex items-center gap-0.5"><Clock className="h-2.5 w-2.5" /> {formatRelativeTime(stop.estimatedDelivery)}</span>
                       )}
@@ -550,8 +550,8 @@ function RouteDetailContent({ route }: { route: RouteItem }) {
       ) : (
         <div className="rounded-lg border border-dashed p-6 text-center">
           <Package className="mx-auto mb-2 h-8 w-8 text-muted-foreground/50" />
-          <p className="text-sm font-medium">No active stops</p>
-          <p className="text-xs text-muted-foreground">This route has no shipments assigned to its driver.</p>
+          <p className="text-sm font-medium">Không có trạm dừng nào</p>
+          <p className="text-xs text-muted-foreground">Tuyến này chưa có đơn hàng nào được gán cho tài xế.</p>
         </div>
       )}
     </div>

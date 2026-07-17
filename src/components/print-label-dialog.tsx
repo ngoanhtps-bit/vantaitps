@@ -46,7 +46,7 @@ function generateBarcodePattern(input: string): number[] {
 function Barcode({ value, className }: { value: string; className?: string }) {
   const bars = React.useMemo(() => generateBarcodePattern(value), [value]);
   return (
-    <div className={cn("flex h-16 items-end gap-px", className)} aria-label={`Barcode ${value}`}>
+    <div className={cn("flex h-16 items-end gap-px", className)} aria-label={`Mã vạch ${value}`}>
       {bars.map((w, i) => (
         <div
           key={i}
@@ -79,9 +79,9 @@ export function PrintLabelDialog({
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto custom-scroll print:max-w-none print:max-h-none print:overflow-visible print:border-0 print:shadow-none">
         <DialogHeader className="print:hidden">
           <DialogTitle className="flex items-center gap-2">
-            <Printer className="h-5 w-5 text-emerald-500" /> Shipment Label
+            <Printer className="h-5 w-5 text-emerald-500" /> Nhãn vận đơn
           </DialogTitle>
-          <DialogDescription>Preview the shipping label. Click print to send to your printer.</DialogDescription>
+          <DialogDescription>Xem trước nhãn vận chuyển. Nhấn in để gửi đến máy in.</DialogDescription>
         </DialogHeader>
 
         {/* Printable label */}
@@ -90,7 +90,7 @@ export function PrintLabelDialog({
           <div className="flex items-start justify-between border-b-2 border-slate-900 pb-3">
             <div>
               <h2 className="text-lg font-black tracking-tight">LOGISTICS V2</h2>
-              <p className="text-[9px] uppercase tracking-widest text-slate-500">Express Delivery Network</p>
+              <p className="text-[9px] uppercase tracking-widest text-slate-500">Mạng lưới giao hàng nhanh</p>
             </div>
             <div className="text-right">
               <span className={cn("inline-block rounded border px-2 py-0.5 text-[10px] font-bold uppercase", statusMeta.badge)}>
@@ -102,7 +102,7 @@ export function PrintLabelDialog({
 
           {/* Tracking number + barcode */}
           <div className="border-b border-slate-300 py-3">
-            <p className="mb-1 text-[9px] uppercase tracking-widest text-slate-500">Tracking Number</p>
+            <p className="mb-1 text-[9px] uppercase tracking-widest text-slate-500">Mã vận đơn</p>
             <p className="font-mono text-xl font-bold tracking-wider">{shipment.trackingNumber}</p>
             <div className="mt-2 rounded border border-slate-200 bg-white p-2">
               <Barcode value={shipment.trackingNumber} />
@@ -114,21 +114,21 @@ export function PrintLabelDialog({
           <div className="grid grid-cols-2 gap-3 border-b border-slate-300 py-3">
             <div>
               <p className="mb-1 flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest text-slate-500">
-                <User className="h-2.5 w-2.5" /> From
+                <User className="h-2.5 w-2.5" /> Từ
               </p>
               <p className="text-sm font-bold">{shipment.sender.name}</p>
               <p className="text-[11px] text-slate-600">{shipment.originAddress}</p>
               <p className="text-[11px] font-medium text-slate-700">{shipment.originCity}</p>
-              {shipment.sender.phone && <p className="text-[10px] text-slate-500">Tel: {shipment.sender.phone}</p>}
+              {shipment.sender.phone && <p className="text-[10px] text-slate-500">ĐT: {shipment.sender.phone}</p>}
             </div>
             <div className="border-l border-slate-300 pl-3">
               <p className="mb-1 flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest text-slate-500">
-                <MapPin className="h-2.5 w-2.5" /> To
+                <MapPin className="h-2.5 w-2.5" /> Đến
               </p>
               <p className="text-sm font-bold">{shipment.receiver.name}</p>
               <p className="text-[11px] text-slate-600">{shipment.destinationAddress}</p>
               <p className="text-[11px] font-medium text-slate-700">{shipment.destinationCity}</p>
-              {shipment.receiver.phone && <p className="text-[10px] text-slate-500">Tel: {shipment.receiver.phone}</p>}
+              {shipment.receiver.phone && <p className="text-[10px] text-slate-500">ĐT: {shipment.receiver.phone}</p>}
             </div>
           </div>
 
@@ -136,22 +136,22 @@ export function PrintLabelDialog({
           <div className="grid grid-cols-4 gap-2 border-b border-slate-300 py-3 text-center">
             <div>
               <Weight className="mx-auto mb-0.5 h-3.5 w-3.5 text-slate-400" />
-              <p className="text-[9px] uppercase text-slate-500">Weight</p>
+              <p className="text-[9px] uppercase text-slate-500">Trọng lượng</p>
               <p className="text-xs font-bold">{formatWeight(shipment.weightKg)}</p>
             </div>
             <div>
               <Box className="mx-auto mb-0.5 h-3.5 w-3.5 text-slate-400" />
-              <p className="text-[9px] uppercase text-slate-500">Pieces</p>
+              <p className="text-[9px] uppercase text-slate-500">Số kiện</p>
               <p className="text-xs font-bold">{shipment.pieces}</p>
             </div>
             <div>
               <Truck className="mx-auto mb-0.5 h-3.5 w-3.5 text-slate-400" />
-              <p className="text-[9px] uppercase text-slate-500">Distance</p>
+              <p className="text-[9px] uppercase text-slate-500">Quãng đường</p>
               <p className="text-xs font-bold">{shipment.distanceKm} km</p>
             </div>
             <div>
               <Package className="mx-auto mb-0.5 h-3.5 w-3.5 text-slate-400" />
-              <p className="text-[9px] uppercase text-slate-500">Priority</p>
+              <p className="text-[9px] uppercase text-slate-500">Ưu tiên</p>
               <p className="text-xs font-bold capitalize">{shipment.priority}</p>
             </div>
           </div>
@@ -159,11 +159,11 @@ export function PrintLabelDialog({
           {/* Footer */}
           <div className="flex items-center justify-between pt-3">
             <div>
-              <p className="text-[9px] uppercase tracking-widest text-slate-500">Est. Delivery</p>
+              <p className="text-[9px] uppercase tracking-widest text-slate-500">Dự kiến giao</p>
               <p className="text-xs font-semibold">{shipment.estimatedDelivery ? formatDateTime(shipment.estimatedDelivery) : "N/A"}</p>
             </div>
             <div className="text-right">
-              <p className="text-[9px] uppercase tracking-widest text-slate-500">Printed</p>
+              <p className="text-[9px] uppercase tracking-widest text-slate-500">Đã in</p>
               <p className="text-[10px] text-slate-600">{new Date().toLocaleString()}</p>
             </div>
           </div>
@@ -181,9 +181,9 @@ export function PrintLabelDialog({
 
         {/* Actions */}
         <div className="mt-4 flex justify-end gap-2 print:hidden">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Đóng</Button>
           <Button onClick={handlePrint} className="gap-1.5">
-            <Printer className="h-4 w-4" /> Print Label
+            <Printer className="h-4 w-4" /> In nhãn
           </Button>
         </div>
       </DialogContent>

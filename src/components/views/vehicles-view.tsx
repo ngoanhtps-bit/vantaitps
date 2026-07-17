@@ -150,9 +150,9 @@ export function VehiclesView() {
       qc.invalidateQueries({ queryKey: ["vehicles"] });
       qc.invalidateQueries({ queryKey: ["vehicle", vars.id] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success("Vehicle updated");
+      toast.success("Đã cập nhật phương tiện");
     },
-    onError: (e: Error) => toast.error(e.message || "Failed to update vehicle"),
+    onError: (e: Error) => toast.error(e.message || "Cập nhật phương tiện thất bại"),
   });
 
   const createMutation = useMutation({
@@ -160,10 +160,10 @@ export function VehiclesView() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["vehicles"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success("Vehicle added to fleet");
+      toast.success("Đã thêm phương tiện vào đội xe");
       setCreateOpen(false);
     },
-    onError: (e: Error) => toast.error(e.message || "Failed to add vehicle"),
+    onError: (e: Error) => toast.error(e.message || "Thêm phương tiện thất bại"),
   });
 
   const vehicles = data?.items ?? [];
@@ -184,32 +184,32 @@ export function VehiclesView() {
       {/* KPI row */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <KpiCard
-          title="Total Vehicles"
+          title="Tổng phương tiện"
           value={formatNumber(stats.total)}
           icon={Truck}
           accent="emerald"
-          footer="In fleet"
+          footer="Trong đội xe"
         />
         <KpiCard
-          title="Active"
+          title="Hoạt động"
           value={formatNumber(stats.active)}
           icon={Truck}
           accent="sky"
-          footer="On the road"
+          footer="Đang chạy"
         />
         <KpiCard
-          title="In Maintenance"
+          title="Đang bảo trì"
           value={formatNumber(stats.maintenance)}
           icon={Wrench}
           accent="orange"
-          footer="Being serviced"
+          footer="Đang sửa chữa"
         />
         <KpiCard
-          title="Total Capacity"
+          title="Tổng tải trọng"
           value={formatWeight(stats.totalCapacity)}
           icon={Gauge}
           accent="violet"
-          footer="Combined payload"
+          footer="Tải trọng tổng cộng"
         />
       </div>
 
@@ -220,7 +220,7 @@ export function VehiclesView() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search plate, model, brand…"
+                placeholder="Tìm biển số, mẫu xe, hãng xe…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9"
@@ -229,10 +229,10 @@ export function VehiclesView() {
             <div className="flex flex-wrap items-center gap-2">
               <Select value={status} onValueChange={setStatus}>
                 <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Status" />
+                  <SelectValue placeholder="Trạng thái" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All statuses</SelectItem>
+                  <SelectItem value="all">Tất cả trạng thái</SelectItem>
                   {VEHICLE_STATUSES.map((s) => (
                     <SelectItem key={s} value={s}>{VEHICLE_STATUS_META[s].label}</SelectItem>
                   ))}
@@ -240,10 +240,10 @@ export function VehiclesView() {
               </Select>
               <Select value={type} onValueChange={setType}>
                 <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Type" />
+                  <SelectValue placeholder="Loại" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All types</SelectItem>
+                  <SelectItem value="all">Tất cả loại</SelectItem>
                   {VEHICLE_TYPES.map((t) => (
                     <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>
                   ))}
@@ -251,11 +251,11 @@ export function VehiclesView() {
               </Select>
               {hasFilters && (
                 <Button variant="ghost" size="sm" onClick={resetFilters} className="gap-1 text-xs">
-                  <X className="h-3.5 w-3.5" /> Clear
+                  <X className="h-3.5 w-3.5" /> Xóa
                 </Button>
               )}
               <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
-                <Plus className="h-4 w-4" /> Add Vehicle
+                <Plus className="h-4 w-4" /> Thêm phương tiện
               </Button>
             </div>
           </div>
@@ -272,9 +272,9 @@ export function VehiclesView() {
       ) : vehicles.length === 0 ? (
         <EmptyState
           icon={Truck}
-          title="No vehicles found"
-          description="Try adjusting filters or add a new vehicle to your fleet."
-          action={<Button size="sm" variant="outline" onClick={resetFilters}>Reset filters</Button>}
+          title="Không tìm thấy phương tiện"
+          description="Thử điều chỉnh bộ lọc hoặc thêm phương tiện mới vào đội xe của bạn."
+          action={<Button size="sm" variant="outline" onClick={resetFilters}>Đặt lại bộ lọc</Button>}
         />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -291,8 +291,8 @@ export function VehiclesView() {
       >
         <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-lg">
           <SheetHeader className="border-b p-4">
-            <SheetTitle>Vehicle details</SheetTitle>
-            <SheetDescription>Full specs, maintenance, and recent shipments.</SheetDescription>
+            <SheetTitle>Chi tiết phương tiện</SheetTitle>
+            <SheetDescription>Thông số đầy đủ, bảo trì và đơn hàng gần đây.</SheetDescription>
           </SheetHeader>
           <div className="flex-1 overflow-y-auto">
             {detailLoading || !detail ? (
@@ -368,15 +368,15 @@ function VehicleCard({ vehicle, onView }: { vehicle: Vehicle; onView: () => void
 
         {/* Specs */}
         <div className="grid grid-cols-2 gap-2 rounded-lg bg-muted/40 p-3">
-          <SpecItem icon={Gauge} label="Capacity" value={formatWeight(vehicle.capacityKg)} />
-          <SpecItem icon={Container} label="Mileage" value={formatDistance(vehicle.mileage)} />
+          <SpecItem icon={Gauge} label="Tải trọng" value={formatWeight(vehicle.capacityKg)} />
+          <SpecItem icon={Container} label="Số km" value={formatDistance(vehicle.mileage)} />
         </div>
 
         {/* Fuel */}
         <div>
           <div className="mb-1 flex items-center justify-between text-xs">
             <span className="flex items-center gap-1 text-muted-foreground">
-              <Fuel className="h-3 w-3" /> Fuel
+              <Fuel className="h-3 w-3" /> Nhiên liệu
             </span>
             <span className="font-semibold tabular-nums">{vehicle.fuelLevel}%</span>
           </div>
@@ -391,11 +391,11 @@ function VehicleCard({ vehicle, onView }: { vehicle: Vehicle; onView: () => void
           <Wrench className={cn("h-3.5 w-3.5 shrink-0", maintenanceOverdue ? "text-rose-500" : "text-muted-foreground")} />
           <div className="min-w-0 flex-1">
             <p className="text-xs font-medium">
-              {vehicle.nextMaintenance ? `Next: ${formatRelativeTime(vehicle.nextMaintenance)}` : "No scheduled maintenance"}
+              {vehicle.nextMaintenance ? `Tiếp theo: ${formatRelativeTime(vehicle.nextMaintenance)}` : "Chưa lên lịch bảo trì"}
             </p>
             {maintenanceOverdue && (
               <p className="flex items-center gap-1 text-[10px] font-medium text-rose-600 dark:text-rose-400">
-                <AlertTriangle className="h-2.5 w-2.5" /> Overdue — service required
+                <AlertTriangle className="h-2.5 w-2.5" /> Quá hạn — cần bảo trì
               </p>
             )}
           </div>
@@ -415,16 +415,16 @@ function VehicleCard({ vehicle, onView }: { vehicle: Vehicle; onView: () => void
               </Avatar>
               <div className="min-w-0">
                 <p className="truncate text-xs font-medium">{vehicle.driver.name}</p>
-                <p className="text-[10px] text-muted-foreground">Assigned driver</p>
+                <p className="text-[10px] text-muted-foreground">Tài xế được gán</p>
               </div>
             </div>
           ) : (
-            <p className="flex-1 text-xs text-muted-foreground">Unassigned</p>
+            <p className="flex-1 text-xs text-muted-foreground">Chưa gán</p>
           )}
         </div>
 
         <Button variant="outline" size="sm" className="mt-auto w-full gap-1.5" onClick={onView}>
-          View details <ArrowRight className="h-3.5 w-3.5" />
+          Xem chi tiết <ArrowRight className="h-3.5 w-3.5" />
         </Button>
       </CardContent>
     </Card>
@@ -471,26 +471,26 @@ function VehicleDetailContent({
       {/* Badges */}
       <div className="flex flex-wrap gap-1.5">
         <Badge variant="secondary" className="capitalize">{vehicle.type}</Badge>
-        <Badge variant="outline" className="capitalize">{vehicle.fuelType} fuel</Badge>
+        <Badge variant="outline" className="capitalize">{vehicle.fuelType} nhiên liệu</Badge>
         <Badge variant="outline" className="capitalize">{vehicle.color}</Badge>
       </div>
 
       {/* Specs */}
       <div className="grid grid-cols-2 gap-2 rounded-lg bg-muted/40 p-3">
-        <SpecItem icon={Gauge} label="Capacity" value={formatWeight(vehicle.capacityKg)} />
-        <SpecItem icon={Container} label="Mileage" value={formatDistance(vehicle.mileage)} />
+        <SpecItem icon={Gauge} label="Tải trọng" value={formatWeight(vehicle.capacityKg)} />
+        <SpecItem icon={Container} label="Số km" value={formatDistance(vehicle.mileage)} />
       </div>
 
       {/* Maintenance */}
       <div>
-        <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">Maintenance</p>
+        <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">Bảo trì</p>
         <div className={cn(
           "space-y-1.5 rounded-lg border p-3",
           maintenanceOverdue && "border-rose-200 bg-rose-50 dark:border-rose-900 dark:bg-rose-950/30"
         )}>
           <div className="flex items-center justify-between text-xs">
             <span className="flex items-center gap-1.5 text-muted-foreground">
-              <Wrench className="h-3 w-3" /> Last service
+              <Wrench className="h-3 w-3" /> Bảo trì gần nhất
             </span>
             <span className="font-medium">
               {vehicle.lastMaintenance ? formatDate(vehicle.lastMaintenance) : "—"}
@@ -498,7 +498,7 @@ function VehicleDetailContent({
           </div>
           <div className="flex items-center justify-between text-xs">
             <span className="flex items-center gap-1.5 text-muted-foreground">
-              <CalendarClock className="h-3 w-3" /> Next service
+              <CalendarClock className="h-3 w-3" /> Bảo trì tiếp theo
             </span>
             <span className={cn("font-medium", maintenanceOverdue && "text-rose-600 dark:text-rose-400")}>
               {vehicle.nextMaintenance ? formatDate(vehicle.nextMaintenance) : "—"}
@@ -506,7 +506,7 @@ function VehicleDetailContent({
           </div>
           {maintenanceOverdue && (
             <p className="flex items-center gap-1 text-[11px] font-medium text-rose-600 dark:text-rose-400">
-              <AlertTriangle className="h-3 w-3" /> Maintenance overdue — please service this vehicle
+              <AlertTriangle className="h-3 w-3" /> Bảo trì quá hạn — vui lòng bảo trì phương tiện này
             </p>
           )}
         </div>
@@ -514,7 +514,7 @@ function VehicleDetailContent({
 
       {/* Driver */}
       <div>
-        <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">Assigned driver</p>
+        <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">Tài xế được gán</p>
         {vehicle.driver ? (
           <div className="flex items-center gap-2 rounded-lg border p-2.5">
             <Avatar className="h-9 w-9">
@@ -529,21 +529,21 @@ function VehicleDetailContent({
           </div>
         ) : (
           <p className="rounded-lg border border-dashed p-3 text-center text-xs text-muted-foreground">
-            No driver assigned
+            Chưa gán tài xế
           </p>
         )}
       </div>
 
       {/* Status control */}
       <div>
-        <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">Update status</p>
+        <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">Cập nhật trạng thái</p>
         <Select
           value={vehicle.status}
           onValueChange={(v) => onUpdate({ status: v })}
           disabled={updating}
         >
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select status" />
+            <SelectValue placeholder="Chọn trạng thái" />
           </SelectTrigger>
           <SelectContent>
             {VEHICLE_STATUSES.map((s) => (
@@ -556,7 +556,7 @@ function VehicleDetailContent({
       {/* Fuel control */}
       <div>
         <div className="mb-1.5 flex items-center justify-between">
-          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Fuel level</p>
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Mức nhiên liệu</p>
           <span className="text-xs font-semibold tabular-nums">{fuelLevel}%</span>
         </div>
         <Progress value={fuelLevel} className={cn("h-2", fuelColorClass(fuelLevel))} />
@@ -569,18 +569,18 @@ function VehicleDetailContent({
           onValueCommit={(v) => onUpdate({ fuelLevel: v[0] })}
           disabled={updating}
         />
-        <p className="mt-1 text-[10px] text-muted-foreground">Drag to adjust — releases to update.</p>
+        <p className="mt-1 text-[10px] text-muted-foreground">Kéo để điều chỉnh — nhả để cập nhật.</p>
       </div>
 
       {/* Recent shipments */}
       <div>
         <div className="mb-2 flex items-center justify-between">
-          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Recent shipments</p>
-          <Badge variant="secondary" className="text-[10px]">{vehicle._count.shipments} total</Badge>
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Đơn hàng gần đây</p>
+          <Badge variant="secondary" className="text-[10px]">{vehicle._count.shipments} tổng</Badge>
         </div>
         {vehicle.shipments.length === 0 ? (
           <p className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
-            No shipments yet
+            Chưa có đơn hàng
           </p>
         ) : (
           <div className="space-y-1.5">
@@ -635,7 +635,7 @@ function CreateVehicleDialog({
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!plateNumber || !model || !brand) {
-      toast.error("Plate number, model and brand are required");
+      toast.error("Biển số, mẫu xe và hãng xe là bắt buộc");
       return;
     }
     onSubmit({
@@ -653,14 +653,14 @@ function CreateVehicleDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add new vehicle</DialogTitle>
+          <DialogTitle>Thêm phương tiện mới</DialogTitle>
           <DialogDescription>
-            Register a new vehicle in the fleet. It will start with &ldquo;Active&rdquo; status.
+            Đăng ký phương tiện mới vào đội xe. Sẽ bắt đầu với trạng thái &ldquo;Hoạt động&rdquo;.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-3">
           <div className="space-y-1.5">
-            <Label htmlFor="v-plate">Plate number *</Label>
+            <Label htmlFor="v-plate">Biển số *</Label>
             <Input
               id="v-plate"
               value={plateNumber}
@@ -671,20 +671,20 @@ function CreateVehicleDialog({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="v-model">Model *</Label>
+              <Label htmlFor="v-model">Mẫu xe *</Label>
               <Input id="v-model" value={model} onChange={(e) => setModel(e.target.value)} placeholder="Actros" required />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="v-brand">Brand *</Label>
+              <Label htmlFor="v-brand">Hãng xe *</Label>
               <Input id="v-brand" value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="Mercedes-Benz" required />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="v-type">Type</Label>
+              <Label htmlFor="v-type">Loại</Label>
               <Select value={type} onValueChange={setType}>
                 <SelectTrigger id="v-type" className="w-full">
-                  <SelectValue placeholder="Type" />
+                  <SelectValue placeholder="Loại" />
                 </SelectTrigger>
                 <SelectContent>
                   {VEHICLE_TYPES.map((t) => (
@@ -694,7 +694,7 @@ function CreateVehicleDialog({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="v-cap">Capacity (kg)</Label>
+              <Label htmlFor="v-cap">Tải trọng (kg)</Label>
               <Input
                 id="v-cap"
                 type="number"
@@ -707,10 +707,10 @@ function CreateVehicleDialog({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="v-fuel">Fuel type</Label>
+              <Label htmlFor="v-fuel">Loại nhiên liệu</Label>
               <Select value={fuelType} onValueChange={setFuelType}>
                 <SelectTrigger id="v-fuel" className="w-full">
-                  <SelectValue placeholder="Fuel" />
+                  <SelectValue placeholder="Nhiên liệu" />
                 </SelectTrigger>
                 <SelectContent>
                   {FUEL_TYPES.map((f) => (
@@ -720,10 +720,10 @@ function CreateVehicleDialog({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="v-color">Color</Label>
+              <Label htmlFor="v-color">Màu sắc</Label>
               <Select value={color} onValueChange={setColor}>
                 <SelectTrigger id="v-color" className="w-full">
-                  <SelectValue placeholder="Color" />
+                  <SelectValue placeholder="Màu sắc" />
                 </SelectTrigger>
                 <SelectContent>
                   {VEHICLE_COLORS_LIST.map((c) => (
@@ -734,9 +734,9 @@ function CreateVehicleDialog({
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Hủy</Button>
             <Button type="submit" disabled={submitting}>
-              {submitting ? "Adding…" : "Add vehicle"}
+              {submitting ? "Đang thêm…" : "Thêm phương tiện"}
             </Button>
           </DialogFooter>
         </form>

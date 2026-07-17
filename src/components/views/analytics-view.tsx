@@ -138,9 +138,9 @@ export function AnalyticsView() {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      toast.success("CSV exported");
+      toast.success("Đã xuất CSV");
     } catch {
-      toast.error("Failed to export CSV");
+      toast.error("Xuất CSV thất bại");
     }
   };
 
@@ -149,17 +149,17 @@ export function AnalyticsView() {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-lg font-semibold">Analytics Overview</h2>
+          <h2 className="text-lg font-semibold">Tổng quan phân tích</h2>
           <p className="text-xs text-muted-foreground">
-            Last 14 days · updated every 30s
+            14 ngày qua · cập nhật mỗi 30 giây
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="gap-1.5">
-            <Activity className="h-3 w-3 text-emerald-500" /> Live
+            <Activity className="h-3 w-3 text-emerald-500" /> Trực tiếp
           </Badge>
           <Button variant="outline" size="sm" onClick={exportCsv} className="gap-1.5">
-            <Download className="h-3.5 w-3.5" /> Export CSV
+            <Download className="h-3.5 w-3.5" /> Xuất CSV
           </Button>
         </div>
       </div>
@@ -167,43 +167,43 @@ export function AnalyticsView() {
       {/* KPI row */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <KpiCard
-          title="Total Revenue"
+          title="Tổng doanh thu"
           value={formatCurrency(revenue.total)}
           icon={DollarSign}
           accent="emerald"
           trend={15.3}
-          trendLabel="delivered"
-          footer={`${formatCurrency(revenue.pending)} pending`}
+          trendLabel="đã giao"
+          footer={`${formatCurrency(revenue.pending)} chờ xử lý`}
         />
         <KpiCard
-          title="Pending Revenue"
+          title="Doanh thu chờ"
           value={formatCurrency(revenue.pending)}
           icon={Clock}
           accent="amber"
-          footer="In pipeline"
+          footer="Trong quy trình"
         />
         <KpiCard
-          title="Avg Shipment Value"
+          title="Giá trị đơn hàng TB"
           value={formatCurrency(avgValue)}
           icon={TrendingUp}
           accent="sky"
-          footer={`${formatNumber(totals.delivered)} delivered`}
+          footer={`${formatNumber(totals.delivered)} đã giao`}
         />
         <KpiCard
-          title="On-time Rate"
+          title="Tỷ lệ đúng hạn"
           value={`${onTimeRate}%`}
           icon={CheckCircle2}
           accent="violet"
           trend={2.1}
-          trendLabel="service level"
-          footer={`${totals.delayed} delayed`}
+          trendLabel="mức dịch vụ"
+          footer={`${totals.delayed} trễ hạn`}
         />
         <KpiCard
-          title="Active Shipments"
+          title="Đơn hàng đang hoạt động"
           value={formatNumber(totals.activeShipments)}
           icon={Truck}
           accent="teal"
-          footer={`${totals.inTransit} in transit`}
+          footer={`${totals.inTransit} đang vận chuyển`}
         />
       </div>
 
@@ -211,13 +211,13 @@ export function AnalyticsView() {
       <Card>
         <CardHeader className="flex flex-row items-start justify-between space-y-0">
           <div>
-            <CardTitle className="text-base">Revenue Trend</CardTitle>
+            <CardTitle className="text-base">Xu hướng doanh thu</CardTitle>
             <CardDescription className="text-xs">
-              Daily delivered revenue · last 14 days
+              Doanh thu đã giao theo ngày · 14 ngày qua
             </CardDescription>
           </div>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" /> Revenue
+            <span className="h-2 w-2 rounded-full bg-emerald-500" /> Doanh thu
           </div>
         </CardHeader>
         <CardContent>
@@ -232,7 +232,7 @@ export function AnalyticsView() {
               <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.9 0 0)" className="dark:opacity-30" vertical={false} />
               <XAxis
                 dataKey="date"
-                tickFormatter={(d) => new Date(d).toLocaleDateString("en-US", { day: "numeric", month: "short" })}
+                tickFormatter={(d) => new Date(d).toLocaleDateString("vi-VN", { day: "numeric", month: "short" })}
                 tick={{ fontSize: 10, fill: "oklch(0.5 0 0)" }}
                 axisLine={false}
                 tickLine={false}
@@ -249,10 +249,10 @@ export function AnalyticsView() {
                   borderRadius: 8, border: "1px solid oklch(0.9 0 0)", fontSize: 12,
                   background: "oklch(1 0 0)",
                 }}
-                labelFormatter={(d) => new Date(d as string).toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short" })}
-                formatter={(v: number) => [formatCurrency(v), "Revenue"]}
+                labelFormatter={(d) => new Date(d as string).toLocaleDateString("vi-VN", { weekday: "short", day: "numeric", month: "short" })}
+                formatter={(v: number) => [formatCurrency(v), "Doanh thu"]}
               />
-              <Area type="monotone" dataKey="revenue" name="Revenue" stroke="#10b981" strokeWidth={2} fill="url(#g-revenue)" />
+              <Area type="monotone" dataKey="revenue" name="Doanh thu" stroke="#10b981" strokeWidth={2} fill="url(#g-revenue)" />
             </AreaChart>
           </ResponsiveContainer>
         </CardContent>
@@ -263,15 +263,15 @@ export function AnalyticsView() {
         <Card className="lg:col-span-2">
           <CardHeader className="flex flex-row items-start justify-between space-y-0">
             <div>
-              <CardTitle className="text-base">Shipment Volume</CardTitle>
-              <CardDescription className="text-xs">Created vs delivered · last 14 days</CardDescription>
+              <CardTitle className="text-base">Khối lượng đơn hàng</CardTitle>
+              <CardDescription className="text-xs">Đã tạo so với đã giao · 14 ngày qua</CardDescription>
             </div>
             <div className="flex items-center gap-3 text-xs">
               <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-emerald-500" /> Created
+                <span className="h-2 w-2 rounded-full bg-emerald-500" /> Đã tạo
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-sky-500" /> Delivered
+                <span className="h-2 w-2 rounded-full bg-sky-500" /> Đã giao
               </span>
             </div>
           </CardHeader>
@@ -281,7 +281,7 @@ export function AnalyticsView() {
                 <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.9 0 0)" className="dark:opacity-30" vertical={false} />
                 <XAxis
                   dataKey="date"
-                  tickFormatter={(d) => new Date(d).toLocaleDateString("en-US", { day: "numeric", month: "short" })}
+                  tickFormatter={(d) => new Date(d).toLocaleDateString("vi-VN", { day: "numeric", month: "short" })}
                   tick={{ fontSize: 10, fill: "oklch(0.5 0 0)" }}
                   axisLine={false}
                   tickLine={false}
@@ -293,10 +293,10 @@ export function AnalyticsView() {
                     background: "oklch(1 0 0)",
                   }}
                   cursor={{ fill: "oklch(0.95 0 0)" }}
-                  labelFormatter={(d) => new Date(d as string).toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short" })}
+                  labelFormatter={(d) => new Date(d as string).toLocaleDateString("vi-VN", { weekday: "short", day: "numeric", month: "short" })}
                 />
-                <Bar dataKey="total" name="Created" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} barSize={14} />
-                <Bar dataKey="delivered" name="Delivered" stackId="a" fill="#0ea5e9" radius={[3, 3, 0, 0]} barSize={14} />
+                <Bar dataKey="total" name="Đã tạo" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} barSize={14} />
+                <Bar dataKey="delivered" name="Đã giao" stackId="a" fill="#0ea5e9" radius={[3, 3, 0, 0]} barSize={14} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -304,8 +304,8 @@ export function AnalyticsView() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Status Distribution</CardTitle>
-            <CardDescription className="text-xs">Current shipment statuses</CardDescription>
+            <CardTitle className="text-base">Phân bố trạng thái</CardTitle>
+            <CardDescription className="text-xs">Trạng thái đơn hàng hiện tại</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={200}>
@@ -344,8 +344,8 @@ export function AnalyticsView() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-base">Top Origin Cities</CardTitle>
-            <CardDescription className="text-xs">By shipment volume</CardDescription>
+            <CardTitle className="text-base">Thành phố xuất phát hàng đầu</CardTitle>
+            <CardDescription className="text-xs">Theo khối lượng đơn hàng</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
@@ -363,9 +363,9 @@ export function AnalyticsView() {
                 <Tooltip
                   contentStyle={{ borderRadius: 8, fontSize: 12, border: "1px solid oklch(0.9 0 0)" }}
                   cursor={{ fill: "oklch(0.95 0 0)" }}
-                  formatter={(v: number) => [`${v} shipments`, "Volume"]}
+                  formatter={(v: number) => [`${v} đơn hàng`, "Khối lượng"]}
                 />
-                <Bar dataKey="_count" name="Shipments" fill="#10b981" radius={[0, 4, 4, 0]} barSize={16} />
+                <Bar dataKey="_count" name="Đơn hàng" fill="#10b981" radius={[0, 4, 4, 0]} barSize={16} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -373,8 +373,8 @@ export function AnalyticsView() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Vehicle Type Breakdown</CardTitle>
-            <CardDescription className="text-xs">Fleet composition</CardDescription>
+            <CardTitle className="text-base">Cơ cấu loại phương tiện</CardTitle>
+            <CardDescription className="text-xs">Thành phần đội xe</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={180}>
@@ -414,9 +414,9 @@ export function AnalyticsView() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <Boxes className="h-4 w-4 text-violet-500" /> Vehicle Status
+              <Boxes className="h-4 w-4 text-violet-500" /> Trạng thái phương tiện
             </CardTitle>
-            <CardDescription className="text-xs">Fleet availability</CardDescription>
+            <CardDescription className="text-xs">Tình trạng đội xe</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={200}>
@@ -432,9 +432,9 @@ export function AnalyticsView() {
                 <Tooltip
                   contentStyle={{ borderRadius: 8, fontSize: 12, border: "1px solid oklch(0.9 0 0)" }}
                   cursor={{ fill: "oklch(0.95 0 0)" }}
-                  formatter={(v: number) => [`${v} vehicles`, "Count"]}
+                  formatter={(v: number) => [`${v} phương tiện`, "Số lượng"]}
                 />
-                <Bar dataKey="value" name="Vehicles" radius={[4, 4, 0, 0]} barSize={48}>
+                <Bar dataKey="value" name="Phương tiện" radius={[4, 4, 0, 0]} barSize={48}>
                   {vehicleStatusData.map((entry) => (
                     <Cell key={entry.key} fill={VEHICLE_STATUS_COLORS[entry.key] || "#94a3b8"} />
                   ))}
@@ -457,16 +457,16 @@ export function AnalyticsView() {
           <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <div>
               <CardTitle className="text-base flex items-center gap-2">
-                <Star className="h-4 w-4 text-amber-500" /> Top Performers
+                <Star className="h-4 w-4 text-amber-500" /> Người thực hiện xuất sắc
               </CardTitle>
-              <CardDescription className="text-xs">Drivers by total deliveries</CardDescription>
+              <CardDescription className="text-xs">Tài xế theo tổng số lần giao</CardDescription>
             </div>
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y">
               {topDrivers.length === 0 ? (
                 <div className="p-6 text-center text-xs text-muted-foreground">
-                  No driver data available
+                  Chưa có dữ liệu tài xế
                 </div>
               ) : (
                 topDrivers.map((d, i) => (
@@ -488,12 +488,12 @@ export function AnalyticsView() {
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">{d.name}</p>
                       <p className="truncate text-xs text-muted-foreground">
-                        {d.vehicle ? `${d.vehicle.plateNumber} · ${d.vehicle.model}` : "Unassigned"}
+                        {d.vehicle ? `${d.vehicle.plateNumber} · ${d.vehicle.model}` : "Chưa gán"}
                       </p>
                     </div>
                     <div className="hidden text-right sm:block">
                       <p className="text-xs font-semibold tabular-nums">{formatNumber(d.totalDeliveries)}</p>
-                      <p className="text-[10px] text-muted-foreground">deliveries</p>
+                      <p className="text-[10px] text-muted-foreground">lần giao</p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-semibold tabular-nums">★ {d.rating.toFixed(1)}</p>
@@ -510,10 +510,10 @@ export function AnalyticsView() {
       {/* Summary footer stats */}
       <Card>
         <CardContent className="grid grid-cols-2 gap-4 p-5 sm:grid-cols-4">
-          <SummaryStat icon={Package} label="Total Shipments" value={formatNumber(totalShipments)} />
-          <SummaryStat icon={Boxes} label="Fleet & Drivers" value={`${totals.vehicles}/${totals.drivers}`} sub="vehicles / drivers" />
-          <SummaryStat icon={Truck} label="In Transit" value={formatNumber(totals.inTransit)} sub="shipments moving" />
-          <SummaryStat icon={CheckCircle2} label="Delivered" value={formatNumber(totals.delivered)} sub={`${onTimeRate}% on-time`} />
+          <SummaryStat icon={Package} label="Tổng đơn hàng" value={formatNumber(totalShipments)} />
+          <SummaryStat icon={Boxes} label="Đội xe & Tài xế" value={`${totals.vehicles}/${totals.drivers}`} sub="phương tiện / tài xế" />
+          <SummaryStat icon={Truck} label="Đang vận chuyển" value={formatNumber(totals.inTransit)} sub="đơn hàng đang di chuyển" />
+          <SummaryStat icon={CheckCircle2} label="Đã giao" value={formatNumber(totals.delivered)} sub={`${onTimeRate}% đúng hạn`} />
         </CardContent>
       </Card>
     </div>

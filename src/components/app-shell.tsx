@@ -15,11 +15,11 @@ import {
 import { cn } from "@/lib/utils";
 
 const MOBILE_NAV: { key: ViewKey; label: string; icon: React.ElementType }[] = [
-  { key: "dashboard", label: "Home", icon: LayoutDashboard },
-  { key: "shipments", label: "Shipments", icon: Package },
-  { key: "tracking", label: "Tracking", icon: MapPin },
-  { key: "routes", label: "Routes", icon: RouteIcon },
-  { key: "analytics", label: "Stats", icon: BarChart3 },
+  { key: "dashboard", label: "Trang chủ", icon: LayoutDashboard },
+  { key: "shipments", label: "Đơn hàng", icon: Package },
+  { key: "tracking", label: "Theo dõi", icon: MapPin },
+  { key: "routes", label: "Tuyến", icon: RouteIcon },
+  { key: "analytics", label: "Thống kê", icon: BarChart3 },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -116,12 +116,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </div>
                 <span className="font-medium text-foreground">Logistics App V2</span>
                 <span className="text-muted-foreground/60">·</span>
-                <span>Smart Fleet & Shipment Operations</span>
+                <span>Quản lý đội xe & đơn hàng thông minh</span>
               </div>
               <div className="flex items-center gap-4">
                 <span>v2.1.0</span>
                 <span className="flex items-center gap-1">
-                  Built with <Heart className="h-3 w-3 fill-rose-500 text-rose-500" /> for modern logistics
+                  Xây dựng với <Heart className="h-3 w-3 fill-rose-500 text-rose-500" /> cho logistics hiện đại
                 </span>
               </div>
             </div>

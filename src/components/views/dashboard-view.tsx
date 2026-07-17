@@ -117,8 +117,8 @@ export function DashboardView() {
 
   const now = new Date();
   const hour = now.getHours();
-  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
-  const today = now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+  const greeting = hour < 12 ? "Chào buổi sáng" : hour < 18 ? "Chào buổi chiều" : "Chào buổi tối";
+  const today = now.toLocaleDateString("vi-VN", { weekday: "long", month: "long", day: "numeric" });
 
   return (
     <div className="space-y-5">
@@ -144,23 +144,23 @@ export function DashboardView() {
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
                   <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-white" />
                 </span>
-                Live · {totals.activeShipments} active
+                Trực tiếp · {totals.activeShipments} hoạt động
               </span>
               <span className="text-[11px] font-medium text-emerald-50/80">{today}</span>
             </div>
-            <h2 className="text-xl font-bold tracking-tight sm:text-2xl">{greeting}, Ops Team 👋</h2>
+            <h2 className="text-xl font-bold tracking-tight sm:text-2xl">{greeting}, Đội vận hành 👋</h2>
             <p className="mt-1 max-w-lg text-sm text-emerald-50/90">
-              You have <span className="font-semibold text-white">{totals.inTransit}</span> shipments in transit,{" "}
-              <span className="font-semibold text-white">{totals.delayed}</span> delayed, and{" "}
-              <span className="font-semibold text-white">{formatCurrency(revenue.total)}</span> delivered revenue.
+              Bạn có <span className="font-semibold text-white">{totals.inTransit}</span> đơn hàng đang vận chuyển,{" "}
+              <span className="font-semibold text-white">{totals.delayed}</span> trễ hạn, và{" "}
+              <span className="font-semibold text-white">{formatCurrency(revenue.total)}</span> doanh thu đã giao.
             </p>
           </div>
 
           {/* quick stats tiles */}
           <div className="grid grid-cols-3 gap-2 sm:gap-3">
-            <HeroStat label="Delivered" value={formatNumber(totals.delivered)} icon={CheckCircle2} />
-            <HeroStat label="In Transit" value={formatNumber(totals.inTransit)} icon={Truck} />
-            <HeroStat label="Delayed" value={formatNumber(totals.delayed)} icon={AlertTriangle} alert={totals.delayed > 0} />
+            <HeroStat label="Đã giao" value={formatNumber(totals.delivered)} icon={CheckCircle2} />
+            <HeroStat label="Đang vận chuyển" value={formatNumber(totals.inTransit)} icon={Truck} />
+            <HeroStat label="Trễ hạn" value={formatNumber(totals.delayed)} icon={AlertTriangle} alert={totals.delayed > 0} />
           </div>
         </div>
 
@@ -170,19 +170,19 @@ export function DashboardView() {
             onClick={() => { setView("shipments"); window.dispatchEvent(new CustomEvent("open-new-shipment")); }}
             className="inline-flex items-center gap-1.5 rounded-lg bg-white/15 px-3 py-1.5 text-xs font-medium backdrop-blur-sm transition-colors hover:bg-white/25"
           >
-            <Plus className="h-3.5 w-3.5" /> New Shipment
+            <Plus className="h-3.5 w-3.5" /> Tạo đơn hàng
           </button>
           <button
             onClick={() => setView("tracking")}
             className="inline-flex items-center gap-1.5 rounded-lg bg-white/15 px-3 py-1.5 text-xs font-medium backdrop-blur-sm transition-colors hover:bg-white/25"
           >
-            <MapPin className="h-3.5 w-3.5" /> Live Tracking
+            <MapPin className="h-3.5 w-3.5" /> Theo dõi trực tuyến
           </button>
           <button
             onClick={() => setView("analytics")}
             className="inline-flex items-center gap-1.5 rounded-lg bg-white/15 px-3 py-1.5 text-xs font-medium backdrop-blur-sm transition-colors hover:bg-white/25"
           >
-            <BarChart3 className="h-3.5 w-3.5" /> View Analytics
+            <BarChart3 className="h-3.5 w-3.5" /> Xem phân tích
           </button>
         </div>
       </div>
@@ -191,47 +191,47 @@ export function DashboardView() {
       {/* KPI cards */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         <KpiCard
-          title="Total Shipments"
+          title="Tổng đơn hàng"
           value={formatNumber(totals.shipments)}
           icon={Package}
           accent="emerald"
           trend={12.5}
-          trendLabel="vs last month"
-          footer={`${totals.activeShipments} active now`}
+          trendLabel="so với tháng trước"
+          footer={`${totals.activeShipments} đang hoạt động`}
         />
         <KpiCard
-          title="Active Deliveries"
+          title="Đang giao hàng"
           value={formatNumber(totals.inTransit)}
           icon={Truck}
           accent="amber"
           trend={8.2}
-          trendLabel="in transit"
-          footer={`${totals.delayed} delayed`}
+          trendLabel="đang vận chuyển"
+          footer={`${totals.delayed} trễ hạn`}
         />
         <KpiCard
-          title="Revenue (delivered)"
+          title="Doanh thu (đã giao)"
           value={formatCurrency(revenue.total)}
           icon={DollarSign}
           accent="teal"
           trend={15.3}
-          trendLabel="vs last month"
-          footer={`${formatCurrency(revenue.pending)} pending`}
+          trendLabel="so với tháng trước"
+          footer={`${formatCurrency(revenue.pending)} chờ xử lý`}
         />
         <KpiCard
-          title="On-time Rate"
+          title="Tỷ lệ đúng hạn"
           value={`${onTimeRate}%`}
           icon={CheckCircle2}
           accent="sky"
           trend={2.1}
-          trendLabel="service level"
-          footer={`${totals.delivered} delivered`}
+          trendLabel="mức dịch vụ"
+          footer={`${totals.delivered} đã giao`}
         />
         <KpiCard
-          title="Fleet & Drivers"
+          title="Đội xe & Tài xế"
           value={`${totals.vehicles}/${totals.drivers}`}
           icon={Boxes}
           accent="violet"
-          footer="vehicles / drivers"
+          footer="phương tiện / tài xế"
         />
       </div>
 
@@ -241,15 +241,15 @@ export function DashboardView() {
         <Card className="lg:col-span-2">
           <CardHeader className="flex flex-row items-start justify-between space-y-0">
             <div>
-              <CardTitle className="text-base">Shipment Volume</CardTitle>
-              <CardDescription className="text-xs">Daily shipments & deliveries · last 14 days</CardDescription>
+              <CardTitle className="text-base">Khối lượng đơn hàng</CardTitle>
+              <CardDescription className="text-xs">Đơn hàng và giao hàng theo ngày · 14 ngày qua</CardDescription>
             </div>
             <div className="flex items-center gap-3 text-xs">
               <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-emerald-500" /> Created
+                <span className="h-2 w-2 rounded-full bg-emerald-500" /> Đã tạo
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-sky-500" /> Delivered
+                <span className="h-2 w-2 rounded-full bg-sky-500" /> Đã giao
               </span>
             </div>
           </CardHeader>
@@ -269,7 +269,7 @@ export function DashboardView() {
                 <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.9 0 0)" className="dark:opacity-30" vertical={false} />
                 <XAxis
                   dataKey="date"
-                  tickFormatter={(d) => new Date(d).toLocaleDateString("en-US", { day: "numeric", month: "short" })}
+                  tickFormatter={(d) => new Date(d).toLocaleDateString("vi-VN", { day: "numeric", month: "short" })}
                   tick={{ fontSize: 10, fill: "oklch(0.5 0 0)" }}
                   axisLine={false}
                   tickLine={false}
@@ -280,10 +280,10 @@ export function DashboardView() {
                     borderRadius: 8, border: "1px solid oklch(0.9 0 0)", fontSize: 12,
                     background: "oklch(1 0 0)",
                   }}
-                  labelFormatter={(d) => new Date(d as string).toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short" })}
+                  labelFormatter={(d) => new Date(d as string).toLocaleDateString("vi-VN", { weekday: "short", day: "numeric", month: "short" })}
                 />
-                <Area type="monotone" dataKey="total" name="Created" stroke="#10b981" strokeWidth={2} fill="url(#g-created)" />
-                <Area type="monotone" dataKey="delivered" name="Delivered" stroke="#0ea5e9" strokeWidth={2} fill="url(#g-delivered)" />
+                <Area type="monotone" dataKey="total" name="Đã tạo" stroke="#10b981" strokeWidth={2} fill="url(#g-created)" />
+                <Area type="monotone" dataKey="delivered" name="Đã giao" stroke="#0ea5e9" strokeWidth={2} fill="url(#g-delivered)" />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
@@ -292,8 +292,8 @@ export function DashboardView() {
         {/* Status pie */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Status Distribution</CardTitle>
-            <CardDescription className="text-xs">Current shipment statuses</CardDescription>
+            <CardTitle className="text-base">Phân bố trạng thái</CardTitle>
+            <CardDescription className="text-xs">Trạng thái đơn hàng hiện tại</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={240}>
@@ -338,12 +338,12 @@ export function DashboardView() {
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
                 </span>
-                Live Fleet Tracking
+                Theo dõi đội xe trực tuyến
               </CardTitle>
-              <CardDescription className="text-xs">{liveShipments.length} shipments currently in motion</CardDescription>
+              <CardDescription className="text-xs">{liveShipments.length} đơn hàng đang di chuyển</CardDescription>
             </div>
             <Button variant="ghost" size="sm" className="gap-1 text-xs" onClick={() => setView("tracking")}>
-              View full map <ArrowRight className="h-3.5 w-3.5" />
+              Xem bản đồ đầy đủ <ArrowRight className="h-3.5 w-3.5" />
             </Button>
           </CardHeader>
           <CardContent>
@@ -357,24 +357,24 @@ export function DashboardView() {
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
                 <AlertTriangle className="h-4 w-4 text-orange-500" />
-                Needs Attention
+                Cần chú ý
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 pt-0">
               <div className="flex items-center justify-between rounded-lg bg-orange-50 dark:bg-orange-950/30 px-3 py-2">
-                <span className="text-sm">Delayed shipments</span>
+                <span className="text-sm">Đơn hàng trễ hạn</span>
                 <span className="text-lg font-bold text-orange-600 dark:text-orange-400">{totals.delayed}</span>
               </div>
               <div className="flex items-center justify-between rounded-lg bg-sky-50 dark:bg-sky-950/30 px-3 py-2">
-                <span className="text-sm">In transit</span>
+                <span className="text-sm">Đang vận chuyển</span>
                 <span className="text-lg font-bold text-sky-600 dark:text-sky-400">{statusCounts.in_transit || 0}</span>
               </div>
               <div className="flex items-center justify-between rounded-lg bg-violet-50 dark:bg-violet-950/30 px-3 py-2">
-                <span className="text-sm">Out for delivery</span>
+                <span className="text-sm">Đang giao hàng</span>
                 <span className="text-lg font-bold text-violet-600 dark:text-violet-400">{statusCounts.out_for_delivery || 0}</span>
               </div>
               <div className="flex items-center justify-between rounded-lg bg-rose-50 dark:bg-rose-950/30 px-3 py-2">
-                <span className="text-sm">Cancelled / Returned</span>
+                <span className="text-sm">Đã hủy / Trả hàng</span>
                 <span className="text-lg font-bold text-rose-600 dark:text-rose-400">{(statusCounts.cancelled || 0) + (statusCounts.returned || 0)}</span>
               </div>
             </CardContent>
@@ -382,7 +382,7 @@ export function DashboardView() {
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Top Origin Cities</CardTitle>
+              <CardTitle className="text-base">Thành phố xuất phát hàng đầu</CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
               <ResponsiveContainer width="100%" height={140}>
@@ -390,7 +390,7 @@ export function DashboardView() {
                   <XAxis type="number" hide />
                   <YAxis type="category" dataKey="originCity" tick={{ fontSize: 10, fill: "oklch(0.5 0 0)" }} axisLine={false} tickLine={false} width={70} />
                   <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12, border: "1px solid oklch(0.9 0 0)" }} cursor={{ fill: "oklch(0.95 0 0)" }} />
-                  <Bar dataKey="_count" name="Shipments" fill="#10b981" radius={[0, 4, 4, 0]} barSize={14} />
+                  <Bar dataKey="_count" name="Đơn hàng" fill="#10b981" radius={[0, 4, 4, 0]} barSize={14} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -403,11 +403,11 @@ export function DashboardView() {
         <Card className="lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <div>
-              <CardTitle className="text-base">Recent Shipments</CardTitle>
-              <CardDescription className="text-xs">Latest 8 shipments</CardDescription>
+              <CardTitle className="text-base">Đơn hàng gần đây</CardTitle>
+              <CardDescription className="text-xs">8 đơn hàng mới nhất</CardDescription>
             </div>
             <Button variant="ghost" size="sm" className="gap-1 text-xs" onClick={() => setView("shipments")}>
-              View all <ArrowRight className="h-3.5 w-3.5" />
+              Xem tất cả <ArrowRight className="h-3.5 w-3.5" />
             </Button>
           </CardHeader>
           <CardContent className="p-0">
@@ -443,11 +443,11 @@ export function DashboardView() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <div>
-              <CardTitle className="text-base">Top Drivers</CardTitle>
-              <CardDescription className="text-xs">By total deliveries</CardDescription>
+              <CardTitle className="text-base">Tài xế hàng đầu</CardTitle>
+              <CardDescription className="text-xs">Theo tổng số giao hàng</CardDescription>
             </div>
             <Button variant="ghost" size="sm" className="gap-1 text-xs" onClick={() => setView("drivers")}>
-              All <ArrowRight className="h-3.5 w-3.5" />
+              Tất cả <ArrowRight className="h-3.5 w-3.5" />
             </Button>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -462,7 +462,7 @@ export function DashboardView() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{d.name}</p>
                   <p className="truncate text-xs text-muted-foreground">
-                    {d.vehicle ? `${d.vehicle.plateNumber} · ` : ""}{formatNumber(d.totalDeliveries)} deliveries
+                    {d.vehicle ? `${d.vehicle.plateNumber} · ` : ""}{formatNumber(d.totalDeliveries)} lần giao
                   </p>
                 </div>
                 <div className="text-right">

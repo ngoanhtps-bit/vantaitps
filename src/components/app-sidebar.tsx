@@ -24,17 +24,17 @@ const NAV: {
   icon: React.ElementType;
   hint?: string;
 }[] = [
-  { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { key: "shipments", label: "Shipments", icon: Package },
-  { key: "tracking", label: "Live Tracking", icon: MapPin, hint: "Live" },
-  { key: "drivers", label: "Drivers", icon: Truck },
-  { key: "vehicles", label: "Fleet", icon: CarFront },
-  { key: "customers", label: "Customers", icon: Users },
-  { key: "warehouses", label: "Warehouses", icon: Warehouse },
-  { key: "routes", label: "Route Planning", icon: RouteIcon },
-  { key: "invoices", label: "Invoices", icon: Receipt },
-  { key: "reports", label: "Reports", icon: FileBarChart },
-  { key: "analytics", label: "Analytics", icon: BarChart3 },
+  { key: "dashboard", label: "Tổng quan", icon: LayoutDashboard },
+  { key: "shipments", label: "Đơn hàng", icon: Package },
+  { key: "tracking", label: "Theo dõi trực tuyến", icon: MapPin, hint: "Trực tiếp" },
+  { key: "drivers", label: "Tài xế", icon: Truck },
+  { key: "vehicles", label: "Đội xe", icon: CarFront },
+  { key: "customers", label: "Khách hàng", icon: Users },
+  { key: "warehouses", label: "Kho hàng", icon: Warehouse },
+  { key: "routes", label: "Lập kế hoạch tuyến", icon: RouteIcon },
+  { key: "invoices", label: "Hóa đơn", icon: Receipt },
+  { key: "reports", label: "Báo cáo", icon: FileBarChart },
+  { key: "analytics", label: "Phân tích", icon: BarChart3 },
 ];
 
 export function AppSidebar() {
@@ -50,7 +50,7 @@ export function AppSidebar() {
         <div className="flex flex-col leading-tight">
           <span className="text-sm font-bold tracking-tight">Logistics V2</span>
           <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
-            Ops Console
+            Bảng điều khiển
           </span>
         </div>
       </div>
@@ -58,7 +58,7 @@ export function AppSidebar() {
       {/* Nav */}
       <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4 custom-scroll">
         <div className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Operations
+          Vận hành
         </div>
         {NAV.map((item) => {
           const active = view === item.key;
@@ -108,8 +108,8 @@ export function AppSidebar() {
               <Truck className="h-4 w-4" />
             </div>
             <div className="flex flex-col leading-tight">
-              <span className="text-xs font-semibold">Fleet Online</span>
-              <span className="text-[10px] text-muted-foreground">Real-time sync active</span>
+              <span className="text-xs font-semibold">Đội xe trực tuyến</span>
+              <span className="text-[10px] text-muted-foreground">Đồng bộ thời gian thực</span>
             </div>
           </div>
         </div>

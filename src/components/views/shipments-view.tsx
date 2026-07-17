@@ -165,13 +165,13 @@ export function ShipmentsView() {
       await Promise.all(ids.map((id) => api.patch(`/api/shipments/${id}`, { status: newStatus })));
     },
     onSuccess: () => {
-      toast.success(`${selectedIds.size} shipment${selectedIds.size > 1 ? "s" : ""} updated`);
+      toast.success(`Đã cập nhật ${selectedIds.size} đơn hàng`);
       setSelectedIds(new Set());
       qc.invalidateQueries({ queryKey: ["shipments"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       qc.invalidateQueries({ queryKey: ["notifications"] });
     },
-    onError: (e: Error) => toast.error("Bulk update failed", { description: e.message }),
+    onError: (e: Error) => toast.error("Cập nhật hàng loạt thất bại", { description: e.message }),
   });
 
   const toggleSelect = (id: string) => {
@@ -205,7 +205,7 @@ export function ShipmentsView() {
     if (!data) return;
     const toExport = data.items.filter((s) => selectedIds.has(s.id));
     const rows = [
-      ["Tracking #", "Status", "Priority", "Service", "Origin", "Destination", "Sender", "Receiver", "Weight (kg)", "Pieces", "Cost", "Created"],
+      ["Mã vận đơn", "Trạng thái", "Ưu tiên", "Dịch vụ", "Điểm đi", "Điểm đến", "Người gửi", "Người nhận", "Trọng lượng (kg)", "Số kiện", "Chi phí", "Ngày tạo"],
       ...toExport.map((s) => [
         s.trackingNumber, s.status, s.priority, s.serviceType,
         s.originCity, s.destinationCity, s.sender.name, s.receiver.name,
@@ -220,7 +220,7 @@ export function ShipmentsView() {
     a.download = `shipments-export-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(`Exported ${toExport.length} shipment${toExport.length > 1 ? "s" : ""} to CSV`);
+    toast.success(`Đã xuất ${toExport.length} đơn hàng sang CSV`);
   };
 
   return (
@@ -232,7 +232,7 @@ export function ShipmentsView() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search tracking #, sender, route…"
+                placeholder="Tìm mã vận đơn, người gửi, tuyến đường…"
                 value={search}
                 onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                 className="pl-9"
@@ -240,36 +240,36 @@ export function ShipmentsView() {
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <Select value={status} onValueChange={(v) => { setStatus(v); setPage(1); }}>
-                <SelectTrigger className="w-[150px]"><SelectValue placeholder="Status" /></SelectTrigger>
+                <SelectTrigger className="w-[150px]"><SelectValue placeholder="Trạng thái" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All statuses</SelectItem>
+                  <SelectItem value="all">Tất cả trạng thái</SelectItem>
                   {SHIPMENT_STATUSES.map((s) => (
                     <SelectItem key={s} value={s}>{SHIPMENT_STATUS_META[s].label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <Select value={priority} onValueChange={(v) => { setPriority(v); setPage(1); }}>
-                <SelectTrigger className="w-[130px]"><SelectValue placeholder="Priority" /></SelectTrigger>
+                <SelectTrigger className="w-[130px]"><SelectValue placeholder="Ưu tiên" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All priority</SelectItem>
+                  <SelectItem value="all">Tất cả mức ưu tiên</SelectItem>
                   {PRIORITIES.map((p) => (
                     <SelectItem key={p} value={p}>{PRIORITY_META[p].label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <Select value={service} onValueChange={(v) => { setService(v); setPage(1); }}>
-                <SelectTrigger className="w-[140px]"><SelectValue placeholder="Service" /></SelectTrigger>
+                <SelectTrigger className="w-[140px]"><SelectValue placeholder="Dịch vụ" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All services</SelectItem>
+                  <SelectItem value="all">Tất cả dịch vụ</SelectItem>
                   {SERVICE_TYPES.map((s) => (
                     <SelectItem key={s} value={s}>{SERVICE_META[s].label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <Select value={city} onValueChange={(v) => { setCity(v); setPage(1); }}>
-                <SelectTrigger className="w-[150px]"><SelectValue placeholder="City" /></SelectTrigger>
+                <SelectTrigger className="w-[150px]"><SelectValue placeholder="Thành phố" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All cities</SelectItem>
+                  <SelectItem value="all">Tất cả thành phố</SelectItem>
                   {VIETNAM_CITIES.map((c) => (
                     <SelectItem key={c} value={c}>{c}</SelectItem>
                   ))}
@@ -277,11 +277,11 @@ export function ShipmentsView() {
               </Select>
               {hasFilters && (
                 <Button variant="ghost" size="sm" onClick={resetFilters} className="gap-1 text-xs">
-                  <X className="h-3.5 w-3.5" /> Clear
+                  <X className="h-3.5 w-3.5" /> Xóa
                 </Button>
               )}
               <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
-                <Plus className="h-4 w-4" /> New
+                <Plus className="h-4 w-4" /> Tạo mới
               </Button>
             </div>
           </div>
@@ -293,12 +293,12 @@ export function ShipmentsView() {
         <div className="sticky top-16 z-20 flex flex-wrap items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50/95 px-4 py-2.5 shadow-sm backdrop-blur dark:border-emerald-900 dark:bg-emerald-950/80">
           <span className="flex items-center gap-2 text-sm font-medium text-emerald-700 dark:text-emerald-300">
             <Checkbox checked={true} onCheckedChange={() => setSelectedIds(new Set())} className="border-emerald-400" />
-            {selectedIds.size} selected
+            {selectedIds.size} đã chọn
           </span>
           <div className="ml-auto flex flex-wrap items-center gap-1.5">
             <Select value="" onValueChange={(v) => { if (v) bulkUpdate.mutate(v); }}>
               <SelectTrigger className="h-8 w-[160px] text-xs">
-                <SelectValue placeholder="Update status…" />
+                <SelectValue placeholder="Cập nhật trạng thái…" />
               </SelectTrigger>
               <SelectContent>
                 {SHIPMENT_STATUSES.map((s) => (
@@ -307,10 +307,10 @@ export function ShipmentsView() {
               </SelectContent>
             </Select>
             <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={exportSelected}>
-              <Download className="h-3.5 w-3.5" /> Export CSV
+              <Download className="h-3.5 w-3.5" /> Xuất CSV
             </Button>
             <Button size="sm" variant="ghost" className="h-8 gap-1.5 text-xs" onClick={() => setSelectedIds(new Set())}>
-              <X className="h-3.5 w-3.5" /> Clear
+              <X className="h-3.5 w-3.5" /> Xóa
             </Button>
           </div>
         </div>
@@ -329,10 +329,10 @@ export function ShipmentsView() {
                 <Package className="h-6 w-6" />
               </div>
               <div>
-                <p className="text-sm font-medium">No shipments found</p>
-                <p className="text-xs text-muted-foreground">Try adjusting filters or create a new shipment.</p>
+                <p className="text-sm font-medium">Không tìm thấy đơn hàng</p>
+                <p className="text-xs text-muted-foreground">Thử điều chỉnh bộ lọc hoặc tạo đơn hàng mới.</p>
               </div>
-              <Button size="sm" variant="outline" onClick={resetFilters}>Reset filters</Button>
+              <Button size="sm" variant="outline" onClick={resetFilters}>Đặt lại bộ lọc</Button>
             </div>
           ) : (
             <>
@@ -342,18 +342,18 @@ export function ShipmentsView() {
                     <TableRow className="bg-muted/40 hover:bg-muted/40">
                       <TableHead className="w-[40px]">
                         <Checkbox
-                          aria-label="Select all"
+                          aria-label="Chọn tất cả"
                           checked={data.items.length > 0 && data.items.every((s) => selectedIds.has(s.id))}
                           onCheckedChange={toggleSelectAll}
                         />
                       </TableHead>
-                      <TableHead className="min-w-[140px]">Tracking #</TableHead>
-                      <TableHead className="min-w-[200px]">Route</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="hidden md:table-cell">Priority</TableHead>
-                      <TableHead className="hidden lg:table-cell">Driver</TableHead>
-                      <TableHead className="text-right">Cost</TableHead>
-                      <TableHead className="hidden sm:table-cell">Created</TableHead>
+                      <TableHead className="min-w-[140px]">Mã vận đơn</TableHead>
+                      <TableHead className="min-w-[200px]">Tuyến đường</TableHead>
+                      <TableHead>Trạng thái</TableHead>
+                      <TableHead className="hidden md:table-cell">Ưu tiên</TableHead>
+                      <TableHead className="hidden lg:table-cell">Tài xế</TableHead>
+                      <TableHead className="text-right">Chi phí</TableHead>
+                      <TableHead className="hidden sm:table-cell">Ngày tạo</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -368,7 +368,7 @@ export function ShipmentsView() {
                         >
                           <TableCell onClick={(e) => e.stopPropagation()}>
                             <Checkbox
-                              aria-label={`Select ${s.trackingNumber}`}
+                              aria-label={`Chọn ${s.trackingNumber}`}
                               checked={isSelected}
                               onCheckedChange={() => toggleSelect(s.id)}
                             />
@@ -405,7 +405,7 @@ export function ShipmentsView() {
                                 <span className="text-xs">{s.driver.name}</span>
                               </div>
                             ) : (
-                              <span className="text-xs text-muted-foreground">Unassigned</span>
+                              <span className="text-xs text-muted-foreground">Chưa gán</span>
                             )}
                           </TableCell>
                           <TableCell className="text-right font-semibold tabular-nums">{formatCurrency(s.cost)}</TableCell>
@@ -420,17 +420,17 @@ export function ShipmentsView() {
               {/* Pagination */}
               <div className="flex items-center justify-between gap-3 border-t px-4 py-3">
                 <p className="text-xs text-muted-foreground">
-                  Showing <span className="font-medium text-foreground">{(page - 1) * pageSize + 1}</span>–
-                  <span className="font-medium text-foreground">{Math.min(page * pageSize, data.total)}</span> of{" "}
+                  Hiển thị <span className="font-medium text-foreground">{(page - 1) * pageSize + 1}</span>–
+                  <span className="font-medium text-foreground">{Math.min(page * pageSize, data.total)}</span> trong tổng số{" "}
                   <span className="font-medium text-foreground">{data.total}</span>
                 </p>
                 <div className="flex items-center gap-1">
                   <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))} className="gap-1">
-                    <ChevronLeft className="h-3.5 w-3.5" /> Prev
+                    <ChevronLeft className="h-3.5 w-3.5" /> Trước
                   </Button>
                   <span className="px-2 text-xs text-muted-foreground">{page} / {data.totalPages || 1}</span>
                   <Button variant="outline" size="sm" disabled={page >= data.totalPages} onClick={() => setPage((p) => p + 1)} className="gap-1">
-                    Next <ChevronRight className="h-3.5 w-3.5" />
+                    Sau <ChevronRight className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </div>
@@ -444,7 +444,7 @@ export function ShipmentsView() {
         setSelectedShipmentId(s.id);
         qc.invalidateQueries({ queryKey: ["shipments"] });
         qc.invalidateQueries({ queryKey: ["dashboard"] });
-        toast.success("Shipment created", { description: s.trackingNumber });
+        toast.success("Đã tạo đơn hàng", { description: s.trackingNumber });
       }} />
 
       {/* Detail drawer */}
@@ -501,7 +501,7 @@ function CreateShipmentDialog({
       onOpenChange(false);
       setForm({ senderId: "", receiverId: "", originAddress: "", originCity: "", destinationAddress: "", destinationCity: "", weightKg: "", pieces: "1", description: "", priority: "standard", serviceType: "standard", driverId: "", vehicleId: "", notes: "" });
     },
-    onError: (e: Error) => toast.error("Failed to create shipment", { description: e.message }),
+    onError: (e: Error) => toast.error("Tạo đơn hàng thất bại", { description: e.message }),
   });
 
   const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
@@ -510,13 +510,13 @@ function CreateShipmentDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto custom-scroll">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2"><Plus className="h-5 w-5 text-emerald-500" /> Create New Shipment</DialogTitle>
-          <DialogDescription>Fill in the shipment details. Tracking number is auto-generated.</DialogDescription>
+          <DialogTitle className="flex items-center gap-2"><Plus className="h-5 w-5 text-emerald-500" /> Tạo đơn hàng mới</DialogTitle>
+          <DialogDescription>Điền thông tin đơn hàng. Mã vận đơn được tạo tự động.</DialogDescription>
         </DialogHeader>
 
         <div className="grid grid-cols-1 gap-4 py-2 sm:grid-cols-2">
           <div className="space-y-1.5 sm:col-span-2">
-            <Label>Service Type</Label>
+            <Label>Loại dịch vụ</Label>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
               {SERVICE_TYPES.map((s) => {
                 const Icon = SERVICE_ICON[s] || Package;
@@ -540,18 +540,18 @@ function CreateShipmentDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Sender *</Label>
+            <Label>Người gửi *</Label>
             <Select value={form.senderId} onValueChange={(v) => set("senderId", v)}>
-              <SelectTrigger><SelectValue placeholder="Select sender" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Chọn người gửi" /></SelectTrigger>
               <SelectContent>
                 {customers?.items.map((c) => <SelectItem key={c.id} value={c.id}>{c.name} · {c.city}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>Receiver *</Label>
+            <Label>Người nhận *</Label>
             <Select value={form.receiverId} onValueChange={(v) => set("receiverId", v)}>
-              <SelectTrigger><SelectValue placeholder="Select receiver" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Chọn người nhận" /></SelectTrigger>
               <SelectContent>
                 {customers?.items.map((c) => <SelectItem key={c.id} value={c.id}>{c.name} · {c.city}</SelectItem>)}
               </SelectContent>
@@ -559,13 +559,13 @@ function CreateShipmentDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Origin Address *</Label>
-            <Input value={form.originAddress} onChange={(e) => set("originAddress", e.target.value)} placeholder="Street address" />
+            <Label>Địa chỉ đi *</Label>
+            <Input value={form.originAddress} onChange={(e) => set("originAddress", e.target.value)} placeholder="Địa chỉ đường phố" />
           </div>
           <div className="space-y-1.5">
-            <Label>Origin City *</Label>
+            <Label>Thành phố đi *</Label>
             <Select value={form.originCity} onValueChange={(v) => set("originCity", v)}>
-              <SelectTrigger><SelectValue placeholder="Select city" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Chọn thành phố" /></SelectTrigger>
               <SelectContent>
                 {VIETNAM_CITIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
               </SelectContent>
@@ -573,13 +573,13 @@ function CreateShipmentDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Destination Address *</Label>
-            <Input value={form.destinationAddress} onChange={(e) => set("destinationAddress", e.target.value)} placeholder="Street address" />
+            <Label>Địa chỉ đến *</Label>
+            <Input value={form.destinationAddress} onChange={(e) => set("destinationAddress", e.target.value)} placeholder="Địa chỉ đường phố" />
           </div>
           <div className="space-y-1.5">
-            <Label>Destination City *</Label>
+            <Label>Thành phố đến *</Label>
             <Select value={form.destinationCity} onValueChange={(v) => set("destinationCity", v)}>
-              <SelectTrigger><SelectValue placeholder="Select city" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Chọn thành phố" /></SelectTrigger>
               <SelectContent>
                 {VIETNAM_CITIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
               </SelectContent>
@@ -587,16 +587,16 @@ function CreateShipmentDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Weight (kg)</Label>
+            <Label>Trọng lượng (kg)</Label>
             <Input type="number" value={form.weightKg} onChange={(e) => set("weightKg", e.target.value)} placeholder="0.0" />
           </div>
           <div className="space-y-1.5">
-            <Label>Pieces</Label>
+            <Label>Số kiện</Label>
             <Input type="number" value={form.pieces} onChange={(e) => set("pieces", e.target.value)} placeholder="1" />
           </div>
 
           <div className="space-y-1.5">
-            <Label>Priority</Label>
+            <Label>Ưu tiên</Label>
             <Select value={form.priority} onValueChange={(v) => set("priority", v)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -605,45 +605,45 @@ function CreateShipmentDialog({
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>Description</Label>
-            <Input value={form.description} onChange={(e) => set("description", e.target.value)} placeholder="e.g. Electronics" />
+            <Label>Mô tả</Label>
+            <Input value={form.description} onChange={(e) => set("description", e.target.value)} placeholder="vd. Điện tử" />
           </div>
 
           <div className="space-y-1.5">
-            <Label>Assign Driver</Label>
+            <Label>Gán tài xế</Label>
             <Select value={form.driverId || "none"} onValueChange={(v) => set("driverId", v === "none" ? "" : v)}>
-              <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Chưa gán" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Unassigned</SelectItem>
+                <SelectItem value="none">Chưa gán</SelectItem>
                 {drivers?.items.map((d) => <SelectItem key={d.id} value={d.id}>{d.name} · {d.status}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>Assign Vehicle</Label>
+            <Label>Gán phương tiện</Label>
             <Select value={form.vehicleId || "none"} onValueChange={(v) => set("vehicleId", v === "none" ? "" : v)}>
-              <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Chưa gán" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Unassigned</SelectItem>
+                <SelectItem value="none">Chưa gán</SelectItem>
                 {vehicles?.items.map((v) => <SelectItem key={v.id} value={v.id}>{v.plateNumber} · {v.model}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-1.5 sm:col-span-2">
-            <Label>Notes</Label>
-            <Textarea value={form.notes} onChange={(e) => set("notes", e.target.value)} placeholder="Optional handling notes…" rows={2} />
+            <Label>Ghi chú</Label>
+            <Textarea value={form.notes} onChange={(e) => set("notes", e.target.value)} placeholder="Ghi chú xử lý tùy chọn…" rows={2} />
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Hủy</Button>
           <Button
             disabled={create.isPending || !form.senderId || !form.receiverId || !form.originAddress || !form.destinationAddress}
             onClick={() => create.mutate()}
             className="gap-1.5"
           >
-            {create.isPending ? "Creating…" : (<><Plus className="h-4 w-4" /> Create Shipment</>)}
+            {create.isPending ? "Đang tạo…" : (<><Plus className="h-4 w-4" /> Tạo đơn hàng</>)}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -673,9 +673,9 @@ function ShipmentDetailDrawer({
       qc.invalidateQueries({ queryKey: ["shipments"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       qc.invalidateQueries({ queryKey: ["notifications"] });
-      toast.success("Shipment updated");
+      toast.success("Đã cập nhật đơn hàng");
     },
-    onError: (e: Error) => toast.error("Update failed", { description: e.message }),
+    onError: (e: Error) => toast.error("Cập nhật thất bại", { description: e.message }),
   });
 
   const remove = useMutation({
@@ -684,10 +684,10 @@ function ShipmentDetailDrawer({
       qc.invalidateQueries({ queryKey: ["shipments"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       qc.invalidateQueries({ queryKey: ["notifications"] });
-      toast.success("Shipment deleted");
+      toast.success("Đã xóa đơn hàng");
       onOpenChange(false);
     },
-    onError: (e: Error) => toast.error("Delete failed", { description: e.message }),
+    onError: (e: Error) => toast.error("Xóa thất bại", { description: e.message }),
   });
 
   const [editOpen, setEditOpen] = React.useState(false);
@@ -698,7 +698,7 @@ function ShipmentDetailDrawer({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-xl overflow-y-auto custom-scroll p-0">
         <SheetHeader className="border-b px-5 py-4">
-          <SheetDescription className="sr-only">Shipment details</SheetDescription>
+          <SheetDescription className="sr-only">Chi tiết đơn hàng</SheetDescription>
           <SheetTitle className="flex items-center justify-between gap-2 text-base">
             <span className="flex items-center gap-2 min-w-0">
               {shipment ? (
@@ -707,18 +707,18 @@ function ShipmentDetailDrawer({
                   <span className="font-mono truncate">{shipment.trackingNumber}</span>
                   <StatusBadge status={shipment.status} kind="shipment" />
                 </>
-              ) : "Loading…"}
+              ) : "Đang tải…"}
             </span>
             {shipment && (
               <span className="flex shrink-0 items-center gap-1">
                 <Button size="sm" variant="ghost" className="h-8 gap-1.5 px-2 text-xs" onClick={() => setPrintOpen(true)}>
-                  <Printer className="h-3.5 w-3.5" /> Label
+                  <Printer className="h-3.5 w-3.5" /> Nhãn
                 </Button>
                 <Button size="sm" variant="ghost" className="h-8 gap-1.5 px-2 text-xs" onClick={() => setEditOpen(true)}>
-                  <Pencil className="h-3.5 w-3.5" /> Edit
+                  <Pencil className="h-3.5 w-3.5" /> Sửa
                 </Button>
                 <Button size="sm" variant="ghost" className="h-8 gap-1.5 px-2 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40" onClick={() => setDeleteOpen(true)}>
-                  <Trash2 className="h-3.5 w-3.5" /> Delete
+                  <Trash2 className="h-3.5 w-3.5" /> Xóa
                 </Button>
               </span>
             )}
@@ -736,7 +736,7 @@ function ShipmentDetailDrawer({
             <div className="rounded-xl border bg-muted/30 p-4">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex-1">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">From</p>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Từ</p>
                   <p className="font-semibold">{shipment.originCity}</p>
                   <p className="text-xs text-muted-foreground">{shipment.originAddress}</p>
                 </div>
@@ -747,7 +747,7 @@ function ShipmentDetailDrawer({
                   </span>
                 </div>
                 <div className="flex-1 text-right">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">To</p>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Đến</p>
                   <p className="font-semibold">{shipment.destinationCity}</p>
                   <p className="text-xs text-muted-foreground">{shipment.destinationAddress}</p>
                 </div>
@@ -755,7 +755,7 @@ function ShipmentDetailDrawer({
               {shipment.status !== "pending" && shipment.status !== "cancelled" && (
                 <div className="mt-3">
                   <div className="mb-1 flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Progress</span>
+                    <span className="text-muted-foreground">Tiến độ</span>
                     <span className="font-semibold tabular-nums">{shipment.progress}%</span>
                   </div>
                   <Progress value={shipment.progress} className="h-2" />
@@ -768,32 +768,32 @@ function ShipmentDetailDrawer({
               {shipment.status !== "delivered" && shipment.status !== "cancelled" && (
                 <>
                   <Button size="sm" variant="outline" disabled={update.isPending} onClick={() => update.mutate({ status: "picked_up" })} className="gap-1.5">
-                    <PackageCheck className="h-3.5 w-3.5" /> Pick Up
+                    <PackageCheck className="h-3.5 w-3.5" /> Lấy hàng
                   </Button>
                   <Button size="sm" variant="outline" disabled={update.isPending} onClick={() => update.mutate({ status: "in_transit" })} className="gap-1.5">
-                    <Truck className="h-3.5 w-3.5" /> In Transit
+                    <Truck className="h-3.5 w-3.5" /> Đang vận chuyển
                   </Button>
                   <Button size="sm" variant="outline" disabled={update.isPending} onClick={() => update.mutate({ status: "out_for_delivery" })} className="gap-1.5">
-                    <MapPin className="h-3.5 w-3.5" /> Out for Delivery
+                    <MapPin className="h-3.5 w-3.5" /> Đang giao hàng
                   </Button>
                   <Button size="sm" disabled={update.isPending} onClick={() => update.mutate({ status: "delivered", progress: 100 })} className="gap-1.5 bg-emerald-600 hover:bg-emerald-700">
-                    <CheckCircle2 className="h-3.5 w-3.5" /> Mark Delivered
+                    <CheckCircle2 className="h-3.5 w-3.5" /> Đánh dấu đã giao
                   </Button>
                 </>
               )}
               {shipment.status !== "delayed" && shipment.status !== "cancelled" && shipment.status !== "delivered" && (
                 <Button size="sm" variant="outline" disabled={update.isPending} onClick={() => update.mutate({ status: "delayed" })} className="gap-1.5 text-orange-600">
-                  <AlertTriangle className="h-3.5 w-3.5" /> Delay
+                  <AlertTriangle className="h-3.5 w-3.5" /> Báo trễ
                 </Button>
               )}
               {shipment.status !== "cancelled" && shipment.status !== "delivered" && (
                 <Button size="sm" variant="outline" disabled={update.isPending} onClick={() => update.mutate({ status: "cancelled" })} className="gap-1.5 text-rose-600">
-                  <XCircle className="h-3.5 w-3.5" /> Cancel
+                  <XCircle className="h-3.5 w-3.5" /> Hủy
                 </Button>
               )}
               {shipment.status === "delivered" && (
                 <Button size="sm" variant="outline" disabled={update.isPending} onClick={() => update.mutate({ status: "returned" })} className="gap-1.5">
-                  <RotateCcw className="h-3.5 w-3.5" /> Mark Returned
+                  <RotateCcw className="h-3.5 w-3.5" /> Đánh dấu trả hàng
                 </Button>
               )}
             </div>
@@ -801,12 +801,12 @@ function ShipmentDetailDrawer({
             {/* Parties */}
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-lg border p-3">
-                <p className="mb-1 flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground"><User className="h-3 w-3" /> Sender</p>
+                <p className="mb-1 flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground"><User className="h-3 w-3" /> Người gửi</p>
                 <p className="text-sm font-medium">{shipment.sender.name}</p>
                 <p className="text-xs text-muted-foreground">{shipment.sender.city}</p>
               </div>
               <div className="rounded-lg border p-3">
-                <p className="mb-1 flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground"><User className="h-3 w-3" /> Receiver</p>
+                <p className="mb-1 flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground"><User className="h-3 w-3" /> Người nhận</p>
                 <p className="text-sm font-medium">{shipment.receiver.name}</p>
                 <p className="text-xs text-muted-foreground">{shipment.receiver.city}</p>
               </div>
@@ -814,16 +814,16 @@ function ShipmentDetailDrawer({
 
             {/* Cargo & cost grid */}
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <Stat label="Weight" value={formatWeight(shipment.weightKg)} icon={Weight} />
-              <Stat label="Pieces" value={String(shipment.pieces)} icon={Box} />
-              <Stat label="Cost" value={formatCurrency(shipment.cost)} icon={DollarSign} />
-              <Stat label="Insurance" value={formatCurrency(shipment.insurance)} icon={DollarSign} />
+              <Stat label="Trọng lượng" value={formatWeight(shipment.weightKg)} icon={Weight} />
+              <Stat label="Số kiện" value={String(shipment.pieces)} icon={Box} />
+              <Stat label="Chi phí" value={formatCurrency(shipment.cost)} icon={DollarSign} />
+              <Stat label="Bảo hiểm" value={formatCurrency(shipment.insurance)} icon={DollarSign} />
             </div>
 
             {/* Driver / Vehicle */}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="rounded-lg border p-3">
-                <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">Assigned Driver</p>
+                <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">Tài xế được gán</p>
                 {shipment.driver ? (
                   <div className="flex items-center gap-2">
                     <Avatar className="h-8 w-8">
@@ -834,10 +834,10 @@ function ShipmentDetailDrawer({
                       <p className="text-xs text-muted-foreground capitalize">{shipment.driver.status.replace("_", " ")}</p>
                     </div>
                   </div>
-                ) : <p className="text-xs text-muted-foreground">Unassigned</p>}
+                ) : <p className="text-xs text-muted-foreground">Chưa gán</p>}
               </div>
               <div className="rounded-lg border p-3">
-                <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">Vehicle</p>
+                <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">Phương tiện</p>
                 {shipment.vehicle ? (
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400">
@@ -848,14 +848,14 @@ function ShipmentDetailDrawer({
                       <p className="text-xs text-muted-foreground">{shipment.vehicle.model}</p>
                     </div>
                   </div>
-                ) : <p className="text-xs text-muted-foreground">Unassigned</p>}
+                ) : <p className="text-xs text-muted-foreground">Chưa gán</p>}
               </div>
             </div>
 
             {/* Tracking timeline */}
             <div>
               <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold">
-                <Clock className="h-4 w-4 text-muted-foreground" /> Tracking History
+                <Clock className="h-4 w-4 text-muted-foreground" /> Lịch sử theo dõi
               </h4>
               <div className="relative space-y-3 border-l-2 border-muted pl-4">
                 {shipment.trackingEvents.map((ev, i) => {
@@ -877,7 +877,7 @@ function ShipmentDetailDrawer({
 
             {shipment.notes && (
               <div className="rounded-lg border bg-amber-50 dark:bg-amber-950/20 p-3">
-                <p className="mb-1 text-[10px] uppercase tracking-wider text-amber-700 dark:text-amber-400">Notes</p>
+                <p className="mb-1 text-[10px] uppercase tracking-wider text-amber-700 dark:text-amber-400">Ghi chú</p>
                 <p className="text-xs">{shipment.notes}</p>
               </div>
             )}
@@ -926,14 +926,14 @@ function ShipmentDetailDrawer({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              <Trash2 className="h-5 w-5 text-rose-500" /> Delete shipment?
+              <Trash2 className="h-5 w-5 text-rose-500" /> Xóa đơn hàng?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete shipment <span className="font-mono font-semibold text-foreground">{shipment?.trackingNumber}</span> and all its tracking events. This action cannot be undone.
+              Điều này sẽ xóa vĩnh viễn đơn hàng <span className="font-mono font-semibold text-foreground">{shipment?.trackingNumber}</span> và tất cả sự kiện theo dõi. Hành động này không thể hoàn tác.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
             <AlertDialogAction
               className="bg-rose-600 hover:bg-rose-700 focus:ring-rose-600"
               disabled={remove.isPending}
@@ -942,7 +942,7 @@ function ShipmentDetailDrawer({
                 remove.mutate();
               }}
             >
-              {remove.isPending ? "Deleting…" : "Delete shipment"}
+              {remove.isPending ? "Đang xóa…" : "Xóa đơn hàng"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1010,11 +1010,11 @@ function EditShipmentDialog({
         notes: form.notes || null,
       }),
     onSuccess: () => {
-      toast.success("Shipment updated");
+      toast.success("Đã cập nhật đơn hàng");
       onSaved();
       onOpenChange(false);
     },
-    onError: (e: Error) => toast.error("Update failed", { description: e.message }),
+    onError: (e: Error) => toast.error("Cập nhật thất bại", { description: e.message }),
   });
 
   const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
@@ -1023,13 +1023,13 @@ function EditShipmentDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto custom-scroll">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2"><Pencil className="h-5 w-5 text-emerald-500" /> Edit Shipment</DialogTitle>
-          <DialogDescription>Update shipment details for <span className="font-mono">{shipment.trackingNumber}</span></DialogDescription>
+          <DialogTitle className="flex items-center gap-2"><Pencil className="h-5 w-5 text-emerald-500" /> Sửa đơn hàng</DialogTitle>
+          <DialogDescription>Cập nhật thông tin đơn hàng <span className="font-mono">{shipment.trackingNumber}</span></DialogDescription>
         </DialogHeader>
 
         <div className="grid grid-cols-1 gap-4 py-2 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <Label>Priority</Label>
+            <Label>Ưu tiên</Label>
             <Select value={form.priority} onValueChange={(v) => set("priority", v)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -1038,7 +1038,7 @@ function EditShipmentDialog({
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>Service Type</Label>
+            <Label>Loại dịch vụ</Label>
             <Select value={form.serviceType} onValueChange={(v) => set("serviceType", v)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -1047,47 +1047,47 @@ function EditShipmentDialog({
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>Assign Driver</Label>
+            <Label>Gán tài xế</Label>
             <Select value={form.driverId || "none"} onValueChange={(v) => set("driverId", v === "none" ? "" : v)}>
-              <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Chưa gán" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Unassigned</SelectItem>
+                <SelectItem value="none">Chưa gán</SelectItem>
                 {drivers?.items.map((d) => <SelectItem key={d.id} value={d.id}>{d.name} · {d.status}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>Assign Vehicle</Label>
+            <Label>Gán phương tiện</Label>
             <Select value={form.vehicleId || "none"} onValueChange={(v) => set("vehicleId", v === "none" ? "" : v)}>
-              <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Chưa gán" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Unassigned</SelectItem>
+                <SelectItem value="none">Chưa gán</SelectItem>
                 {vehicles?.items.map((v) => <SelectItem key={v.id} value={v.id}>{v.plateNumber} · {v.model}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>Weight (kg)</Label>
+            <Label>Trọng lượng (kg)</Label>
             <Input type="number" value={form.weightKg} onChange={(e) => set("weightKg", e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label>Pieces</Label>
+            <Label>Số kiện</Label>
             <Input type="number" value={form.pieces} onChange={(e) => set("pieces", e.target.value)} />
           </div>
           <div className="space-y-1.5 sm:col-span-2">
-            <Label>Description</Label>
-            <Input value={form.description} onChange={(e) => set("description", e.target.value)} placeholder="e.g. Electronics" />
+            <Label>Mô tả</Label>
+            <Input value={form.description} onChange={(e) => set("description", e.target.value)} placeholder="vd. Điện tử" />
           </div>
           <div className="space-y-1.5 sm:col-span-2">
-            <Label>Notes</Label>
-            <Textarea value={form.notes} onChange={(e) => set("notes", e.target.value)} rows={2} placeholder="Handling notes…" />
+            <Label>Ghi chú</Label>
+            <Textarea value={form.notes} onChange={(e) => set("notes", e.target.value)} rows={2} placeholder="Ghi chú xử lý…" />
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Hủy</Button>
           <Button disabled={save.isPending} onClick={() => save.mutate()} className="gap-1.5">
-            {save.isPending ? "Saving…" : (<><CheckCircle2 className="h-4 w-4" /> Save Changes</>)}
+            {save.isPending ? "Đang lưu…" : (<><CheckCircle2 className="h-4 w-4" /> Lưu thay đổi</>)}
           </Button>
         </DialogFooter>
       </DialogContent>

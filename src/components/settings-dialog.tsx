@@ -26,18 +26,18 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 const REFRESH_OPTIONS: { value: RefreshInterval; label: string }[] = [
-  { value: "0", label: "Off" },
-  { value: "15000", label: "15 seconds" },
-  { value: "30000", label: "30 seconds" },
-  { value: "60000", label: "1 minute" },
+  { value: "0", label: "Tắt" },
+  { value: "15000", label: "15 giây" },
+  { value: "30000", label: "30 giây" },
+  { value: "60000", label: "1 phút" },
 ];
 
 const STATUS_OPTIONS: { value: DefaultShipmentFilter; label: string }[] = [
-  { value: "all", label: "All shipments" },
-  { value: "pending", label: "Pending" },
-  { value: "in_transit", label: "In transit" },
-  { value: "delayed", label: "Delayed" },
-  { value: "delivered", label: "Delivered" },
+  { value: "all", label: "Tất cả đơn hàng" },
+  { value: "pending", label: "Chờ xử lý" },
+  { value: "in_transit", label: "Đang vận chuyển" },
+  { value: "delayed", label: "Trễ hạn" },
+  { value: "delivered", label: "Đã giao" },
 ];
 
 export function SettingsDialog({
@@ -54,7 +54,7 @@ export function SettingsDialog({
   const handleReset = () => {
     settings.resetSettings();
     setTheme("light");
-    toast.success("Settings reset to defaults");
+    toast.success("Đã đặt lại cài đặt theo mặc định");
   };
 
   return (
@@ -62,38 +62,38 @@ export function SettingsDialog({
       <DialogContent className="max-h-[90vh] overflow-y-auto custom-scroll sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Settings className="h-5 w-5 text-emerald-500" /> Settings
+            <Settings className="h-5 w-5 text-emerald-500" /> Cài đặt
           </DialogTitle>
           <DialogDescription>
-            Customize your logistics workspace. Changes are saved automatically.
+            Tùy chỉnh không gian làm việc logistics của bạn. Các thay đổi được lưu tự động.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-1 py-2">
           {/* Appearance */}
-          <SettingsSection icon={Palette} title="Appearance" description="Theme and visual preferences">
+          <SettingsSection icon={Palette} title="Giao diện" description="Chủ đề và tùy chọn hiển thị">
             <div className="flex items-center justify-between">
               <div>
-                <Label className="text-sm font-medium">Theme</Label>
-                <p className="text-xs text-muted-foreground">Choose light, dark, or system theme</p>
+                <Label className="text-sm font-medium">Chủ đề</Label>
+                <p className="text-xs text-muted-foreground">Chọn chủ đề sáng, tối hoặc hệ thống</p>
               </div>
               {mounted && (
                 <div className="flex items-center gap-1 rounded-lg border bg-muted/40 p-0.5">
-                  <ThemeButton active={theme === "light"} onClick={() => setTheme("light")} icon={Sun} label="Light" />
-                  <ThemeButton active={theme === "dark"} onClick={() => setTheme("dark")} icon={Moon} label="Dark" />
-                  <ThemeButton active={theme === "system"} onClick={() => setTheme("system")} icon={Monitor} label="Auto" />
+                  <ThemeButton active={theme === "light"} onClick={() => setTheme("light")} icon={Sun} label="Sáng" />
+                  <ThemeButton active={theme === "dark"} onClick={() => setTheme("dark")} icon={Moon} label="Tối" />
+                  <ThemeButton active={theme === "system"} onClick={() => setTheme("system")} icon={Monitor} label="Tự động" />
                 </div>
               )}
             </div>
             <ToggleRow
-              label="Dashboard hero banner"
-              description="Show the gradient welcome banner on the dashboard"
+              label="Banner trang tổng quan"
+              description="Hiển thị banner chào mừng gradient trên trang tổng quan"
               checked={settings.showHeroBanner}
               onCheckedChange={(v) => settings.setSetting("showHeroBanner", v)}
             />
             <ToggleRow
-              label="Compact tables"
-              description="Reduce row padding for denser data display"
+              label="Bảng thu gọn"
+              description="Giảm khoảng cách hàng để hiển thị dữ liệu dày đặc hơn"
               checked={settings.compactTables}
               onCheckedChange={(v) => settings.setSetting("compactTables", v)}
             />
@@ -102,22 +102,22 @@ export function SettingsDialog({
           <Separator />
 
           {/* Refresh intervals */}
-          <SettingsSection icon={RefreshCw} title="Data Refresh" description="Control how often data auto-refreshes">
+          <SettingsSection icon={RefreshCw} title="Làm mới dữ liệu" description="Kiểm soát tần suất tự động làm mới dữ liệu">
             <SelectRow
-              label="Live tracking"
-              description="Real-time shipment map updates"
+              label="Theo dõi trực tuyến"
+              description="Cập nhật bản đồ đơn hàng theo thời gian thực"
               value={settings.trackingRefreshInterval}
               onValueChange={(v) => settings.setSetting("trackingRefreshInterval", v as RefreshInterval)}
             />
             <SelectRow
-              label="Notifications"
-              description="Alerts and notification panel"
+              label="Thông báo"
+              description="Cảnh báo và bảng thông báo"
               value={settings.notificationsRefreshInterval}
               onValueChange={(v) => settings.setSetting("notificationsRefreshInterval", v as RefreshInterval)}
             />
             <SelectRow
-              label="Dashboard"
-              description="KPI cards and charts"
+              label="Tổng quan"
+              description="Thẻ KPI và biểu đồ"
               value={settings.dashboardRefreshInterval}
               onValueChange={(v) => settings.setSetting("dashboardRefreshInterval", v as RefreshInterval)}
             />
@@ -126,18 +126,18 @@ export function SettingsDialog({
           <Separator />
 
           {/* Defaults */}
-          <SettingsSection icon={Filter} title="Default Filters" description="Pre-selected filters when opening views">
+          <SettingsSection icon={Filter} title="Bộ lọc mặc định" description="Bộ lọc được chọn sẵn khi mở các trang">
             <SelectRow
-              label="Shipment status filter"
-              description="Default status filter on Shipments page"
+              label="Lọc trạng thái đơn hàng"
+              description="Bộ lọc trạng thái mặc định trên trang Đơn hàng"
               value={settings.defaultShipmentStatus}
               onValueChange={(v) => settings.setSetting("defaultShipmentStatus", v as DefaultShipmentFilter)}
               options={STATUS_OPTIONS}
             />
             <div className="flex items-center justify-between py-2">
               <div>
-                <Label className="text-sm font-medium">Shipments per page</Label>
-                <p className="text-xs text-muted-foreground">Number of rows shown in the table</p>
+                <Label className="text-sm font-medium">Số đơn hàng mỗi trang</Label>
+                <p className="text-xs text-muted-foreground">Số hàng hiển thị trong bảng</p>
               </div>
               <Select value={String(settings.defaultShipmentPageSize)} onValueChange={(v) => settings.setSetting("defaultShipmentPageSize", Number(v))}>
                 <SelectTrigger className="w-20"><SelectValue /></SelectTrigger>
@@ -153,10 +153,10 @@ export function SettingsDialog({
           <Separator />
 
           {/* Route planning */}
-          <SettingsSection icon={Eye} title="Route Planning" description="Display options for route cards">
+          <SettingsSection icon={Eye} title="Lập kế hoạch tuyến" description="Tùy chọn hiển thị cho thẻ tuyến">
             <ToggleRow
-              label="Show progress bars"
-              description="Display progress bars on active route cards"
+              label="Hiển thị thanh tiến độ"
+              description="Hiển thị thanh tiến độ trên thẻ tuyến đang hoạt động"
               checked={settings.showRouteProgressBars}
               onCheckedChange={(v) => settings.setSetting("showRouteProgressBars", v)}
             />
@@ -165,10 +165,10 @@ export function SettingsDialog({
 
         <DialogFooter className="gap-2 sm:gap-2">
           <Button variant="outline" onClick={handleReset} className="gap-1.5">
-            <RotateCcw className="h-4 w-4" /> Reset
+            <RotateCcw className="h-4 w-4" /> Đặt lại
           </Button>
-          <Button onClick={() => { onOpenChange(false); toast.success("Settings saved"); }} className="gap-1.5">
-            <Check className="h-4 w-4" /> Done
+          <Button onClick={() => { onOpenChange(false); toast.success("Đã lưu cài đặt"); }} className="gap-1.5">
+            <Check className="h-4 w-4" /> Xong
           </Button>
         </DialogFooter>
       </DialogContent>

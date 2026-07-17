@@ -74,7 +74,7 @@ export function ReportsView() {
   const exportCSV = () => {
     if (!data) return;
     const rows = [
-      ["Tracking #", "Status", "Priority", "Service", "Origin", "Destination", "Sender", "Weight (kg)", "Distance (km)", "Cost", "Created"],
+      ["Mã vận đơn", "Trạng thái", "Ưu tiên", "Dịch vụ", "Điểm đi", "Điểm đến", "Người gửi", "Trọng lượng (kg)", "Khoảng cách (km)", "Chi phí", "Ngày tạo"],
       ...data.shipments.map((s) => [
         s.trackingNumber, s.status, s.priority, s.serviceType,
         s.originCity, s.destinationCity, s.sender.name,
@@ -95,33 +95,33 @@ export function ReportsView() {
   const exportSummary = () => {
     if (!data) return;
     const lines = [
-      "LOGISTICS APP V2 — OPERATIONAL REPORT",
-      `Period: ${formatDate(data.since)} to ${formatDate(data.until)}`,
-      `Generated: ${new Date().toLocaleString()}`,
+      "LOGISTICS APP V2 — BÁO CÁO VẬN HÀNH",
+      `Kỳ: ${formatDate(data.since)} đến ${formatDate(data.until)}`,
+      `Ngày tạo: ${new Date().toLocaleString()}`,
       "",
-      "=== SUMMARY ===",
-      `Total Shipments (all time): ${data.summary.totalShipments}`,
-      `Shipments in Period: ${data.summary.shipmentsInPeriod}`,
-      `Total Revenue (delivered): ${formatCurrency(data.summary.totalRevenue)}`,
-      `Pending Revenue: ${formatCurrency(data.summary.pendingRevenue)}`,
-      `Avg Delivery Time: ${data.summary.avgDeliveryHours} hours`,
-      `Invoice Revenue (paid): ${formatCurrency(data.summary.invoiceRevenue)}`,
-      `Outstanding Invoices: ${formatCurrency(data.summary.outstandingInvoices)}`,
+      "=== TÓM TẮT ===",
+      `Tổng đơn hàng (tất cả thời gian): ${data.summary.totalShipments}`,
+      `Đơn hàng trong kỳ: ${data.summary.shipmentsInPeriod}`,
+      `Tổng doanh thu (đã giao): ${formatCurrency(data.summary.totalRevenue)}`,
+      `Doanh thu chờ xử lý: ${formatCurrency(data.summary.pendingRevenue)}`,
+      `Thời gian giao TB: ${data.summary.avgDeliveryHours} giờ`,
+      `Doanh thu hóa đơn (đã thanh toán): ${formatCurrency(data.summary.invoiceRevenue)}`,
+      `Hóa đơn chưa thanh toán: ${formatCurrency(data.summary.outstandingInvoices)}`,
       "",
-      "=== STATUS BREAKDOWN ===",
+      "=== PHÂN BỐ TRẠNG THÁI ===",
       ...data.statusBreakdown.map((s) => `  ${s.status}: ${s.count}`),
       "",
-      "=== TOP CUSTOMERS ===",
-      ...data.topCustomers.slice(0, 5).map((c, i) => `  ${i + 1}. ${c.customer?.name || "Unknown"} — ${c._count} shipments`),
+      "=== KHÁCH HÀNG HÀNG ĐẦU ===",
+      ...data.topCustomers.slice(0, 5).map((c, i) => `  ${i + 1}. ${c.customer?.name || "Không xác định"} — ${c._count} đơn hàng`),
       "",
-      "=== TOP DRIVERS ===",
-      ...data.topDrivers.slice(0, 5).map((d, i) => `  ${i + 1}. ${d.driver?.name || "Unassigned"} — ${d._count} shipments`),
+      "=== TÀI XẾ HÀNG ĐẦU ===",
+      ...data.topDrivers.slice(0, 5).map((d, i) => `  ${i + 1}. ${d.driver?.name || "Chưa gán tài xế"} — ${d._count} đơn hàng`),
       "",
-      "=== TOP ROUTES ===",
-      ...data.topRoutes.slice(0, 5).map((r, i) => `  ${i + 1}. ${r.originCity} → ${r.destinationCity} — ${r.count} shipments`),
+      "=== TUYẾN ĐƯỜNG HÀNG ĐẦU ===",
+      ...data.topRoutes.slice(0, 5).map((r, i) => `  ${i + 1}. ${r.originCity} → ${r.destinationCity} — ${r.count} đơn hàng`),
       "",
-      "=== REVENUE BY SERVICE ===",
-      ...data.revenueByService.map((s) => `  ${s.serviceType}: ${s.count} shipments, ${formatCurrency(s.revenue)}`),
+      "=== DOANH THU THEO DỊCH VỤ ===",
+      ...data.revenueByService.map((s) => `  ${s.serviceType}: ${s.count} đơn hàng, ${formatCurrency(s.revenue)}`),
     ];
     const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -149,7 +149,7 @@ export function ReportsView() {
   }
 
   const { summary, statusBreakdown, topCustomers, topDrivers, topRoutes, revenueByService, dailyVolume } = data;
-  const rangeLabel = range === "7d" ? "Last 7 days" : range === "30d" ? "Last 30 days" : range === "90d" ? "Last 90 days" : "Year to date";
+  const rangeLabel = range === "7d" ? "7 ngày qua" : range === "30d" ? "30 ngày qua" : range === "90d" ? "90 ngày qua" : "Từ đầu năm";
 
   return (
     <div className="space-y-5">
@@ -159,10 +159,10 @@ export function ReportsView() {
           <Select value={range} onValueChange={setRange}>
             <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="7d">Last 7 days</SelectItem>
-              <SelectItem value="30d">Last 30 days</SelectItem>
-              <SelectItem value="90d">Last 90 days</SelectItem>
-              <SelectItem value="ytd">Year to date</SelectItem>
+              <SelectItem value="7d">7 ngày qua</SelectItem>
+              <SelectItem value="30d">30 ngày qua</SelectItem>
+              <SelectItem value="90d">90 ngày qua</SelectItem>
+              <SelectItem value="ytd">Từ đầu năm</SelectItem>
             </SelectContent>
           </Select>
           <Badge variant="outline" className="gap-1.5">
@@ -171,20 +171,20 @@ export function ReportsView() {
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={exportSummary} className="gap-1.5">
-            <FileText className="h-4 w-4" /> Summary
+            <FileText className="h-4 w-4" /> Tóm tắt
           </Button>
           <Button size="sm" onClick={exportCSV} className="gap-1.5">
-            <FileSpreadsheet className="h-4 w-4" /> Export CSV
+            <FileSpreadsheet className="h-4 w-4" /> Xuất CSV
           </Button>
         </div>
       </div>
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        <KpiCard title="Shipments in Period" value={formatNumber(summary.shipmentsInPeriod)} icon={Package} accent="emerald" footer={`${summary.totalShipments} all time`} />
-        <KpiCard title="Revenue (Delivered)" value={formatCurrency(summary.totalRevenue)} icon={DollarSign} accent="teal" trend={12.5} trendLabel="vs prior" footer={`${formatCurrency(summary.pendingRevenue)} pending`} />
-        <KpiCard title="Avg Delivery Time" value={`${summary.avgDeliveryHours}h`} icon={Clock} accent="sky" footer="pickup → delivery" />
-        <KpiCard title="Invoice Revenue" value={formatCurrency(summary.invoiceRevenue)} icon={TrendingUp} accent="violet" footer={`${formatCurrency(summary.outstandingInvoices)} outstanding`} />
+        <KpiCard title="Đơn hàng trong kỳ" value={formatNumber(summary.shipmentsInPeriod)} icon={Package} accent="emerald" footer={`${summary.totalShipments} tất cả thời gian`} />
+        <KpiCard title="Doanh thu (đã giao)" value={formatCurrency(summary.totalRevenue)} icon={DollarSign} accent="teal" trend={12.5} trendLabel="so với trước" footer={`${formatCurrency(summary.pendingRevenue)} chờ xử lý`} />
+        <KpiCard title="Thời gian giao TB" value={`${summary.avgDeliveryHours}h`} icon={Clock} accent="sky" footer="lấy hàng → giao hàng" />
+        <KpiCard title="Doanh thu hóa đơn" value={formatCurrency(summary.invoiceRevenue)} icon={TrendingUp} accent="violet" footer={`${formatCurrency(summary.outstandingInvoices)} chưa thanh toán`} />
       </div>
 
       {/* Charts row */}
@@ -192,8 +192,8 @@ export function ReportsView() {
         {/* Daily volume area chart */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-base">Shipment & Revenue Trend</CardTitle>
-            <CardDescription className="text-xs">Daily volume and revenue over {rangeLabel.toLowerCase()}</CardDescription>
+            <CardTitle className="text-base">Xu hướng đơn hàng & doanh thu</CardTitle>
+            <CardDescription className="text-xs">Khối lượng và doanh thu theo ngày trong {rangeLabel.toLowerCase()}</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={260}>
@@ -211,7 +211,7 @@ export function ReportsView() {
                 <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.9 0 0)" className="dark:opacity-30" vertical={false} />
                 <XAxis
                   dataKey="date"
-                  tickFormatter={(d) => new Date(d).toLocaleDateString("en-US", { day: "numeric", month: "short" })}
+                  tickFormatter={(d) => new Date(d).toLocaleDateString("vi-VN", { day: "numeric", month: "short" })}
                   tick={{ fontSize: 10, fill: "oklch(0.5 0 0)" }}
                   axisLine={false}
                   tickLine={false}
@@ -219,8 +219,8 @@ export function ReportsView() {
                 <YAxis yAxisId="left" tick={{ fontSize: 10, fill: "oklch(0.5 0 0)" }} axisLine={false} tickLine={false} width={28} />
                 <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10, fill: "oklch(0.5 0 0)" }} axisLine={false} tickLine={false} width={40} tickFormatter={(v) => `$${formatCompact(v)}`} />
                 <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid oklch(0.9 0 0)", fontSize: 12 }} />
-                <Area yAxisId="left" type="monotone" dataKey="total" name="Shipments" stroke="#10b981" strokeWidth={2} fill="url(#g-vol)" />
-                <Area yAxisId="right" type="monotone" dataKey="revenue" name="Revenue" stroke="#0ea5e9" strokeWidth={2} fill="url(#g-rev)" />
+                <Area yAxisId="left" type="monotone" dataKey="total" name="Đơn hàng" stroke="#10b981" strokeWidth={2} fill="url(#g-vol)" />
+                <Area yAxisId="right" type="monotone" dataKey="revenue" name="Doanh thu" stroke="#0ea5e9" strokeWidth={2} fill="url(#g-rev)" />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
@@ -229,8 +229,8 @@ export function ReportsView() {
         {/* Status distribution pie */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Status Distribution</CardTitle>
-            <CardDescription className="text-xs">Shipment statuses in period</CardDescription>
+            <CardTitle className="text-base">Phân bố trạng thái</CardTitle>
+            <CardDescription className="text-xs">Trạng thái đơn hàng trong kỳ</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={260}>
@@ -260,8 +260,8 @@ export function ReportsView() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Revenue by Service Type</CardTitle>
-            <CardDescription className="text-xs">Shipment count and revenue per service</CardDescription>
+            <CardTitle className="text-base">Doanh thu theo loại dịch vụ</CardTitle>
+            <CardDescription className="text-xs">Số đơn hàng và doanh thu theo dịch vụ</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={200}>
@@ -270,7 +270,7 @@ export function ReportsView() {
                 <XAxis dataKey="serviceType" tick={{ fontSize: 10, fill: "oklch(0.5 0 0)" }} axisLine={false} tickLine={false} tickFormatter={(v) => SERVICE_META[v as keyof typeof SERVICE_META]?.label ?? v} />
                 <YAxis tick={{ fontSize: 10, fill: "oklch(0.5 0 0)" }} axisLine={false} tickLine={false} width={40} tickFormatter={(v) => `$${formatCompact(v)}`} />
                 <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12, border: "1px solid oklch(0.9 0 0)" }} cursor={{ fill: "oklch(0.95 0 0)" }} />
-                <Bar dataKey="revenue" name="Revenue" fill="#10b981" radius={[4, 4, 0, 0]} barSize={40} />
+                <Bar dataKey="revenue" name="Doanh thu" fill="#10b981" radius={[4, 4, 0, 0]} barSize={40} />
               </BarChart>
             </ResponsiveContainer>
             <div className="mt-3 space-y-1.5">
@@ -280,7 +280,7 @@ export function ReportsView() {
                     <span className="h-2 w-2 rounded-full" style={{ background: SERVICE_COLORS[i % SERVICE_COLORS.length] }} />
                     <span className="font-medium">{SERVICE_META[s.serviceType as keyof typeof SERVICE_META]?.label ?? s.serviceType}</span>
                   </span>
-                  <span className="text-muted-foreground">{s.count} shipments · <span className="font-semibold text-foreground">{formatCurrency(s.revenue)}</span></span>
+                  <span className="text-muted-foreground">{s.count} đơn hàng · <span className="font-semibold text-foreground">{formatCurrency(s.revenue)}</span></span>
                 </div>
               ))}
             </div>
@@ -289,8 +289,8 @@ export function ReportsView() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Top Routes</CardTitle>
-            <CardDescription className="text-xs">Busiest origin → destination pairs</CardDescription>
+            <CardTitle className="text-base">Tuyến đường hàng đầu</CardTitle>
+            <CardDescription className="text-xs">Cặp điểm đi → điểm đến đông nhất</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y">
@@ -314,8 +314,8 @@ export function ReportsView() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base"><Users className="h-4 w-4 text-emerald-500" /> Top Customers</CardTitle>
-            <CardDescription className="text-xs">By shipment volume in period</CardDescription>
+            <CardTitle className="flex items-center gap-2 text-base"><Users className="h-4 w-4 text-emerald-500" /> Khách hàng hàng đầu</CardTitle>
+            <CardDescription className="text-xs">Theo khối lượng đơn hàng trong kỳ</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y">
@@ -323,7 +323,7 @@ export function ReportsView() {
                 <div key={c.senderId} className="flex items-center gap-3 px-4 py-2.5">
                   <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-muted-foreground">{i + 1}</span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{c.customer?.name || "Unknown"}</p>
+                    <p className="truncate text-sm font-medium">{c.customer?.name || "Không xác định"}</p>
                     <p className="truncate text-xs text-muted-foreground">{c.customer?.company || c.customer?.city || "—"}</p>
                   </div>
                   <span className="shrink-0 text-xs font-semibold tabular-nums">{c._count}</span>
@@ -335,8 +335,8 @@ export function ReportsView() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base"><Truck className="h-4 w-4 text-sky-500" /> Top Drivers</CardTitle>
-            <CardDescription className="text-xs">By shipment count in period</CardDescription>
+            <CardTitle className="flex items-center gap-2 text-base"><Truck className="h-4 w-4 text-sky-500" /> Tài xế hàng đầu</CardTitle>
+            <CardDescription className="text-xs">Theo số đơn hàng trong kỳ</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y">
@@ -344,9 +344,9 @@ export function ReportsView() {
                 <div key={d.driverId || i} className="flex items-center gap-3 px-4 py-2.5">
                   <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-muted-foreground">{i + 1}</span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{d.driver?.name || "Unassigned"}</p>
+                    <p className="truncate text-sm font-medium">{d.driver?.name || "Chưa gán tài xế"}</p>
                     <p className="truncate text-xs text-muted-foreground">
-                      {d.driver ? `★ ${d.driver.rating.toFixed(1)} · ${formatNumber(d.driver.totalDeliveries)} total` : "No driver assigned"}
+                      {d.driver ? `★ ${d.driver.rating.toFixed(1)} · ${formatNumber(d.driver.totalDeliveries)} tổng` : "Chưa gán tài xế"}
                     </p>
                   </div>
                   <span className="shrink-0 text-xs font-semibold tabular-nums">{d._count}</span>
@@ -360,20 +360,20 @@ export function ReportsView() {
       {/* Recent shipments table */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base"><Package className="h-4 w-4 text-emerald-500" /> Shipments in Period</CardTitle>
-          <CardDescription className="text-xs">Latest {data.shipments.length} shipments — exportable via CSV</CardDescription>
+          <CardTitle className="flex items-center gap-2 text-base"><Package className="h-4 w-4 text-emerald-500" /> Đơn hàng trong kỳ</CardTitle>
+          <CardDescription className="text-xs">Mới nhất {data.shipments.length} đơn hàng — có thể xuất CSV</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           <div className="max-h-96 overflow-y-auto custom-scroll">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/40 hover:bg-muted/40 sticky top-0">
-                  <TableHead className="min-w-[130px]">Tracking #</TableHead>
-                  <TableHead className="min-w-[160px]">Route</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="hidden md:table-cell">Service</TableHead>
-                  <TableHead className="text-right">Cost</TableHead>
-                  <TableHead className="hidden sm:table-cell">Date</TableHead>
+                  <TableHead className="min-w-[130px]">Mã vận đơn</TableHead>
+                  <TableHead className="min-w-[160px]">Tuyến đường</TableHead>
+                  <TableHead>Trạng thái</TableHead>
+                  <TableHead className="hidden md:table-cell">Dịch vụ</TableHead>
+                  <TableHead className="text-right">Chi phí</TableHead>
+                  <TableHead className="hidden sm:table-cell">Ngày</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

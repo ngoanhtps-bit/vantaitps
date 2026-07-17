@@ -37,17 +37,17 @@ type QuickResult = {
 };
 
 const NAV_ITEMS: { key: ViewKey; label: string; icon: React.ElementType; desc: string }[] = [
-  { key: "dashboard", label: "Dashboard", icon: LayoutDashboard, desc: "Operations overview" },
-  { key: "shipments", label: "Shipments", icon: Package, desc: "All shipments" },
-  { key: "tracking", label: "Live Tracking", icon: MapPin, desc: "Real-time map" },
-  { key: "drivers", label: "Drivers", icon: Truck, desc: "Driver roster" },
-  { key: "vehicles", label: "Fleet", icon: CarFront, desc: "Vehicles" },
-  { key: "customers", label: "Customers", icon: Users, desc: "Customers" },
-  { key: "warehouses", label: "Warehouses", icon: Warehouse, desc: "Distribution centers" },
-  { key: "routes", label: "Route Planning", icon: RouteIcon, desc: "Delivery routes" },
-  { key: "invoices", label: "Invoices", icon: Receipt, desc: "Billing" },
-  { key: "reports", label: "Reports", icon: FileBarChart, desc: "Exports" },
-  { key: "analytics", label: "Analytics", icon: BarChart3, desc: "Reports" },
+  { key: "dashboard", label: "Tổng quan", icon: LayoutDashboard, desc: "Tổng quan hoạt động" },
+  { key: "shipments", label: "Đơn hàng", icon: Package, desc: "Tất cả đơn hàng" },
+  { key: "tracking", label: "Theo dõi trực tuyến", icon: MapPin, desc: "Bản đồ thời gian thực" },
+  { key: "drivers", label: "Tài xế", icon: Truck, desc: "Danh sách tài xế" },
+  { key: "vehicles", label: "Đội xe", icon: CarFront, desc: "Phương tiện" },
+  { key: "customers", label: "Khách hàng", icon: Users, desc: "Khách hàng" },
+  { key: "warehouses", label: "Kho hàng", icon: Warehouse, desc: "Trung tâm phân phối" },
+  { key: "routes", label: "Lập kế hoạch tuyến", icon: RouteIcon, desc: "Tuyến giao hàng" },
+  { key: "invoices", label: "Hóa đơn", icon: Receipt, desc: "Thanh toán" },
+  { key: "reports", label: "Báo cáo", icon: FileBarChart, desc: "Xuất báo cáo" },
+  { key: "analytics", label: "Phân tích", icon: BarChart3, desc: "Báo cáo" },
 ];
 
 export function CommandPalette() {
@@ -96,15 +96,15 @@ export function CommandPalette() {
   return (
     <CommandDialog open={commandOpen} onOpenChange={setCommandOpen}>
       <CommandInput
-        placeholder="Search shipments, drivers, vehicles…"
+        placeholder="Tìm đơn hàng, tài xế, phương tiện…"
         value={query}
         onValueChange={setQuery}
       />
       <CommandList>
-        <CommandEmpty>No results found.</CommandEmpty>
+        <CommandEmpty>Không tìm thấy kết quả.</CommandEmpty>
 
         {results.length > 0 && (
-          <CommandGroup heading="Results">
+          <CommandGroup heading="Kết quả">
             {results.map((r) => (
               <CommandItem
                 key={`${r.type}-${r.id}`}
@@ -130,7 +130,7 @@ export function CommandPalette() {
           </CommandGroup>
         )}
 
-        <CommandGroup heading="Navigation">
+        <CommandGroup heading="Điều hướng">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             return (
@@ -143,7 +143,7 @@ export function CommandPalette() {
           })}
         </CommandGroup>
         <CommandSeparator />
-        <CommandGroup heading="Quick Actions">
+        <CommandGroup heading="Thao tác nhanh">
           <CommandItem
             onSelect={() => {
               setView("shipments");
@@ -153,7 +153,7 @@ export function CommandPalette() {
             className="gap-2"
           >
             <Package className="h-4 w-4" />
-            Create new shipment
+            Tạo đơn hàng mới
           </CommandItem>
         </CommandGroup>
       </CommandList>

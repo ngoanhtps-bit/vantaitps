@@ -20,17 +20,17 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const VIEW_TITLES: Record<ViewKey, { title: string; subtitle: string }> = {
-  dashboard: { title: "Dashboard", subtitle: "Overview of your logistics operations" },
-  shipments: { title: "Shipments", subtitle: "Manage and track all shipments" },
-  tracking: { title: "Live Tracking", subtitle: "Real-time fleet & shipment map" },
-  drivers: { title: "Drivers", subtitle: "Driver roster and performance" },
-  vehicles: { title: "Fleet", subtitle: "Vehicles and maintenance status" },
-  customers: { title: "Customers", subtitle: "Customer directory and history" },
-  warehouses: { title: "Warehouses", subtitle: "Distribution centers and capacity" },
-  routes: { title: "Route Planning", subtitle: "Optimize delivery routes and stops" },
-  invoices: { title: "Invoices", subtitle: "Billing and payment management" },
-  reports: { title: "Reports", subtitle: "Generate and export operational reports" },
-  analytics: { title: "Analytics", subtitle: "Insights and performance reports" },
+  dashboard: { title: "Tổng quan", subtitle: "Tổng quan hoạt động logistics" },
+  shipments: { title: "Đơn hàng", subtitle: "Quản lý và theo dõi tất cả đơn hàng" },
+  tracking: { title: "Theo dõi trực tuyến", subtitle: "Bản đồ đội xe và đơn hàng thời gian thực" },
+  drivers: { title: "Tài xế", subtitle: "Danh sách tài xế và hiệu suất" },
+  vehicles: { title: "Đội xe", subtitle: "Phương tiện và tình trạng bảo trì" },
+  customers: { title: "Khách hàng", subtitle: "Danh bạ khách hàng và lịch sử" },
+  warehouses: { title: "Kho hàng", subtitle: "Trung tâm phân phối và công suất" },
+  routes: { title: "Lập kế hoạch tuyến", subtitle: "Tối ưu hóa tuyến đường giao hàng" },
+  invoices: { title: "Hóa đơn", subtitle: "Quản lý thanh toán và công nợ" },
+  reports: { title: "Báo cáo", subtitle: "Tạo và xuất báo cáo vận hành" },
+  analytics: { title: "Phân tích", subtitle: "Thông tin chi tiết và báo cáo hiệu suất" },
 };
 
 export function AppTopbar() {
@@ -47,7 +47,7 @@ export function AppTopbar() {
         size="icon"
         className="md:hidden"
         onClick={() => setSidebarOpen(true)}
-        aria-label="Open menu"
+        aria-label="Mở menu"
       >
         <Menu className="h-5 w-5" />
       </Button>
@@ -68,7 +68,7 @@ export function AppTopbar() {
         className="group hidden items-center gap-2 rounded-lg border bg-muted/40 px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted md:flex md:w-64 lg:w-80"
       >
         <Search className="h-4 w-4" />
-        <span className="flex-1 text-left">Search shipments, drivers…</span>
+        <span className="flex-1 text-left">Tìm đơn hàng, tài xế…</span>
         <kbd className="flex items-center gap-0.5 rounded border bg-background px-1.5 py-0.5 text-[10px] font-medium">
           <Command className="h-3 w-3" />K
         </kbd>
@@ -79,7 +79,7 @@ export function AppTopbar() {
         size="icon"
         className="md:hidden"
         onClick={() => setCommandOpen(true)}
-        aria-label="Search"
+        aria-label="Tìm kiếm"
       >
         <Search className="h-5 w-5" />
       </Button>
@@ -108,7 +108,7 @@ export function AppTopbar() {
         variant="ghost"
         size="icon"
         className="rounded-full"
-        aria-label="Settings"
+        aria-label="Cài đặt"
         onClick={() => setSettingsOpen(true)}
       >
         <SettingsIcon className="h-[1.15rem] w-[1.15rem]" />

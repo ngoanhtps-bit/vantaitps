@@ -44,12 +44,12 @@ type CustomerStatus = (typeof CUSTOMER_STATUSES)[number];
 
 const CUSTOMER_STATUS_META: Record<CustomerStatus, { label: string; badge: string; dot: string }> = {
   active: {
-    label: "Active",
+    label: "Hoạt động",
     badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900",
     dot: "bg-emerald-500",
   },
   inactive: {
-    label: "Inactive",
+    label: "Không hoạt động",
     badge: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-700",
     dot: "bg-slate-400",
   },
@@ -64,8 +64,8 @@ const CUSTOMER_TYPES = ["business", "individual"] as const;
 type CustomerType = (typeof CUSTOMER_TYPES)[number];
 
 const CUSTOMER_TYPE_META: Record<CustomerType, { label: string; badge: string }> = {
-  business: { label: "Business", badge: "bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300 border-sky-200 dark:border-sky-900" },
-  individual: { label: "Individual", badge: "bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300 border-violet-200 dark:border-violet-900" },
+  business: { label: "Doanh nghiệp", badge: "bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300 border-sky-200 dark:border-sky-900" },
+  individual: { label: "Cá nhân", badge: "bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300 border-violet-200 dark:border-violet-900" },
 };
 
 function CustomerStatusBadge({ status }: { status: string }) {
@@ -161,10 +161,10 @@ export function CustomersView() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["customers"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success("Customer created successfully");
+      toast.success("Đã tạo khách hàng thành công");
       setCreateOpen(false);
     },
-    onError: (e: Error) => toast.error(e.message || "Failed to create customer"),
+    onError: (e: Error) => toast.error(e.message || "Tạo khách hàng thất bại"),
   });
 
   const updateStatusMutation = useMutation({
@@ -174,9 +174,9 @@ export function CustomersView() {
       qc.invalidateQueries({ queryKey: ["customers"] });
       qc.invalidateQueries({ queryKey: ["customer", selectedId] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success("Customer status updated");
+      toast.success("Đã cập nhật trạng thái khách hàng");
     },
-    onError: (e: Error) => toast.error(e.message || "Failed to update status"),
+    onError: (e: Error) => toast.error(e.message || "Cập nhật trạng thái thất bại"),
   });
 
   const deleteMutation = useMutation({
@@ -184,10 +184,10 @@ export function CustomersView() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["customers"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success("Customer deleted");
+      toast.success("Đã xóa khách hàng");
       setSelectedId(null);
     },
-    onError: (e: Error) => toast.error(e.message || "Failed to delete customer"),
+    onError: (e: Error) => toast.error(e.message || "Xóa khách hàng thất bại"),
   });
 
   const customers = data?.items ?? [];
@@ -210,32 +210,32 @@ export function CustomersView() {
       {/* KPI row */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <KpiCard
-          title="Total Customers"
+          title="Tổng khách hàng"
           value={formatNumber(stats.total)}
           icon={Users}
           accent="emerald"
-          footer={`${stats.vip} VIP · ${stats.business} business`}
+          footer={`${stats.vip} VIP · ${stats.business} doanh nghiệp`}
         />
         <KpiCard
-          title="VIP Customers"
+          title="Khách VIP"
           value={formatNumber(stats.vip)}
           icon={Crown}
           accent="amber"
-          footer="High priority tier"
+          footer="Phân khưu ưu tiên cao"
         />
         <KpiCard
-          title="Active"
+          title="Hoạt động"
           value={formatNumber(stats.active)}
           icon={UserCheck}
           accent="sky"
-          footer="Currently trading"
+          footer="Đang giao dịch"
         />
         <KpiCard
-          title="Business Type"
+          title="Loại doanh nghiệp"
           value={formatNumber(stats.business)}
           icon={Building2}
           accent="violet"
-          footer="B2B accounts"
+          footer="Tài khoản B2B"
         />
       </div>
 
@@ -246,7 +246,7 @@ export function CustomersView() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search name, phone, email, company…"
+                placeholder="Tìm tên, điện thoại, email, công ty…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9"
@@ -255,10 +255,10 @@ export function CustomersView() {
             <div className="flex flex-wrap items-center gap-2">
               <Select value={status} onValueChange={setStatus}>
                 <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Status" />
+                  <SelectValue placeholder="Trạng thái" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All statuses</SelectItem>
+                  <SelectItem value="all">Tất cả trạng thái</SelectItem>
                   {CUSTOMER_STATUSES.map((s) => (
                     <SelectItem key={s} value={s}>{CUSTOMER_STATUS_META[s].label}</SelectItem>
                   ))}
@@ -266,10 +266,10 @@ export function CustomersView() {
               </Select>
               <Select value={type} onValueChange={setType}>
                 <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Type" />
+                  <SelectValue placeholder="Loại" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All types</SelectItem>
+                  <SelectItem value="all">Tất cả loại</SelectItem>
                   {CUSTOMER_TYPES.map((t) => (
                     <SelectItem key={t} value={t}>{CUSTOMER_TYPE_META[t].label}</SelectItem>
                   ))}
@@ -277,10 +277,10 @@ export function CustomersView() {
               </Select>
               <Select value={city} onValueChange={setCity}>
                 <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="City" />
+                  <SelectValue placeholder="Thành phố" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All cities</SelectItem>
+                  <SelectItem value="all">Tất cả thành phố</SelectItem>
                   {VIETNAM_CITIES.map((c) => (
                     <SelectItem key={c} value={c}>{c}</SelectItem>
                   ))}
@@ -288,11 +288,11 @@ export function CustomersView() {
               </Select>
               {hasFilters && (
                 <Button variant="ghost" size="sm" onClick={resetFilters} className="gap-1 text-xs">
-                  <X className="h-3.5 w-3.5" /> Clear
+                  <X className="h-3.5 w-3.5" /> Xóa
                 </Button>
               )}
               <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
-                <Plus className="h-4 w-4" /> Add Customer
+                <Plus className="h-4 w-4" /> Thêm khách hàng
               </Button>
             </div>
           </div>
@@ -309,9 +309,9 @@ export function CustomersView() {
           ) : customers.length === 0 ? (
             <EmptyState
               icon={Users}
-              title="No customers found"
-              description="Try adjusting filters or add a new customer to your directory."
-              action={<Button size="sm" variant="outline" onClick={resetFilters}>Reset filters</Button>}
+              title="Không tìm thấy khách hàng"
+              description="Thử điều chỉnh bộ lọc hoặc thêm khách hàng mới vào danh bạ của bạn."
+              action={<Button size="sm" variant="outline" onClick={resetFilters}>Đặt lại bộ lọc</Button>}
               className="mx-4 my-6"
             />
           ) : (
@@ -319,13 +319,13 @@ export function CustomersView() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/40 hover:bg-muted/40">
-                    <TableHead className="min-w-[200px]">Customer</TableHead>
-                    <TableHead className="hidden md:table-cell min-w-[160px]">Company</TableHead>
-                    <TableHead className="hidden lg:table-cell">City</TableHead>
-                    <TableHead className="hidden sm:table-cell">Phone</TableHead>
-                    <TableHead className="text-center">Shipments</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="hidden sm:table-cell text-right">Created</TableHead>
+                    <TableHead className="min-w-[200px]">Khách hàng</TableHead>
+                    <TableHead className="hidden md:table-cell min-w-[160px]">Công ty</TableHead>
+                    <TableHead className="hidden lg:table-cell">Thành phố</TableHead>
+                    <TableHead className="hidden sm:table-cell">Điện thoại</TableHead>
+                    <TableHead className="text-center">Đơn hàng</TableHead>
+                    <TableHead>Trạng thái</TableHead>
+                    <TableHead className="hidden sm:table-cell text-right">Ngày tạo</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -389,8 +389,8 @@ export function CustomersView() {
       >
         <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-lg">
           <SheetHeader className="border-b p-4">
-            <SheetTitle>Customer details</SheetTitle>
-            <SheetDescription>Profile, contact info, and shipment history.</SheetDescription>
+            <SheetTitle>Chi tiết khách hàng</SheetTitle>
+            <SheetDescription>Hồ sơ, thông tin liên hệ và lịch sử đơn hàng.</SheetDescription>
           </SheetHeader>
           <div className="flex-1 overflow-y-auto">
             {detailLoading || !detail ? (
@@ -479,7 +479,7 @@ function CustomerDetailContent({
             <CustomerTypeBadge type={customer.type} />
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
-            Customer since {formatDate(customer.createdAt)}
+            Khách hàng từ {formatDate(customer.createdAt)}
           </p>
         </div>
       </div>
@@ -487,22 +487,22 @@ function CustomerDetailContent({
       {/* Contact */}
       <div className="grid grid-cols-1 gap-2">
         {customer.email && <DetailRow icon={Mail} label="Email" value={customer.email} />}
-        <DetailRow icon={Phone} label="Phone" value={customer.phone} mono />
-        {customer.company && <DetailRow icon={Building2} label="Company" value={customer.company} />}
-        <DetailRow icon={MapPin} label="Address" value={customer.address} />
+        <DetailRow icon={Phone} label="Điện thoại" value={customer.phone} mono />
+        {customer.company && <DetailRow icon={Building2} label="Công ty" value={customer.company} />}
+        <DetailRow icon={MapPin} label="Địa chỉ" value={customer.address} />
         <DetailRow
           icon={MapPin}
-          label="City"
+          label="Thành phố"
           value={[customer.city, customer.country].filter(Boolean).join(", ")}
         />
-        {customer.zipCode && <DetailRow icon={MapPin} label="ZIP" value={customer.zipCode} mono />}
+        {customer.zipCode && <DetailRow icon={MapPin} label="Mã bưu chính" value={customer.zipCode} mono />}
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-2">
         <div className="rounded-lg bg-emerald-500/10 p-3">
           <div className="flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-300">
-            <ArrowUpRight className="h-3.5 w-3.5" /> Sent
+            <ArrowUpRight className="h-3.5 w-3.5" /> Đã gửi
           </div>
           <p className="mt-1 text-2xl font-bold tabular-nums text-emerald-700 dark:text-emerald-300">
             {customer._count?.shipmentsAsSender ?? 0}
@@ -510,7 +510,7 @@ function CustomerDetailContent({
         </div>
         <div className="rounded-lg bg-sky-500/10 p-3">
           <div className="flex items-center gap-1.5 text-xs text-sky-700 dark:text-sky-300">
-            <ArrowDownLeft className="h-3.5 w-3.5" /> Received
+            <ArrowDownLeft className="h-3.5 w-3.5" /> Đã nhận
           </div>
           <p className="mt-1 text-2xl font-bold tabular-nums text-sky-700 dark:text-sky-300">
             {customer._count?.shipmentsAsReceiver ?? 0}
@@ -520,14 +520,14 @@ function CustomerDetailContent({
 
       {/* Status change */}
       <div>
-        <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">Change status</p>
+        <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">Đổi trạng thái</p>
         <Select
           value={customer.status}
           onValueChange={(v) => onStatusChange(v as CustomerStatus)}
           disabled={updating}
         >
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select status" />
+            <SelectValue placeholder="Chọn trạng thái" />
           </SelectTrigger>
           <SelectContent>
             {CUSTOMER_STATUSES.map((s) => (
@@ -540,7 +540,7 @@ function CustomerDetailContent({
       {/* Notes */}
       {customer.notes && (
         <div>
-          <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">Notes</p>
+          <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">Ghi chú</p>
           <div className="rounded-lg border bg-muted/30 p-3 text-xs text-muted-foreground">
             {customer.notes}
           </div>
@@ -549,7 +549,7 @@ function CustomerDetailContent({
 
       {/* Sent shipments */}
       <ShipmentList
-        title="Sent Shipments"
+        title="Đơn hàng đã gửi"
         icon={ArrowUpRight}
         iconClass="text-emerald-600 dark:text-emerald-400"
         shipments={sent}
@@ -559,7 +559,7 @@ function CustomerDetailContent({
 
       {/* Received shipments */}
       <ShipmentList
-        title="Received Shipments"
+        title="Đơn hàng đã nhận"
         icon={ArrowDownLeft}
         iconClass="text-sky-600 dark:text-sky-400"
         shipments={received}
@@ -578,10 +578,10 @@ function CustomerDetailContent({
               onClick={onDelete}
               disabled={deleting}
             >
-              {deleting ? "Deleting…" : "Confirm delete"}
+              {deleting ? "Đang xóa…" : "Xác nhận xóa"}
             </Button>
             <Button variant="outline" size="sm" onClick={() => setConfirmDelete(false)}>
-              Cancel
+              Hủy
             </Button>
           </div>
         ) : (
@@ -591,7 +591,7 @@ function CustomerDetailContent({
             className="gap-1.5 text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-950/40"
             onClick={() => setConfirmDelete(true)}
           >
-            Delete customer
+            Xóa khách hàng
           </Button>
         )}
       </div>
@@ -615,11 +615,11 @@ function ShipmentList({
         <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
           <Icon className={cn("h-3.5 w-3.5", iconClass)} /> {title}
         </p>
-        <Badge variant="secondary" className="text-[10px]">{totalCount} total</Badge>
+        <Badge variant="secondary" className="text-[10px]">{totalCount} tổng</Badge>
       </div>
       {shipments.length === 0 ? (
         <p className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
-          No shipments yet
+          Chưa có đơn hàng
         </p>
       ) : (
         <div className="space-y-1.5">
@@ -679,7 +679,7 @@ function CreateCustomerDialog({
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !phone || !address || !city) {
-      toast.error("Name, phone, address and city are required");
+      toast.error("Tên, điện thoại, địa chỉ và thành phố là bắt buộc");
       return;
     }
     onSubmit({
@@ -699,14 +699,14 @@ function CreateCustomerDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add new customer</DialogTitle>
+          <DialogTitle>Thêm khách hàng mới</DialogTitle>
           <DialogDescription>
-            Register a new customer (sender or recipient) for your shipments.
+            Đăng ký khách hàng mới (người gửi hoặc người nhận) cho các đơn hàng của bạn.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-3">
           <div className="space-y-1.5">
-            <Label htmlFor="c-name">Full name *</Label>
+            <Label htmlFor="c-name">Họ và tên *</Label>
             <Input id="c-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nguyen Van A" required />
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -715,24 +715,24 @@ function CreateCustomerDialog({
               <Input id="c-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="a@company.com" />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="c-phone">Phone *</Label>
+              <Label htmlFor="c-phone">Điện thoại *</Label>
               <Input id="c-phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+84 90x xxx xxx" required />
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="c-company">Company</Label>
+            <Label htmlFor="c-company">Công ty</Label>
             <Input id="c-company" value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Acme Logistics Co." />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="c-address">Address *</Label>
-            <Input id="c-address" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="123 Le Loi, District 1" required />
+            <Label htmlFor="c-address">Địa chỉ *</Label>
+            <Input id="c-address" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="123 Lê Lợi, Quận 1" required />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="c-city">City *</Label>
+              <Label htmlFor="c-city">Thành phố *</Label>
               <Select value={city} onValueChange={setCity}>
                 <SelectTrigger id="c-city" className="w-full">
-                  <SelectValue placeholder="Select city" />
+                  <SelectValue placeholder="Chọn thành phố" />
                 </SelectTrigger>
                 <SelectContent>
                   {VIETNAM_CITIES.map((c) => (
@@ -742,10 +742,10 @@ function CreateCustomerDialog({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="c-type">Type</Label>
+              <Label htmlFor="c-type">Loại</Label>
               <Select value={type} onValueChange={(v) => setType(v as CustomerType)}>
                 <SelectTrigger id="c-type" className="w-full">
-                  <SelectValue placeholder="Select type" />
+                  <SelectValue placeholder="Chọn loại" />
                 </SelectTrigger>
                 <SelectContent>
                   {CUSTOMER_TYPES.map((t) => (
@@ -756,10 +756,10 @@ function CreateCustomerDialog({
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="c-status">Status</Label>
+            <Label htmlFor="c-status">Trạng thái</Label>
             <Select value={status} onValueChange={(v) => setStatus(v as CustomerStatus)}>
               <SelectTrigger id="c-status" className="w-full">
-                <SelectValue placeholder="Select status" />
+                <SelectValue placeholder="Chọn trạng thái" />
               </SelectTrigger>
               <SelectContent>
                 {CUSTOMER_STATUSES.map((s) => (
@@ -769,13 +769,13 @@ function CreateCustomerDialog({
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="c-notes">Notes</Label>
-            <Textarea id="c-notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional notes about this customer…" rows={2} />
+            <Label htmlFor="c-notes">Ghi chú</Label>
+            <Textarea id="c-notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ghi chú tùy chọn về khách hàng này…" rows={2} />
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Hủy</Button>
             <Button type="submit" disabled={submitting} className="gap-1.5">
-              {submitting ? "Creating…" : (<><Plus className="h-4 w-4" /> Create</>)}
+              {submitting ? "Đang tạo…" : (<><Plus className="h-4 w-4" /> Tạo mới</>)}
             </Button>
           </DialogFooter>
         </form>

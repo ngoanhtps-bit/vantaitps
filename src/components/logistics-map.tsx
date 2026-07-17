@@ -6,14 +6,14 @@ import { Truck, Warehouse, Package } from "lucide-react";
 
 // City coordinates (lat/lng) for Vietnam — mapped into a 0-100 SVG viewport
 export const CITY_COORDS: Record<string, { lat: number; lng: number; x: number; y: number }> = {
-  "Ho Chi Minh City": { lat: 10.7626, lng: 106.6601, x: 60, y: 88 },
-  Hanoi: { lat: 21.0285, lng: 105.8342, x: 58, y: 18 },
-  "Da Nang": { lat: 16.0544, lng: 108.2022, x: 55, y: 55 },
-  "Hai Phong": { lat: 20.8449, lng: 106.6881, x: 66, y: 20 },
-  "Can Tho": { lat: 10.0452, lng: 105.7469, x: 48, y: 92 },
+  "TP. Hồ Chí Minh": { lat: 10.7626, lng: 106.6601, x: 60, y: 88 },
+  "Hà Nội": { lat: 21.0285, lng: 105.8342, x: 58, y: 18 },
+  "Đà Nẵng": { lat: 16.0544, lng: 108.2022, x: 55, y: 55 },
+  "Hải Phòng": { lat: 20.8449, lng: 106.6881, x: 66, y: 20 },
+  "Cần Thơ": { lat: 10.0452, lng: 105.7469, x: 48, y: 92 },
   "Nha Trang": { lat: 12.2388, lng: 109.1967, x: 66, y: 70 },
-  Hue: { lat: 16.4637, lng: 107.5909, x: 52, y: 52 },
-  "Vung Tau": { lat: 10.9877, lng: 107.0819, x: 68, y: 86 },
+  "Huế": { lat: 16.4637, lng: 107.5909, x: 52, y: 52 },
+  "Vũng Tàu": { lat: 10.9877, lng: 107.0819, x: 68, y: 86 },
 };
 
 // approximate Vietnam landmass path (stylized)
@@ -196,23 +196,23 @@ export function LogisticsMap({
 
       {/* Legend */}
       <div className="absolute bottom-3 left-3 flex min-w-[140px] flex-col gap-2 rounded-xl border border-border/50 bg-background/70 p-3 text-[11px] shadow-sm backdrop-blur-md">
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Legend</span>
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Chú giải</span>
         <div className="flex items-center gap-2.5">
           <span className="relative flex h-3 w-3 items-center justify-center">
             <span className="absolute inline-flex h-3 w-3 animate-ping rounded-full bg-emerald-500 opacity-60" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
           </span>
-          <span className="font-medium">Live shipment</span>
+          <span className="font-medium">Đơn hàng trực tuyến</span>
         </div>
         <div className="flex items-center gap-2.5">
           <span className="h-2.5 w-2.5 rotate-45 rounded-[2px] bg-sky-600" />
-          <span className="font-medium">Warehouse</span>
+          <span className="font-medium">Kho hàng</span>
         </div>
         <div className="flex items-center gap-2.5">
           <svg width="11" height="11" viewBox="0 0 10 10" className="text-orange-500">
             <polygon points="5,0.5 9.5,9 0.5,9" fill="currentColor" />
           </svg>
-          <span className="font-medium">Delayed</span>
+          <span className="font-medium">Trễ hạn</span>
         </div>
       </div>
     </div>

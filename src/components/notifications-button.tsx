@@ -101,7 +101,7 @@ export function NotificationsButton() {
           variant="ghost"
           size="icon"
           className="relative rounded-full"
-          aria-label={`Notifications${urgentCount > 0 ? `, ${urgentCount} urgent` : ""}`}
+          aria-label={`Thông báo${urgentCount > 0 ? `, ${urgentCount} khẩn cấp` : ""}`}
         >
           <Bell className="h-[1.15rem] w-[1.15rem]" />
           {urgentCount > 0 && (
@@ -120,7 +120,7 @@ export function NotificationsButton() {
         <div className="flex items-center justify-between border-b px-4 py-3">
           <div className="flex items-center gap-2">
             <Bell className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-semibold">Notifications</span>
+            <span className="text-sm font-semibold">Thông báo</span>
           </div>
           <div className="flex items-center gap-1">
             {counts.critical > 0 && (
@@ -144,8 +144,8 @@ export function NotificationsButton() {
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                 <CheckCircle2 className="h-5 w-5" />
               </div>
-              <p className="text-sm font-medium">All clear!</p>
-              <p className="text-xs text-muted-foreground">No notifications right now.</p>
+              <p className="text-sm font-medium">Tất cả đã ổn!</p>
+              <p className="text-xs text-muted-foreground">Không có thông báo lúc này.</p>
             </div>
           ) : (
             notifs.map((n) => {
@@ -182,7 +182,7 @@ export function NotificationsButton() {
             className="w-full justify-center gap-1.5 text-xs"
             onClick={() => setView("tracking")}
           >
-            View live tracking <ArrowRight className="h-3.5 w-3.5" />
+            Xem theo dõi trực tuyến <ArrowRight className="h-3.5 w-3.5" />
           </Button>
         </div>
       </DropdownMenuContent>

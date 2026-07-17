@@ -17,16 +17,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Logistics App V2 — Smart Fleet & Shipment Operations",
+  title: "Logistics App V2 — Quản lý đội xe & đơn hàng thông minh",
   description:
-    "Modern logistics management platform: real-time shipment tracking, fleet & driver management, warehouse operations, and analytics.",
+    "Nền tảng quản lý logistics hiện đại: theo dõi đơn hàng thời gian thực, quản lý đội xe và tài xế, vận hành kho hàng và phân tích dữ liệu.",
   keywords: [
     "logistics",
-    "fleet management",
-    "shipment tracking",
-    "supply chain",
-    "delivery",
-    "warehouse",
+    "quản lý đội xe",
+    "theo dõi đơn hàng",
+    "chuỗi cung ứng",
+    "giao hàng",
+    "kho hàng",
   ],
   authors: [{ name: "Logistics App V2" }],
 };
@@ -37,7 +37,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="vi" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >

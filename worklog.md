@@ -488,3 +488,282 @@ The Logistics App V2 was stable from the previous round with 10 views (Dashboard
 3. **Dashboard widgets customization** — drag-and-drop widget arrangement.
 4. **WebSocket mini-service** for true real-time tracking (push-based instead of polling).
 5. **Invoice line items model** — persist line items as separate records for immutable invoices.
+
+---
+Task ID: VI-A
+Agent: general-purpose (Vietnamese i18n — dashboard + tracking views)
+Task: Translate ALL English UI text to Vietnamese (tiếng Việt) in dashboard-view.tsx and tracking-view.tsx
+
+Work Log:
+- Read worklog.md to understand project context (Next.js 16 + TS + Tailwind CSS 4 logistics platform).
+- Inspected the two target files: `src/components/views/dashboard-view.tsx` and `src/components/views/tracking-view.tsx`.
+- Applied Vietnamese translations to **dashboard-view.tsx**:
+  - Hero banner: greeting ("Good morning/afternoon/evening" → "Chào buổi sáng/chiều/tối"), "Ops Team" → "Đội vận hành", the descriptive paragraph ("You have … shipments in transit, … delayed, and … delivered revenue." → "Bạn có … đơn hàng đang vận chuyển, … trễ hạn, và … doanh thu đã giao."), Live badge ("Live · … active" → "Trực tiếp · … hoạt động"), and the three HeroStat labels (Delivered/In Transit/Delayed → Đã giao/Đang vận chuyển/Trễ hạn).
+  - Quick-action buttons: "New Shipment" → "Tạo đơn hàng", "Live Tracking" → "Theo dõi trực tuyến", "View Analytics" → "Xem phân tích".
+  - Five KPI cards: titles, trendLabels, and footers translated (Tổng đơn hàng, Đang giao hàng, Doanh thu (đã giao), Tỷ lệ đúng hạn, Đội xe & Tài xế; "vs last month" → "so với tháng trước"; "service level" → "mức dịch vụ"; "pending" → "chờ xử lý"; "active now" → "đang hoạt động"; "in transit" → "đang vận chuyển"; "delayed" → "trễ hạn"; "delivered" → "đã giao"; "vehicles / drivers" → "phương tiện / tài xế").
+  - Volume area chart: "Shipment Volume" → "Khối lượng đơn hàng", description → "Đơn hàng và giao hàng theo ngày · 14 ngày qua", legend labels "Created"/"Delivered" → "Đã tạo"/"Đã giao", and chart series `name` props translated accordingly. Changed `toLocaleDateString` locale from "en-US" to "vi-VN" for both XAxis tickFormatter and Tooltip labelFormatter.
+  - Status pie: "Status Distribution" → "Phân bố trạng thái", "Current shipment statuses" → "Trạng thái đơn hàng hiện tại".
+  - Live Fleet Tracking card: "Live Fleet Tracking" → "Theo dõi đội xe trực tuyến", "… shipments currently in motion" → "… đơn hàng đang di chuyển", "View full map" → "Xem bản đồ đầy đủ".
+  - Needs Attention card: "Needs Attention" → "Cần chú ý"; rows "Delayed shipments"→"Đơn hàng trễ hạn", "In transit"→"Đang vận chuyển", "Out for delivery"→"Đang giao hàng", "Cancelled / Returned"→"Đã hủy / Trả hàng".
+  - Top Origin Cities card: title → "Thành phố xuất phát hàng đầu", Bar `name="Shipments"` → `name="Đơn hàng"`.
+  - Recent Shipments card: title → "Đơn hàng gần đây", description → "8 đơn hàng mới nhất", "View all" → "Xem tất cả".
+  - Top Drivers card: title → "Tài xế hàng đầu", description → "Theo tổng số giao hàng", button "All" → "Tất cả", and per-driver "… deliveries" → "… lần giao".
+- Applied Vietnamese translations to **tracking-view.tsx**:
+  - Header strip: "… shipments live · " → "… đơn hàng trực tuyến · ", `auto-refresh ${n}s` → `tự động làm mới ${n}s`, `auto-refresh off` → `tự động làm mới tắt`, "· updated …" → "· đã cập nhật …".
+  - Status badge: "Syncing…" → "Đang đồng bộ…", "Real-time" → "Thời gian thực".
+  - Refresh button: "Refresh" → "Làm mới".
+  - Empty-state panel: "Select a shipment" → "Chọn đơn hàng", "Click any marker on the map to see live details." → "Nhấp vào bất kỳ điểm đánh dấu nào trên bản đồ để xem chi tiết trực tiếp."
+  - Selected shipment detail: "Progress" → "Tiến độ", "Sender" → "Người gửi", "Receiver" → "Người nhận", "Open full details" → "Xem chi tiết đầy đủ".
+  - Active Fleet list: "Active Fleet" → "Đội xe đang hoạt động", "… shipments in motion" → "… đơn hàng đang di chuyển".
+  - Delayed Shipments list: "Delayed Shipments" → "Đơn hàng trễ hạn", "… need attention" → "… cần chú ý".
+  - Warehouse Network strip: "Warehouse Network" → "Mạng lưới kho hàng", "% used" → "% sử dụng".
+- Preserved without translation (per rules): all variable/import/identifier names, className values, prop names (e.g., `kind="shipment"` on StatusBadge), type names, API paths, technical abbreviations, and code-level comments.
+- Note: The translation list mentioned "Tracking History" → "Lịch sử theo dõi", but that exact string does not appear in `tracking-view.tsx` (it is not a label rendered in this view) — no action needed there.
+
+## Verification Results
+- **Lint**: `bun run lint` returns 0 errors, 1 pre-existing warning in `prisma/seed.ts` (unrelated to this task — an unused eslint-disable directive). Both edited files (`dashboard-view.tsx`, `tracking-view.tsx`) are lint-clean.
+- **Visual structure**: Only display strings were changed; JSX structure, Tailwind classes, and component props are unchanged, so layout/behavior is unaffected.
+
+## Files Edited
+1. `/home/z/my-project/src/components/views/dashboard-view.tsx`
+2. `/home/z/my-project/src/components/views/tracking-view.tsx`
+
+## Next Actions
+- (Optional) Verify in-browser that the dashboard and tracking views render Vietnamese text correctly across light/dark themes.
+- (Optional) If broader i18n is planned, consider extracting these strings into a locale dictionary (`vi.json`) and wiring `t()` so the rest of the app can be translated consistently.
+
+---
+Task ID: VI-B
+Agent: general-purpose (Vietnamese i18n — shipments + invoices + reports views)
+Task: Translate ALL English UI text to Vietnamese (tiếng Việt) in shipments-view.tsx, invoices-view.tsx, and reports-view.tsx
+
+Work Log:
+- Read worklog.md (incl. VI-A prior i18n round) to align with conventions established for dashboard/tracking views.
+- Inspected the three target files: `shipments-view.tsx` (1117 lines), `invoices-view.tsx` (625 lines), `reports-view.tsx` (407 lines).
+- Applied Vietnamese translations to **shipments-view.tsx** (filter bar, bulk-action bar, table headers, empty state, pagination, Create dialog, Detail drawer, Edit dialog, Delete alert, all toast messages, CSV export headers, and aria-labels):
+  - Filter bar: search placeholder → "Tìm mã vận đơn, người gửi, tuyến đường…", four `<Select>` placeholders ("Trạng thái"/"Ưu tiên"/"Dịch vụ"/"Thành phố") and "all" option labels (Tất cả trạng thái/mức ưu tiên/dịch vụ/thành phố), "Clear" → "Xóa", "New" → "Tạo mới".
+  - Bulk action bar: "{n} selected" → "{n} đã chọn", "Update status…" → "Cập nhật trạng thái…", "Export CSV" → "Xuất CSV", "Clear" → "Xóa".
+  - Empty state: "No shipments found" → "Không tìm thấy đơn hàng", "Try adjusting filters or create a new shipment." → "Thử điều chỉnh bộ lọc hoặc tạo đơn hàng mới.", "Reset filters" → "Đặt lại bộ lọc".
+  - Table headers: Tracking #/Route/Status/Priority/Driver/Cost/Created → Mã vận đơn/Tuyến đường/Trạng thái/Ưu tiên/Tài xế/Chi phí/Ngày tạo. "Unassigned" → "Chưa gán".
+  - Pagination: "Showing … of …" → "Hiển thị … trong tổng số …", "Prev" → "Trước", "Next" → "Sau".
+  - Create dialog: title → "Tạo đơn hàng mới", description → "Điền thông tin đơn hàng. Mã vận đơn được tạo tự động." Labels translated (Loại dịch vụ, Người gửi *, Người nhận *, Địa chỉ đi *, Thành phố đi *, Địa chỉ đến *, Thành phố đến *, Trọng lượng (kg), Số kiện, Ưu tiên, Mô tả, Gán tài xế, Gán phương tiện, Ghi chú). Placeholders: "Select sender/receiver/city" → "Chọn người gửi/người nhận/thành phố", "Unassigned" → "Chưa gán", "e.g. Electronics" → "vd. Điện tử", "Street address" → "Địa chỉ đường phố". Footer: "Cancel" → "Hủy", "Creating…" → "Đang tạo…", "Create Shipment" → "Tạo đơn hàng".
+  - Detail drawer: sr-only "Shipment details" → "Chi tiết đơn hàng", "Loading…" → "Đang tải…", action buttons (Label/Edit/Delete → Nhãn/Sửa/Xóa). Route block "From"/"To"/"Progress" → "Từ"/"Đến"/"Tiến độ". Status action buttons → Lấy hàng / Đang vận chuyển / Đang giao hàng / Đánh dấu đã giao / Báo trễ / Hủy / Đánh dấu trả hàng. Parties section: Sender/Receiver → Người gửi/Người nhận. Cargo Stat labels → Trọng lượng / Số kiện / Chi phí / Bảo hiểm. Driver/Vehicle blocks: "Assigned Driver" → "Tài xế được gán", "Vehicle" → "Phương tiện", "Unassigned" → "Chưa gán". Timeline: "Tracking History" → "Lịch sử theo dõi". Notes label → "Ghi chú".
+  - Edit dialog: title → "Sửa đơn hàng", description → "Cập nhật thông tin đơn hàng …", labels translated (Ưu tiên, Loại dịch vụ, Gán tài xế, Gán phương tiện, Trọng lượng (kg), Số kiện, Mô tả, Ghi chú), placeholders translated, footer "Cancel" → "Hủy", "Saving…" → "Đang lưu…", "Save Changes" → "Lưu thay đổi".
+  - Delete alert: "Delete shipment?" → "Xóa đơn hàng?", description fully translated including "Hành động này không thể hoàn tác.", "Cancel" → "Hủy", "Deleting…" → "Đang xóa…", "Delete shipment" → "Xóa đơn hàng".
+  - Toasts: "Shipment updated/deleted/created" → "Đã cập nhật/xóa/tạo đơn hàng"; bulk-update success → `Đã cập nhật ${n} đơn hàng`; error toasts → "Cập nhật hàng loạt thất bại" / "Tạo đơn hàng thất bại" / "Cập nhật thất bại" / "Xóa thất bại"; CSV export success → `Đã xuất ${n} đơn hàng sang CSV`.
+  - CSV export header row translated to Vietnamese (Mã vận đơn, Trạng thái, Ưu tiên, Dịch vụ, Điểm đi, Điểm đến, Người gửi, Người nhận, Trọng lượng (kg), Số kiện, Chi phí, Ngày tạo).
+  - aria-labels: "Select all" → "Chọn tất cả", "Select ${trackingNumber}" → "Chọn ${trackingNumber}".
+- Applied Vietnamese translations to **invoices-view.tsx**:
+  - 5 KPI cards: titles → Tổng hóa đơn / Đã thanh toán / Chưa thanh toán / Quá hạn / Hóa đơn TB.
+  - Filter bar: search placeholder → "Tìm số hóa đơn, khách hàng, công ty…", status select placeholder → "Trạng thái", "All statuses" → "Tất cả trạng thái", "Generate" → "Tạo hóa đơn".
+  - Empty state: "No invoices yet" → "Chưa có hóa đơn", "Generate invoices from delivered shipments to get started." → "Tạo hóa đơn từ đơn hàng đã giao để bắt đầu.", "Generate Invoice" → "Tạo hóa đơn".
+  - Table headers: Invoice #/Customer/Status/Period/Due Date/Total/Issued → Số hóa đơn/Khách hàng/Trạng thái/Kỳ hạn/Hạn thanh toán/Tổng cộng/Ngày phát hành. Inline "Paid …" date → "Đã thanh toán …".
+  - Generate dialog: title → "Tạo hóa đơn", description → "Tạo hóa đơn từ đơn hàng đã giao trong kỳ thanh toán." Labels translated (Khách hàng *, Từ ngày *, Đến ngày *, Hạn thanh toán, Thuế suất, Ghi chú). "Select customer" → "Chọn khách hàng", "0% (No tax)" → "0% (Không thuế)", "Optional invoice notes…" → "Ghi chú hóa đơn tùy chọn…". Preview text: "✓ … delivered shipment(s) found" → "✓ Tìm thấy … đơn hàng đã giao", "⚠ No delivered shipments in this period" → "⚠ Không có đơn hàng đã giao trong kỳ này". Footer: "Cancel" → "Hủy", "Generating…" → "Đang tạo…", "Generate Invoice" → "Tạo hóa đơn".
+  - Detail drawer: sr-only "Invoice details" → "Chi tiết hóa đơn", "Loading…" → "Đang tải…", "Print" → "In". Status action buttons → Đánh dấu đã gửi / Đánh dấu đã thanh toán / Đánh dấu quá hạn / Hủy hóa đơn. Brand tagline "Express Delivery Network" → "Mạng lưới giao hàng nhanh" (kept brand name "LOGISTICS V2" unchanged). "Issued:"/"Due:" → "Ngày phát hành:"/"Hạn thanh toán:". "Bill To" → "Thanh toán cho". "Billing Period" → "Kỳ thanh toán". "Line Items (n)" → "Chi tiết hạng mục (n)", inner table headers Tracking #/Destination/Amount → Mã vận đơn/Điểm đến/Thành tiền. Totals: "Subtotal" → "Tạm tính", "Tax (n%)" → "Thuế (n%)", "Total" → "Tổng cộng", "✓ Paid on …" → "✓ Đã thanh toán ngày …". Notes label → "Ghi chú".
+  - Toasts: "Invoice generated" → "Đã tạo hóa đơn", "Invoice updated" → "Đã cập nhật hóa đơn"; error toasts → "Tạo hóa đơn thất bại" / "Cập nhật thất bại".
+- Applied Vietnamese translations to **reports-view.tsx**:
+  - Range select options: "Last 7/30/90 days" → "7/30/90 ngày qua", "Year to date" → "Từ đầu năm"; matching `rangeLabel` ternary updated so the badge + chart descriptions render Vietnamese natively.
+  - Export buttons: "Summary" → "Tóm tắt", "Export CSV" → "Xuất CSV".
+  - 4 KPI cards: titles → Đơn hàng trong kỳ / Doanh thu (đã giao) / Thời gian giao TB / Doanh thu hóa đơn. footers → `${n} tất cả thời gian`, `${money} chờ xử lý`, "lấy hàng → giao hàng", `${money} chưa thanh toán`. trendLabel "vs prior" → "so với trước".
+  - Charts: "Shipment & Revenue Trend" → "Xu hướng đơn hàng & doanh thu", description → "Khối lượng và doanh thu theo ngày trong …". Area series `name` props → "Đơn hàng" / "Doanh thu". Bar series `name` → "Doanh thu". "Status Distribution" → "Phân bố trạng thái", description → "Trạng thái đơn hàng trong kỳ". "Revenue by Service Type" → "Doanh thu theo loại dịch vụ", description → "Số đơn hàng và doanh thu theo dịch vụ". Service legend `${n} shipments` → `${n} đơn hàng`. Changed `toLocaleDateString` locale on XAxis tickFormatter from "en-US" to "vi-VN".
+  - Top lists: "Top Routes" → "Tuyến đường hàng đầu" + description "Cặp điểm đi → điểm đến đông nhất"; "Top Customers" → "Khách hàng hàng đầu" + "Theo khối lượng đơn hàng trong kỳ"; "Top Drivers" → "Tài xế hàng đầu" + "Theo số đơn hàng trong kỳ". "Unknown" → "Không xác định", "Unassigned" → "Chưa gán tài xế", `${n} total` → `${n} tổng`, "No driver assigned" → "Chưa gán tài xế".
+  - Recent shipments card: title → "Đơn hàng trong kỳ", description → "Mới nhất ${n} đơn hàng — có thể xuất CSV", table headers (Tracking #/Route/Status/Service/Cost/Date) → Mã vận đơn/Tuyến đường/Trạng thái/Dịch vụ/Chi phí/Ngày.
+  - CSV export header row translated (Mã vận đơn, Trạng thái, Ưu tiên, Dịch vụ, Điểm đi, Điểm đến, Người gửi, Trọng lượng (kg), Khoảng cách (km), Chi phí, Ngày tạo).
+  - Summary text export (.txt) translated end-to-end: header → "LOGISTICS APP V2 — BÁO CÁO VẬN HÀNH"; field labels (Kỳ, Ngày tạo, Tổng đơn hàng (tất cả thời gian), Đơn hàng trong kỳ, Tổng doanh thu (đã giao), Doanh thu chờ xử lý, Thời gian giao TB (giờ), Doanh thu hóa đơn (đã thanh toán), Hóa đơn chưa thanh toán); section banners (TÓM TẮT / PHÂN BỐ TRẠNG THÁI / KHÁCH HÀNG HÀNG ĐẦU / TÀI XẾ HÀNG ĐẦU / TUYẾN ĐƯỜNG HÀNG ĐẦU / DOANH THU THEO DỊCH VỤ); inline words "Unknown" → "Không xác định", "Unassigned" → "Chưa gán tài xế", "shipments" → "đơn hàng".
+- Preserved without translation (per task rules): all imports, variable/identifier names, type names, className values, prop names (e.g., `kind="shipment"`, `accent="emerald"`, `value="all"`, `value="none"`), API paths (`/api/shipments`, `/api/invoices`, `/api/reports`, `/api/customers`, `/api/drivers`, `/api/vehicles`), Recharts `dataKey` identifiers (`total`/`revenue`/`date`/`serviceType`/`count`), status enum keys (`picked_up`, `in_transit`, `out_for_delivery`, `delivered`, `delayed`, `cancelled`, `returned`, `draft`, `sent`, `paid`, `overdue`), CSV-filename stems (`shipments-export-…`, `logistics-report-…`, `logistics-summary-…`), the brand name `LOGISTICS V2`, currency code `USD`, technical abbreviations (CSV, TB, km, kg, h), and code-level comments. Code structure, JSX layout, and Tailwind classes are unchanged.
+
+## Verification Results
+- **Lint**: `bun run lint` returns 0 errors, 1 pre-existing warning in `prisma/seed.ts` (unused eslint-disable directive — unrelated to this task, same as VI-A). All three edited files (`shipments-view.tsx`, `invoices-view.tsx`, `reports-view.tsx`) are lint-clean.
+- **String audit**: Grep scan confirms no remaining user-facing English UI strings (placeholders, table headers, button labels, dialog titles/descriptions, toasts, aria-labels) in the three files. The only English left is the brand name `LOGISTICS V2` (intentionally preserved), code comments, identifiers, and import statements.
+
+## Files Edited
+1. `/home/z/my-project/src/components/views/shipments-view.tsx`
+2. `/home/z/my-project/src/components/views/invoices-view.tsx`
+3. `/home/z/my-project/src/components/views/reports-view.tsx`
+
+## Next Actions
+- (Optional) Verify in-browser that shipments/invoices/reports views render Vietnamese text correctly across light/dark themes, and that the CSV / .txt exports open with Vietnamese headers/labels in Excel and Notepad respectively.
+- (Optional) Continue the i18n sweep to remaining views (drivers, fleet, customers, warehouses, route-planning, analytics, command palette, settings dialog) for full app-wide Vietnamese coverage.
+- (Optional) For maintainability, extract display strings into a `vi.json` locale dictionary and wire a `t()` helper so future translations are centralized.
+
+---
+Task ID: VI-C
+Agent: general-purpose (Vietnamese i18n — drivers, vehicles, customers, warehouses, routes, analytics views + settings/notifications/keyboard-shortcuts/print-label dialogs)
+Task: Translate ALL English UI text to Vietnamese (tiếng Việt) in remaining views and component dialogs to complete the app-wide i18n sweep started in VI-A/VI-B.
+
+Work Log:
+- Read worklog.md (including VI-A and VI-B prior i18n rounds) to align with conventions established for dashboard / tracking / shipments / invoices / reports views.
+- Inspected each target file before editing: drivers-view (612 lines), vehicles-view (756 lines), customers-view (796 lines), warehouses-view (486 lines), routes-view (569 lines), analytics-view (571 lines), settings-dialog (269 lines), notifications-button (192 lines), keyboard-shortcuts-dialog (102 lines), print-label-dialog (193 lines), and kpi-card (103 lines).
+
+- Applied Vietnamese translations to **drivers-view.tsx**:
+  - KPI cards: "Total Drivers/Available Now/On Delivery/Avg Rating" → "Tổng tài xế/Sẵn sàng/Đang giao/Đánh giá TB"; footers "available now/Ready for assignment/Currently active/Across all drivers" → "sẵn sàng/Sẵn sàng nhận việc/Đang hoạt động/Trên tất cả tài xế".
+  - Filter bar: search placeholder "Search name, phone, license #…" → "Tìm theo tên, điện thoại, bằng lái…", status select placeholder + "All statuses" → "Trạng thái" / "Tất cả trạng thái", "Clear" → "Xóa", "Add Driver" → "Thêm tài xế".
+  - Empty state: "No drivers found" → "Không tìm thấy tài xế", description + "Reset filters" translated.
+  - Detail drawer: Sheet title/description → "Chi tiết tài xế" / "Hồ sơ đầy đủ, thống kê và đơn hàng gần đây."; card "Expires …" → "Hết hạn …"; Stat labels "Deliveries/Distance/Rating" → "Lần giao/Quãng đường/Đánh giá"; vehicle "Unassigned" → "Chưa gán"; "View details" → "Xem chi tiết".
+  - Detail content: "Joined …" → "Vào làm …"; DetailRow labels (Email kept; Phone → Điện thoại; License # → Bằng lái; License expires → Bằng lái hết hạn; Hire date → Ngày vào làm); "Assigned vehicle" → "Phương tiện được gán"; "Change status" → "Đổi trạng thái"; select placeholder "Select status" → "Chọn trạng thái"; "Recent shipments" → "Đơn hàng gần đây"; "{n} total" → "{n} tổng"; "No shipments yet" → "Chưa có đơn hàng".
+  - Create dialog: title "Add new driver" → "Thêm tài xế mới"; description translated including the escaped "Available" → "Sẵn sàng"; labels (Full name → Họ và tên, Email kept, Phone → Điện thoại, License # → Số bằng lái, License expiry → Bằng lái hết hạn, Avatar color → Màu đại diện); placeholder "Pick a color" → "Chọn màu"; footer "Cancel/Creating…/Create driver" → "Hủy/Đang tạo…/Tạo tài xế". Validation toast → "Tên, điện thoại và số bằng lái là bắt buộc". Mutation toasts → "Đã cập nhật trạng thái tài xế" / "Đã tạo tài xế thành công" with matching error fallbacks.
+
+- Applied Vietnamese translations to **vehicles-view.tsx**:
+  - KPI cards: "Total Vehicles/Active/In Maintenance/Total Capacity" → "Tổng phương tiện/Hoạt động/Đang bảo trì/Tổng tải trọng"; footers "In fleet/On the road/Being serviced/Combined payload" → "Trong đội xe/Đang chạy/Đang sửa chữa/Tải trọng tổng cộng".
+  - Filter bar: search "Search plate, model, brand…" → "Tìm biển số, mẫu xe, hãng xe…"; status/type placeholders + "All statuses/All types" → "Trạng thái/Loại" / "Tất cả trạng thái/Tất cả loại"; "Clear" → "Xóa"; "Add Vehicle" → "Thêm phương tiện".
+  - Empty state: "No vehicles found" → "Không tìm thấy phương tiện"; description + "Reset filters" translated.
+  - Detail drawer: Sheet title/description → "Chi tiết phương tiện" / "Thông số đầy đủ, bảo trì và đơn hàng gần đây."; vehicle card SpecItem labels "Capacity/Mileage" → "Tải trọng/Số km"; "Fuel" → "Nhiên liệu"; maintenance "Next: …" → "Tiếp theo: …", "No scheduled maintenance" → "Chưa lên lịch bảo trì", "Overdue — service required" → "Quá hạn — cần bảo trì"; "Assigned driver" → "Tài xế được gán"; "Unassigned" → "Chưa gán"; "View details" → "Xem chi tiết".
+  - Detail content: badges "{fuelType} fuel" → "{fuelType} nhiên liệu"; "Maintenance" panel → "Bảo trì"; "Last service/Next service" → "Bảo trì gần nhất/Bảo trì tiếp theo"; "Maintenance overdue — please service this vehicle" → "Bảo trì quá hạn — vui lòng bảo trì phương tiện này"; "Assigned driver" → "Tài xế được gán"; "No driver assigned" → "Chưa gán tài xế"; "Update status" → "Cập nhật trạng thái"; "Select status" → "Chọn trạng thái"; "Fuel level" → "Mức nhiên liệu"; slider hint "Drag to adjust — releases to update." → "Kéo để điều chỉnh — nhả để cập nhật."; "Recent shipments" → "Đơn hàng gần đây"; "{n} total" → "{n} tổng"; "No shipments yet" → "Chưa có đơn hàng".
+  - Create dialog: title "Add new vehicle" → "Thêm phương tiện mới"; description translated including "Active" → "Hoạt động"; labels (Plate number → Biển số, Model → Mẫu xe, Brand → Hãng xe, Type → Loại, Capacity (kg) → Tải trọng (kg), Fuel type → Loại nhiên liệu, Color → Màu sắc); placeholders "Type/Fuel/Color" → "Loại/Nhiên liệu/Màu sắc"; footer "Cancel/Adding…/Add vehicle" → "Hủy/Đang thêm…/Thêm phương tiện". Validation toast → "Biển số, mẫu xe và hãng xe là bắt buộc". Mutation toasts → "Đã cập nhật phương tiện" / "Đã thêm phương tiện vào đội xe".
+
+- Applied Vietnamese translations to **customers-view.tsx**:
+  - CUSTOMER_STATUS_META labels: Active/Inactive → "Hoạt động/Không hoạt động" (VIP kept); CUSTOMER_TYPE_META labels: Business/Individual → "Doanh nghiệp/Cá nhân".
+  - KPI cards: "Total Customers/VIP Customers/Active/Business Type" → "Tổng khách hàng/Khách VIP/Hoạt động/Loại doanh nghiệp"; footers ("{n} VIP · {n} business" → "{n} VIP · {n} doanh nghiệp", "High priority tier" → "Phân khúc ưu tiên cao", "Currently trading" → "Đang giao dịch", "B2B accounts" → "Tài khoản B2B").
+  - Filter bar: search "Search name, phone, email, company…" → "Tìm tên, điện thoại, email, công ty…"; status/type/city placeholders + "All statuses/All types/All cities" → "Trạng thái/Loại/Thành phố" / "Tất cả trạng thái/Tất cả loại/Tất cả thành phố"; "Clear" → "Xóa"; "Add Customer" → "Thêm khách hàng".
+  - Empty state: "No customers found" → "Không tìm thấy khách hàng"; description + "Reset filters" translated.
+  - Table headers: Customer/Company/City/Phone/Shipments/Status/Created → "Khách hàng/Công ty/Thành phố/Điện thoại/Đơn hàng/Trạng thái/Ngày tạo".
+  - Detail drawer: Sheet title/description → "Chi tiết khách hàng" / "Hồ sơ, thông tin liên hệ và lịch sử đơn hàng."; "Customer since …" → "Khách hàng từ …"; DetailRow labels (Email kept, Phone → Điện thoại, Company → Công ty, Address → Địa chỉ, City → Thành phố, ZIP → Mã bưu chính); stats "Sent/Received" → "Đã gửi/Đã nhận"; "Change status" → "Đổi trạng thái"; "Select status" → "Chọn trạng thái"; "Notes" → "Ghi chú"; ShipmentList titles "Sent Shipments/Received Shipments" → "Đơn hàng đã gửi/Đơn hàng đã nhận"; "{n} total" → "{n} tổng"; "No shipments yet" → "Chưa có đơn hàng".
+  - Delete confirm flow: "Deleting…/Confirm delete" → "Đang xóa…/Xác nhận xóa"; "Cancel" → "Hủy"; "Delete customer" → "Xóa khách hàng".
+  - Create dialog: title "Add new customer" → "Thêm khách hàng mới"; description translated; labels (Full name → Họ và tên, Email kept, Phone → Điện thoại, Company → Công ty, Address → Địa chỉ, City → Thành phố, Type → Loại, Status → Trạng thái, Notes → Ghi chú); placeholders "Select city/Select type/Select status" → "Chọn thành phố/Chọn loại/Chọn trạng thái"; placeholder address "123 Le Loi, District 1" → "123 Lê Lợi, Quận 1"; notes placeholder → "Ghi chú tùy chọn về khách hàng này…"; footer "Cancel/Creating…/Create" → "Hủy/Đang tạo…/Tạo mới". Validation toast → "Tên, điện thoại, địa chỉ và thành phố là bắt buộc". Mutation toasts → "Đã tạo khách hàng thành công" / "Đã cập nhật trạng thái khách hàng" / "Đã xóa khách hàng".
+
+- Applied Vietnamese translations to **warehouses-view.tsx**:
+  - KPI cards: "Total Warehouses/Operational/At Capacity/Total Capacity" → "Tổng kho hàng/Hoạt động/Đầy công suất/Tổng công suất"; footers ("Across network/Active and running/Need attention" → "Trên toàn mạng lưới/Đang hoạt động/Cần chú ý", "{n} used" → "{n} đã sử dụng").
+  - Map card title/description: "Warehouse Network" → "Mạng lưới kho hàng"; "{n} locations · {n} operational" → "{n} địa điểm · {n} hoạt động".
+  - Filter bar: search "Search name, code, address, manager…" → "Tìm tên, mã, địa chỉ, quản lý…"; status/city placeholders + "All statuses/All cities" → "Trạng thái/Thành phố" / "Tất cả trạng thái/Tất cả thành phố"; "Clear" → "Xóa".
+  - Empty state: "No warehouses found" → "Không tìm thấy kho hàng"; description + "Reset filters" translated.
+  - Detail drawer: Sheet title/description → "Chi tiết kho hàng" / "Thông tin cơ sở đầy đủ, công suất và vị trí."; WarehouseCard capacity "Capacity" → "Công suất", "{n} used/{n} total" → "{n} đã sử dụng/{n} tổng"; "As origin/As destination" → "Là điểm đi/Là điểm đến"; "{n} shipments handled" → "{n} đơn hàng đã xử lý"; "View details" → "Xem chi tiết".
+  - Detail content: "Created …" → "Ngày tạo …"; "Capacity Usage" → "Mức sử dụng công suất"; "Used/Capacity/Free" → "Đã sử dụng/Công suất/Còn trống"; DetailRow labels (Address → Địa chỉ, City → Thành phố, Manager → Quản lý, Phone → Điện thoại, Coordinates → Tọa độ); "Shipments Activity" → "Hoạt động đơn hàng"; "Origin/Destination/Total" → "Điểm đi/Điểm đến/Tổng"; "Location" → "Vị trí".
+
+- Applied Vietnamese translations to **routes-view.tsx**:
+  - KPI cards: "Total Routes/Active/Planned/Completed/Total Distance" → "Tổng tuyến/Đang chạy/Đã lên kế hoạch/Hoàn thành/Tổng quãng đường".
+  - Filter bar: search "Search route name, driver, vehicle…" → "Tìm tên tuyến, tài xế, phương tiện…"; status placeholder + "All statuses" → "Trạng thái" / "Tất cả trạng thái".
+  - Empty state: "No routes found/Try adjusting filters." → "Không tìm thấy tuyến/Thử điều chỉnh bộ lọc.".
+  - RouteCard: action buttons "Start/Complete" → "Bắt đầu/Hoàn thành"; StatTile labels "Stops/Distance/Duration/Cargo" → "Trạm dừng/Quãng đường/Thời gian/Hàng hóa"; "Unassigned driver/Unassigned vehicle" → "Chưa gán tài xế/Chưa gán phương tiện"; "Route Progress" → "Tiến độ tuyến"; "{n}/{n} stops · {n}%" → "{n}/{n} trạm dừng · {n}%"; toggle "{n} stops / Hide|Show stops" → "{n} trạm dừng / Ẩn|Hiển thị trạm dừng"; "View full details/View details" → "Xem chi tiết đầy đủ/Xem chi tiết".
+  - Detail drawer: sr-only "Route details" → "Chi tiết tuyến"; "Loading…" → "Đang tải…"; "Started/Ended …" → "Bắt đầu/Kết thúc …"; stat tiles labels (Stops/Distance/Duration/Cargo → Trạm dừng/Quãng đường/Thời gian/Hàng hóa); "Assigned Driver/Vehicle" → "Tài xế được gán/Phương tiện"; "Unassigned" → "Chưa gán"; timeline heading "Delivery Sequence ({n} stops)" → "Thứ tự giao hàng ({n} trạm dừng)"; "{n} pcs" → "{n} kiện"; empty state "No active stops/This route has no shipments assigned to its driver." → "Không có trạm dừng nào/Tuyến này chưa có đơn hàng nào được gán cho tài xế.". Mutation toasts → "Đã cập nhật tuyến" / "Cập nhật thất bại".
+
+- Applied Vietnamese translations to **analytics-view.tsx**:
+  - Header: "Analytics Overview" → "Tổng quan phân tích"; "Last 14 days · updated every 30s" → "14 ngày qua · cập nhật mỗi 30 giây"; badge "Live" → "Trực tiếp"; button "Export CSV" → "Xuất CSV".
+  - KPI cards: "Total Revenue/Pending Revenue/Avg Shipment Value/On-time Rate/Active Shipments" → "Tổng doanh thu/Doanh thu chờ/Giá trị đơn hàng TB/Tỷ lệ đúng hạn/Đơn hàng đang hoạt động"; trendLabel "delivered/service level" → "đã giao/mức dịch vụ"; footers ("{n} pending/In pipeline/{n} delivered/{n} delayed/{n} in transit" → "{n} chờ xử lý/Ngày trong quy trình/{n} đã giao/{n} trễ hạn/{n} đang vận chuyển").
+  - Revenue trend card: "Revenue Trend/Daily delivered revenue · last 14 days/Revenue" → "Xu hướng doanh thu/Doanh thu đã giao theo ngày · 14 ngày qua/Doanh thu"; chart series name + Tooltip formatter label → "Doanh thu"; XAxis tickFormatter + Tooltip labelFormatter locale changed "en-US" → "vi-VN".
+  - Volume + status pie: "Shipment Volume/Created vs delivered · last 14 days/Created/Delivered" → "Khối lượng đơn hàng/Đã tạo so với đã giao · 14 ngày qua/Đã tạo/Đã giao"; "Status Distribution/Current shipment statuses" → "Phân bố trạng thái/Trạng thái đơn hàng hiện tại"; stacked Bar `name` props translated; XAxis/Tooltip locale → "vi-VN".
+  - City throughput + vehicle breakdown: "Top Origin Cities/By shipment volume" → "Thành phố xuất phát hàng đầu/Theo khối lượng đơn hàng"; "{n} shipments/Volume" → "{n} đơn hàng/Khối lượng"; Bar `name` → "Đơn hàng"; "Vehicle Type Breakdown/Fleet composition" → "Cơ cấu loại phương tiện/Thành phần đội xe".
+  - Vehicle status + top performers: "Vehicle Status/Fleet availability" → "Trạng thái phương tiện/Tình trạng đội xe"; "{n} vehicles/Count" → "{n} phương tiện/Số lượng"; Bar `name` → "Phương tiện"; "Top Performers/Drivers by total deliveries" → "Người thực hiện xuất sắc/Tài xế theo tổng số lần giao"; empty "No driver data available" → "Chưa có dữ liệu tài xế"; vehicle line "Unassigned" → "Chưa gán"; "{n} deliveries" → "{n} lần giao".
+  - Summary footer stats: "Total Shipments/Fleet & Drivers/In Transit/Delivered" → "Tổng đơn hàng/Đội xe & Tài xế/Đang vận chuyển/Đã giao"; sub labels ("vehicles / drivers/shipments moving/{n}% on-time" → "phương tiện / tài xế/đơn hàng đang di chuyển/{n}% đúng hạn"). Toasts → "Đã xuất CSV" / "Xuất CSV thất bại".
+
+- Applied Vietnamese translations to **settings-dialog.tsx**:
+  - REFRESH_OPTIONS labels "Off/15 seconds/30 seconds/1 minute" → "Tắt/15 giây/30 giây/1 phút".
+  - STATUS_OPTIONS labels "All shipments/Pending/In transit/Delayed/Delivered" → "Tất cả đơn hàng/Chờ xử lý/Đang vận chuyển/Trễ hạn/Đã giao".
+  - Dialog title "Settings" → "Cài đặt"; description → "Tùy chỉnh không gian làm việc logistics của bạn. Các thay đổi được lưu tự động."
+  - Sections: "Appearance/Theme and visual preferences" → "Giao diện/Chủ đề và tùy chọn hiển thị"; "Theme/Choose light, dark, or system theme" → "Chủ đề/Chọn chủ đề sáng, tối hoặc hệ thống"; theme buttons "Light/Dark/Auto" → "Sáng/Tối/Tự động"; "Dashboard hero banner/Show the gradient welcome banner on the dashboard" → "Banner trang tổng quan/Hiển thị banner chào mừng gradient trên trang tổng quan"; "Compact tables/Reduce row padding for denser data display" → "Bảng thu gọn/Giảm khoảng cách hàng để hiển thị dữ liệu dày đặc hơn".
+  - "Data Refresh/Control how often data auto-refreshes" → "Làm mới dữ liệu/Kiểm soát tần suất tự động làm mới dữ liệu"; rows "Live tracking/Real-time shipment map updates" → "Theo dõi trực tuyến/Cập nhật bản đồ đơn hàng theo thời gian thực"; "Notifications/Alerts and notification panel" → "Thông báo/Cảnh báo và bảng thông báo"; "Dashboard/KPI cards and charts" → "Tổng quan/Thẻ KPI và biểu đồ".
+  - "Default Filters/Pre-selected filters when opening views" → "Bộ lọc mặc định/Bộ lọc được chọn sẵn khi mở các trang"; "Shipment status filter/Default status filter on Shipments page" → "Lọc trạng thái đơn hàng/Bộ lọc trạng thái mặc định trên trang Đơn hàng"; "Shipments per page/Number of rows shown in the table" → "Số đơn hàng mỗi trang/Số hàng hiển thị trong bảng".
+  - "Route Planning/Display options for route cards" → "Lập kế hoạch tuyến/Tùy chọn hiển thị cho thẻ tuyến"; "Show progress bars/Display progress bars on active route cards" → "Hiển thị thanh tiến độ/Hiển thị thanh tiến độ trên thẻ tuyến đang hoạt động".
+  - Footer buttons "Reset/Done" → "Đặt lại/Xong". Toasts → "Đã đặt lại cài đặt theo mặc định" / "Đã lưu cài đặt".
+
+- Applied Vietnamese translations to **notifications-button.tsx**:
+  - Trigger aria-label "Notifications, {n} urgent" → "Thông báo, {n} khẩn cấp".
+  - Header label "Notifications" → "Thông báo".
+  - Empty state: "All clear!/No notifications right now." → "Tất cả đã ổn!/Không có thông báo lúc này.".
+  - Footer button "View live tracking" → "Xem theo dõi trực tuyến".
+- Also translated the user-facing notification titles + descriptions in **`/api/notifications/route.ts`** (since these dynamic strings are rendered verbatim in the dropdown and the task explicitly lists each title's expected translation): "Shipment delayed" → "Đơn hàng trễ hạn", "Low fuel level" → "Mức nhiên liệu thấp" (+ "… — {n}% remaining" → "… — còn {n}%"), "Maintenance overdue" → "Bảo trì quá hạn", "Maintenance due soon" → "Sắp đến hạn bảo trì", `Driver ${off duty | on leave}` → `Tài xế ${nghỉ phép | tạm nghỉ}`, "Warehouse at capacity" → "Kho đầy công suất", "Warehouse under maintenance" → "Kho đang bảo trì" (+ "{n}% used" → "đã sử dụng {n}%"), "Pending pickup" → "Chờ lấy hàng" (+ "waiting since …" → "chờ từ …"), "Shipment delivered" → "Đơn hàng đã giao".
+
+- Applied Vietnamese translations to **keyboard-shortcuts-dialog.tsx**:
+  - Dialog title "Keyboard Shortcuts" → "Phím tắt"; description "Use these shortcuts to navigate and perform actions faster." → "Sử dụng các phím tắt này để điều hướng và thực hiện thao tác nhanh hơn."
+  - Section headings "Actions/Navigation" → "Thao tác/Điều hướng".
+  - NAV_SHORTCUTS descriptions: "Go to Dashboard/Go to Shipments/Go to Live Tracking/Go to Reports/Go to Analytics" → "Đi đến Tổng quan/Đi đến Đơn hàng/Đi đến Theo dõi/Đi đến Báo cáo/Đi đến Phân tích".
+  - ACTION_SHORTCUTS descriptions: "Open command palette / search" → "Mở bảng lệnh / tìm kiếm"; "Show this help dialog" → "Hiển thị trợ giúp này"; "New shipment" → "Tạo đơn hàng mới"; "Close dialog / drawer" → "Đóng hộp thoại / ngăn kéo".
+  - Tip block: "Tip:" → "Mẹo:"; "Press ⌘ K anytime to open the command palette — search shipments, drivers, vehicles, and customers, or jump to any view." → "Nhấn ⌘ K bất cứ lúc nào để mở bảng lệnh — tìm đơn hàng, tài xế, phương tiện và khách hàng, hoặc chuyển đến bất kỳ trang nào.".
+
+- Applied Vietnamese translations to **print-label-dialog.tsx**:
+  - Dialog title "Shipment Label" → "Nhãn vận đơn"; description "Preview the shipping label. Click print to send to your printer." → "Xem trước nhãn vận chuyển. Nhấn in để gửi đến máy in.".
+  - Brand tagline "Express Delivery Network" → "Mạng lưới giao hàng nhanh" (brand name `LOGISTICS V2` preserved).
+  - "Tracking Number" → "Mã vận đơn"; section labels "From/To" → "Từ/Đến"; "Tel:" → "ĐT:".
+  - Cargo labels "Weight/Pieces/Distance/Priority" → "Trọng lượng/Số kiện/Quãng đường/Ưu tiên".
+  - Footer labels "Est. Delivery/Printed" → "Dự kiến giao/Đã in".
+  - Actions footer: "Close" → "Đóng"; "Print Label" → "In nhãn".
+  - Barcode aria-label `Barcode {value}` → `Mã vạch {value}`.
+
+- **kpi-card.tsx**: Inspected and confirmed there is NO user-facing English text in this file. It is a generic reusable component whose `title`, `value`, `trend`, `trendLabel`, `footer`, etc. are all dynamic props supplied by parents (which have all been translated in VI-A/VI-B/VI-C). No edits needed.
+
+- Preserved without translation (per task rules): all imports, variable/identifier names, type names (Driver/Vehicle/Customer/Warehouse/RouteItem, CustomerStatus, RefreshInterval, DefaultShipmentFilter, etc.), className values, prop names (e.g., `kind="driver"`, `accent="emerald"`, `value="all"`, `value="0"`), API paths (`/api/drivers`, `/api/vehicles`, `/api/customers`, `/api/warehouses`, `/api/routes`, `/api/notifications`), Recharts `dataKey`/`nameKey` identifiers, status enum keys (`active`, `pending`, `in_transit`, `delivered`, `delayed`, `cancelled`, `returned`, `off_duty`, `on_leave`, `operational`, `full`, `maintenance`, `planned`, `completed`), CSV-filename stems (`analytics-daily-volume-…`), the brand name `LOGISTICS V2`, currency code `USD`, technical abbreviations (CSV, TB, km, kg, h, m, N/A), example/sample data values used as placeholder text ("Nguyen Van A", "DL-00001234", "51A-12345", "Actros", "Mercedes-Benz", "5000", "a@company.com", "+84 90x xxx xxx", "Acme Logistics Co."), and code-level comments. Code structure, JSX layout, and Tailwind classes are unchanged.
+
+## Verification Results
+- **Lint**: `bun run lint` returns 0 errors, 1 pre-existing warning in `prisma/seed.ts` (unused eslint-disable directive — unrelated to this task, same as VI-A/VI-B). All ten edited files (`drivers-view.tsx`, `vehicles-view.tsx`, `customers-view.tsx`, `warehouses-view.tsx`, `routes-view.tsx`, `analytics-view.tsx`, `settings-dialog.tsx`, `notifications-button.tsx`, `keyboard-shortcuts-dialog.tsx`, `print-label-dialog.tsx`) plus the bonus `api/notifications/route.ts` are lint-clean.
+- **String audit**: Targeted grep scans confirm no remaining user-facing English UI strings (placeholders, table headers, button labels, dialog titles/descriptions, toasts, aria-labels, KPI/card titles/footers) in any of the edited files. Only English remaining is the brand name `LOGISTICS V2`, code comments, identifiers, example placeholder values, and import statements — all intentionally preserved.
+
+## Files Edited
+1. `/home/z/my-project/src/components/views/drivers-view.tsx`
+2. `/home/z/my-project/src/components/views/vehicles-view.tsx`
+3. `/home/z/my-project/src/components/views/customers-view.tsx`
+4. `/home/z/my-project/src/components/views/warehouses-view.tsx`
+5. `/home/z/my-project/src/components/views/routes-view.tsx`
+6. `/home/z/my-project/src/components/views/analytics-view.tsx`
+7. `/home/z/my-project/src/components/settings-dialog.tsx`
+8. `/home/z/my-project/src/components/notifications-button.tsx`
+9. `/home/z/my-project/src/components/keyboard-shortcuts-dialog.tsx`
+10. `/home/z/my-project/src/components/print-label-dialog.tsx`
+11. `/home/z/my-project/src/app/api/notifications/route.ts` (bonus: notification titles/descriptions rendered in the dropdown)
+12. `/home/z/my-project/src/components/kpi-card.tsx` — inspected, no edits needed (no user-facing English text).
+
+## Next Actions
+- (Optional) Verify in-browser that all 6 remaining views (drivers, fleet, customers, warehouses, route-planning, analytics) render Vietnamese correctly across light/dark themes; verify the notifications dropdown now shows translated titles (e.g. "Đơn hàng trễ hạn", "Mức nhiên liệu thấp"); verify the print-label preview and the settings/keyboard-shortcuts dialogs render Vietnamese.
+- (Optional) This completes the app-wide Vietnamese i18n sweep started in VI-A/VI-B. For maintainability, consider extracting display strings into a `vi.json` locale dictionary and wiring a `t()` helper so future translations are centralized, and so the app can support a language toggle (vi/en) without scattering string changes across view files.
+- (Optional) Remaining English in the app is limited to: (a) the sidebar/topbar nav labels, command palette, user dropdown, and login/onboarding screens if any — those were not in scope of VI-A/VI-B/VI-C and would be a follow-up task VI-D if needed; (b) server-side log messages, error messages returned to clients in API error responses, and Prisma seed data (customer/driver/vehicle names, tracking numbers) which are intentionally left as-is.
+
+---
+Task ID: VI-FINAL
+Agent: main
+Task: Việt hóa toàn bộ ứng dụng Logistics App V2 sang tiếng Việt
+
+## Mô tả trạng thái dự án
+Ứng dụng Logistics App V2 đã hoàn thiện với 11 trang (Tổng quan, Đơn hàng, Theo dõi trực tuyến, Tài xế, Đội xe, Khách hàng, Kho hàng, Lập kế hoạch tuyến, Hóa đơn, Báo cáo, Phân tích). Người dùng yêu cầu việt hóa toàn bộ giao diện.
+
+## Các thay đổi đã hoàn thành
+
+### 1. Việt hóa file constants (nhãn trạng thái, ưu tiên, dịch vụ)
+- Trạng thái đơn hàng: Pending→Chờ xử lý, Picked Up→Đã lấy hàng, In Transit→Đang vận chuyển, Out for Delivery→Đang giao hàng, Delivered→Đã giao, Delayed→Trễ hạn, Cancelled→Đã hủy, Returned→Trả hàng
+- Mức ưu tiên: Low→Thấp, Standard→Tiêu chuẩn, High→Cao, Express→Hỏa tốc
+- Loại dịch vụ: Standard→Tiêu chuẩn, Express→Chuyển phát nhanh, Same Day→Giao trong ngày, Freight→Hàng hóa, Cold Chain→Chuỗi lạnh
+- Trạng thái tài xế: Available→Sẵn sàng, On Delivery→Đang giao hàng, Off Duty→Nghỉ phép, On Leave→Tạm nghỉ
+- Trạng thái phương tiện: Active→Hoạt động, Maintenance→Bảo trì, Retired→Ngừng hoạt động
+- Trạng thái kho: Operational→Hoạt động, Full→Đầy công suất, Maintenance→Bảo trì, Closed→Đã đóng
+- Trạng thái tuyến: Planned→Đã lên kế hoạch, Active→Đang hoạt động, Completed→Hoàn thành, Cancelled→Đã hủy
+- Trạng thái hóa đơn: Draft→Bản nháp, Sent→Đã gửi, Paid→Đã thanh toán, Overdue→Quá hạn, Cancelled→Đã hủy
+- Thêm VEHICLE_TYPE_LABELS và FUEL_TYPE_LABELS cho tiếng Việt
+- Đổi VIETNAM_CITIES sang tên tiếng Việt (TP. Hồ Chí Minh, Hà Nội, Đà Nẵng, v.v.)
+
+### 2. Việt hóa format helpers
+- formatCurrency, formatNumber, formatCompact: đổi locale từ en-US → vi-VN
+- formatWeight: "tấn" thay vì "t"
+- formatRelativeTime: "vừa xong", "phút trước", "giờ trước", "ngày trước"
+- formatDate, formatDateTime: đổi locale từ en-US → vi-VN
+
+### 3. Việt hóa điều hướng (sidebar, topbar, command palette, app shell)
+- Sidebar: 11 mục điều hướng + brand + footer card
+- Topbar: 11 tiêu đề trang + menu người dùng (Cài đặt, Hồ sơ, Phím tắt, Đăng xuất)
+- Command palette: tìm kiếm, điều hướng, thao tác nhanh
+- App shell: điều hướng mobile, footer
+
+### 4. Việt hóa tất cả 11 trang views (qua 3 subagent song song)
+- VI-A: Dashboard (hero banner, KPI, biểu đồ) + Tracking (theo dõi trực tuyến)
+- VI-B: Shipments (bảng, dialog, drawer) + Invoices (hóa đơn) + Reports (báo cáo)
+- VI-C: Drivers + Vehicles + Customers + Warehouses + Routes + Analytics + Settings + Notifications + Keyboard Shortcuts + Print Label
+
+### 5. Việt hóa API notifications
+- Dịch tất cả tiêu đề và mô tả thông báo trong /api/notifications/route.ts
+
+### 6. Cập nhật dữ liệu
+- Seed.ts: đổi tên thành phố sang tiếng Việt, thêm xóa invoice trước khi seed
+- Logistics-map.tsx: cập nhật CITY_COORDS với key tiếng Việt, dịch chú giải bản đồ
+- Layout.tsx: đổi lang="vi", metadata tiếng Việt
+
+## Kết quả kiểm tra
+- **Lint**: 0 lỗi (1 cảnh báo có sẵn trong seed.ts)
+- **Browser QA**: Tất cả 11 trang hiển thị tiếng Việt, không lỗi console/runtime
+- **VLM đánh giá**: 8/10 chất lượng dịch, không lỗi chính tả hay hiển thị
+- **Dữ liệu**: Re-seed thành công với tên thành phố tiếng Việt (8 kho, 36 khách, 18 xe, 16 tài xế, 120 đơn hàng, 397 sự kiện theo dõi, 10 tuyến)
+
+## Vấn đề chưa giải quyết / Rủi ro
+- Một số thông báo lỗi API vẫn bằng tiếng Anh (server-side) — không ảnh hưởng trải nghiệm người dùng
+- Dữ liệu mẫu (tên khách hàng, công ty) vẫn bằng tiếng Anh/tên người — đây là dữ liệu seed, không phải UI text
+
+## Khuyến nghị giai đoạn tiếp theo
+1. Thêm locale dictionary (vi.json) với helper t() để dễ bảo trì
+2. Việt hóa thông báo lỗi API
+3. Thêm dữ liệu mẫu tên người/công ty tiếng Việt
+4. Hỗ trợ đa ngôn ngữ (chuyển đổi EN/VI)

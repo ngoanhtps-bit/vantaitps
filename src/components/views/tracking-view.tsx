@@ -99,21 +99,21 @@ export function TrackingView() {
           </span>
           <p className="text-sm">
             <span className="font-semibold">{data?.count ?? "—"}</span>
-            <span className="text-muted-foreground"> shipments live · </span>
+            <span className="text-muted-foreground"> đơn hàng trực tuyến · </span>
             <span className="text-muted-foreground">
-              {Number(trackingRefresh) > 0 ? `auto-refresh ${Number(trackingRefresh) / 1000}s` : "auto-refresh off"}
+              {Number(trackingRefresh) > 0 ? `tự động làm mới ${Number(trackingRefresh) / 1000}s` : "tự động làm mới tắt"}
             </span>
             {lastUpdated && (
-              <span className="ml-1 text-muted-foreground/70">· updated {formatRelativeTime(new Date(lastUpdated))}</span>
+              <span className="ml-1 text-muted-foreground/70">· đã cập nhật {formatRelativeTime(new Date(lastUpdated))}</span>
             )}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="gap-1.5 border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-400">
-            <Radio className="h-3 w-3" /> {isFetching ? "Syncing…" : "Real-time"}
+            <Radio className="h-3 w-3" /> {isFetching ? "Đang đồng bộ…" : "Thời gian thực"}
           </Badge>
           <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching} className="gap-1.5">
-            <RefreshCw className={cn("h-3.5 w-3.5", isFetching && "animate-spin")} /> Refresh
+            <RefreshCw className={cn("h-3.5 w-3.5", isFetching && "animate-spin")} /> Làm mới
           </Button>
         </div>
       </div>
@@ -160,7 +160,7 @@ export function TrackingView() {
 
                 <div className="mb-3">
                   <div className="mb-1 flex justify-between text-xs">
-                    <span className="text-muted-foreground">Progress</span>
+                    <span className="text-muted-foreground">Tiến độ</span>
                     <span className="font-semibold tabular-nums">{selected.progress}%</span>
                   </div>
                   <Progress value={selected.progress} className="h-2" />
@@ -168,11 +168,11 @@ export function TrackingView() {
 
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div className="rounded-lg bg-muted/40 p-2">
-                    <p className="text-muted-foreground">Sender</p>
+                    <p className="text-muted-foreground">Người gửi</p>
                     <p className="font-medium truncate">{selected.sender.name}</p>
                   </div>
                   <div className="rounded-lg bg-muted/40 p-2">
-                    <p className="text-muted-foreground">Receiver</p>
+                    <p className="text-muted-foreground">Người nhận</p>
                     <p className="font-medium truncate">{selected.receiver.name}</p>
                   </div>
                 </div>
@@ -211,7 +211,7 @@ export function TrackingView() {
                   className="mt-3 w-full gap-1.5"
                   onClick={() => { setSelectedShipmentId(selected.id); setView("shipments"); }}
                 >
-                  Open full details <ArrowRight className="h-3.5 w-3.5" />
+                  Xem chi tiết đầy đủ <ArrowRight className="h-3.5 w-3.5" />
                 </Button>
               </CardContent>
             </Card>
@@ -221,8 +221,8 @@ export function TrackingView() {
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
                   <MapPin className="h-5 w-5" />
                 </div>
-                <p className="text-sm font-medium">Select a shipment</p>
-                <p className="text-xs text-muted-foreground">Click any marker on the map to see live details.</p>
+                <p className="text-sm font-medium">Chọn đơn hàng</p>
+                <p className="text-xs text-muted-foreground">Nhấp vào bất kỳ điểm đánh dấu nào trên bản đồ để xem chi tiết trực tiếp.</p>
               </CardContent>
             </Card>
           )}
@@ -232,9 +232,9 @@ export function TrackingView() {
             <CardContent className="p-0">
               <div className="border-b px-4 py-3">
                 <h3 className="flex items-center gap-2 text-sm font-semibold">
-                  <Truck className="h-4 w-4 text-emerald-500" /> Active Fleet
+                  <Truck className="h-4 w-4 text-emerald-500" /> Đội xe đang hoạt động
                 </h3>
-                <p className="text-xs text-muted-foreground">{data?.live.length ?? 0} shipments in motion</p>
+                <p className="text-xs text-muted-foreground">{data?.live.length ?? 0} đơn hàng đang di chuyển</p>
               </div>
               <div className="max-h-72 overflow-y-auto custom-scroll divide-y">
                 {isLoading ? (
@@ -274,9 +274,9 @@ export function TrackingView() {
               <CardContent className="p-0">
                 <div className="border-b border-orange-200 px-4 py-3 dark:border-orange-900">
                   <h3 className="flex items-center gap-2 text-sm font-semibold text-orange-700 dark:text-orange-400">
-                    <AlertTriangle className="h-4 w-4" /> Delayed Shipments
+                    <AlertTriangle className="h-4 w-4" /> Đơn hàng trễ hạn
                   </h3>
-                  <p className="text-xs text-muted-foreground">{data.delayed.length} need attention</p>
+                  <p className="text-xs text-muted-foreground">{data.delayed.length} cần chú ý</p>
                 </div>
                 <div className="max-h-48 overflow-y-auto custom-scroll divide-y">
                   {data.delayed.map((s) => (
@@ -304,7 +304,7 @@ export function TrackingView() {
         <Card>
           <CardContent className="p-4">
             <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold">
-              <WarehouseIcon className="h-4 w-4 text-sky-500" /> Warehouse Network
+              <WarehouseIcon className="h-4 w-4 text-sky-500" /> Mạng lưới kho hàng
             </h3>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
               {data.warehouses.map((w) => {
@@ -314,7 +314,7 @@ export function TrackingView() {
                     <p className="truncate text-xs font-medium">{w.city}</p>
                     <p className="mb-1.5 text-[10px] text-muted-foreground">{w.code}</p>
                     <Progress value={pct} className={cn("h-1.5", pct > 90 ? "[&>div]:bg-rose-500" : pct > 70 ? "[&>div]:bg-amber-500" : "[&>div]:bg-emerald-500")} />
-                    <p className="mt-1 text-[10px] text-muted-foreground">{pct}% used</p>
+                    <p className="mt-1 text-[10px] text-muted-foreground">{pct}% sử dụng</p>
                   </div>
                 );
               })}

@@ -7,14 +7,14 @@ const randInt = (min: number, max: number) => Math.floor(rand(min, max + 1));
 const pick = <T,>(arr: T[]): T => arr[randInt(0, arr.length - 1)];
 
 const cities = [
-  { city: "Ho Chi Minh City", lat: 10.7626, lng: 106.6601 },
-  { city: "Hanoi", lat: 21.0285, lng: 105.8342 },
-  { city: "Da Nang", lat: 16.0544, lng: 108.2022 },
-  { city: "Hai Phong", lat: 20.8449, lng: 106.6881 },
-  { city: "Can Tho", lat: 10.0452, lng: 105.7469 },
+  { city: "TP. Hồ Chí Minh", lat: 10.7626, lng: 106.6601 },
+  { city: "Hà Nội", lat: 21.0285, lng: 105.8342 },
+  { city: "Đà Nẵng", lat: 16.0544, lng: 108.2022 },
+  { city: "Hải Phòng", lat: 20.8449, lng: 106.6881 },
+  { city: "Cần Thơ", lat: 10.0452, lng: 105.7469 },
   { city: "Nha Trang", lat: 12.2388, lng: 109.1967 },
-  { city: "Hue", lat: 16.4637, lng: 107.5909 },
-  { city: "Vung Tau", lat: 10.9877, lng: 107.0819 },
+  { city: "Huế", lat: 16.4637, lng: 107.5909 },
+  { city: "Vũng Tàu", lat: 10.9877, lng: 107.0819 },
 ];
 
 const firstNames = [
@@ -76,6 +76,7 @@ async function main() {
   // Clean
   await db.trackingEvent.deleteMany();
   await db.route.deleteMany();
+  await db.invoice.deleteMany();
   await db.shipment.deleteMany();
   await db.warehouse.deleteMany();
   await db.driver.deleteMany();

@@ -121,32 +121,32 @@ export function WarehousesView() {
       {/* KPI row */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <KpiCard
-          title="Total Warehouses"
+          title="Tổng kho hàng"
           value={formatNumber(stats.total)}
           icon={Warehouse}
           accent="sky"
-          footer="Across network"
+          footer="Trên toàn mạng lưới"
         />
         <KpiCard
-          title="Operational"
+          title="Hoạt động"
           value={formatNumber(stats.operational)}
           icon={CheckCircle2}
           accent="emerald"
-          footer="Active and running"
+          footer="Đang hoạt động"
         />
         <KpiCard
-          title="At Capacity"
+          title="Đầy công suất"
           value={formatNumber(stats.atCapacity)}
           icon={AlertTriangle}
           accent="rose"
-          footer="Need attention"
+          footer="Cần chú ý"
         />
         <KpiCard
-          title="Total Capacity"
+          title="Tổng công suất"
           value={formatVolume(stats.totalCapacity)}
           icon={Boxes}
           accent="violet"
-          footer={`${formatVolume(stats.totalUsed)} used`}
+          footer={`${formatVolume(stats.totalUsed)} đã sử dụng`}
         />
       </div>
 
@@ -155,10 +155,10 @@ export function WarehousesView() {
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
           <div>
             <CardTitle className="flex items-center gap-2 text-base">
-              <MapPin className="h-4 w-4 text-sky-500" /> Warehouse Network
+              <MapPin className="h-4 w-4 text-sky-500" /> Mạng lưới kho hàng
             </CardTitle>
             <CardDescription className="text-xs">
-              {stats.total} locations · {stats.operational} operational
+              {stats.total} địa điểm · {stats.operational} hoạt động
             </CardDescription>
           </div>
         </CardHeader>
@@ -183,7 +183,7 @@ export function WarehousesView() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search name, code, address, manager…"
+                placeholder="Tìm tên, mã, địa chỉ, quản lý…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9"
@@ -192,10 +192,10 @@ export function WarehousesView() {
             <div className="flex flex-wrap items-center gap-2">
               <Select value={status} onValueChange={setStatus}>
                 <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="Status" />
+                  <SelectValue placeholder="Trạng thái" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All statuses</SelectItem>
+                  <SelectItem value="all">Tất cả trạng thái</SelectItem>
                   {WAREHOUSE_STATUSES.map((s) => (
                     <SelectItem key={s} value={s} className="capitalize">{s.replace(/_/g, " ")}</SelectItem>
                   ))}
@@ -203,10 +203,10 @@ export function WarehousesView() {
               </Select>
               <Select value={city} onValueChange={setCity}>
                 <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="City" />
+                  <SelectValue placeholder="Thành phố" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All cities</SelectItem>
+                  <SelectItem value="all">Tất cả thành phố</SelectItem>
                   {VIETNAM_CITIES.map((c) => (
                     <SelectItem key={c} value={c}>{c}</SelectItem>
                   ))}
@@ -214,7 +214,7 @@ export function WarehousesView() {
               </Select>
               {hasFilters && (
                 <Button variant="ghost" size="sm" onClick={resetFilters} className="gap-1 text-xs">
-                  <X className="h-3.5 w-3.5" /> Clear
+                  <X className="h-3.5 w-3.5" /> Xóa
                 </Button>
               )}
             </div>
@@ -232,9 +232,9 @@ export function WarehousesView() {
       ) : warehouses.length === 0 ? (
         <EmptyState
           icon={Warehouse}
-          title="No warehouses found"
-          description="Try adjusting filters or add a new warehouse to your network."
-          action={<Button size="sm" variant="outline" onClick={resetFilters}>Reset filters</Button>}
+          title="Không tìm thấy kho hàng"
+          description="Thử điều chỉnh bộ lọc hoặc thêm kho hàng mới vào mạng lưới của bạn."
+          action={<Button size="sm" variant="outline" onClick={resetFilters}>Đặt lại bộ lọc</Button>}
         />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -255,8 +255,8 @@ export function WarehousesView() {
       >
         <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-lg">
           <SheetHeader className="border-b p-4">
-            <SheetTitle>Warehouse details</SheetTitle>
-            <SheetDescription>Full facility info, capacity, and location.</SheetDescription>
+            <SheetTitle>Chi tiết kho hàng</SheetTitle>
+            <SheetDescription>Thông tin cơ sở đầy đủ, công suất và vị trí.</SheetDescription>
           </SheetHeader>
           <div className="flex-1 overflow-y-auto">
             {selected ? (
@@ -320,35 +320,35 @@ function WarehouseCard({ warehouse, onView }: { warehouse: Warehouse; onView: ()
         {/* Capacity */}
         <div className="space-y-1.5">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">Capacity</span>
+            <span className="text-muted-foreground">Công suất</span>
             <span className={cn("font-semibold tabular-nums", capacityTextColorClass(pct))}>{pct}%</span>
           </div>
           <Progress value={pct} className={cn("h-2", capacityColorClass(pct))} />
           <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-            <span>{formatVolume(warehouse.used)} used</span>
-            <span>{formatVolume(warehouse.capacity)} total</span>
+            <span>{formatVolume(warehouse.used)} đã sử dụng</span>
+            <span>{formatVolume(warehouse.capacity)} tổng</span>
           </div>
         </div>
 
         {/* Shipments handled */}
         <div className="grid grid-cols-2 gap-2">
           <div className="rounded-lg bg-muted/40 p-2 text-center">
-            <p className="text-[10px] text-muted-foreground">As origin</p>
+            <p className="text-[10px] text-muted-foreground">Là điểm đi</p>
             <p className="text-sm font-bold tabular-nums">{warehouse._count?.shipmentsOrigin ?? 0}</p>
           </div>
           <div className="rounded-lg bg-muted/40 p-2 text-center">
-            <p className="text-[10px] text-muted-foreground">As destination</p>
+            <p className="text-[10px] text-muted-foreground">Là điểm đến</p>
             <p className="text-sm font-bold tabular-nums">{warehouse._count?.shipmentsDestination ?? 0}</p>
           </div>
         </div>
 
         <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
           <Package className="h-3 w-3" />
-          <span>{formatNumber(handled)} shipments handled</span>
+          <span>{formatNumber(handled)} đơn hàng đã xử lý</span>
         </div>
 
         <Button variant="outline" size="sm" className="mt-auto w-full gap-1.5" onClick={onView}>
-          View details <ArrowRight className="h-3.5 w-3.5" />
+          Xem chi tiết <ArrowRight className="h-3.5 w-3.5" />
         </Button>
       </CardContent>
     </Card>
@@ -388,7 +388,7 @@ function WarehouseDetailContent({ warehouse }: { warehouse: Warehouse }) {
           <p className="font-mono text-xs text-muted-foreground">{warehouse.code}</p>
           <div className="mt-1.5"><StatusBadge status={warehouse.status} kind="warehouse" /></div>
           <p className="mt-1 text-xs text-muted-foreground">
-            Created {formatDate(warehouse.createdAt)}
+            Ngày tạo {formatDate(warehouse.createdAt)}
           </p>
         </div>
       </div>
@@ -397,22 +397,22 @@ function WarehouseDetailContent({ warehouse }: { warehouse: Warehouse }) {
       <div className="rounded-lg border p-3">
         <div className="mb-2 flex items-center justify-between">
           <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            <Gauge className="h-3.5 w-3.5" /> Capacity Usage
+            <Gauge className="h-3.5 w-3.5" /> Mức sử dụng công suất
           </p>
           <span className={cn("text-sm font-bold tabular-nums", capacityTextColorClass(pct))}>{pct}%</span>
         </div>
         <Progress value={pct} className={cn("h-2.5", capacityColorClass(pct))} />
         <div className="mt-2 grid grid-cols-3 gap-2 text-center text-xs">
           <div>
-            <p className="text-[10px] text-muted-foreground">Used</p>
+            <p className="text-[10px] text-muted-foreground">Đã sử dụng</p>
             <p className="font-semibold tabular-nums">{formatVolume(warehouse.used)}</p>
           </div>
           <div>
-            <p className="text-[10px] text-muted-foreground">Capacity</p>
+            <p className="text-[10px] text-muted-foreground">Công suất</p>
             <p className="font-semibold tabular-nums">{formatVolume(warehouse.capacity)}</p>
           </div>
           <div>
-            <p className="text-[10px] text-muted-foreground">Free</p>
+            <p className="text-[10px] text-muted-foreground">Còn trống</p>
             <p className="font-semibold tabular-nums">{formatVolume(Math.max(0, warehouse.capacity - warehouse.used))}</p>
           </div>
         </div>
@@ -420,33 +420,33 @@ function WarehouseDetailContent({ warehouse }: { warehouse: Warehouse }) {
 
       {/* Info rows */}
       <div className="grid grid-cols-1 gap-2">
-        <DetailRow icon={MapPin} label="Address" value={warehouse.address} />
-        <DetailRow icon={MapPin} label="City" value={[warehouse.city, warehouse.country].filter(Boolean).join(", ")} />
-        {warehouse.manager && <DetailRow icon={User} label="Manager" value={warehouse.manager} />}
-        {warehouse.phone && <DetailRow icon={Phone} label="Phone" value={warehouse.phone} mono />}
+        <DetailRow icon={MapPin} label="Địa chỉ" value={warehouse.address} />
+        <DetailRow icon={MapPin} label="Thành phố" value={[warehouse.city, warehouse.country].filter(Boolean).join(", ")} />
+        {warehouse.manager && <DetailRow icon={User} label="Quản lý" value={warehouse.manager} />}
+        {warehouse.phone && <DetailRow icon={Phone} label="Điện thoại" value={warehouse.phone} mono />}
         {warehouse.lat !== null && warehouse.lng !== null && (
-          <DetailRow icon={MapPin} label="Coordinates" value={`${warehouse.lat.toFixed(4)}, ${warehouse.lng.toFixed(4)}`} mono />
+          <DetailRow icon={MapPin} label="Tọa độ" value={`${warehouse.lat.toFixed(4)}, ${warehouse.lng.toFixed(4)}`} mono />
         )}
       </div>
 
       {/* Shipments stats */}
       <div>
-        <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">Shipments Activity</p>
+        <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">Hoạt động đơn hàng</p>
         <div className="grid grid-cols-3 gap-2">
           <div className="rounded-lg bg-emerald-500/10 p-3 text-center">
-            <p className="text-[10px] text-emerald-700 dark:text-emerald-300">Origin</p>
+            <p className="text-[10px] text-emerald-700 dark:text-emerald-300">Điểm đi</p>
             <p className="mt-0.5 text-xl font-bold tabular-nums text-emerald-700 dark:text-emerald-300">
               {warehouse._count?.shipmentsOrigin ?? 0}
             </p>
           </div>
           <div className="rounded-lg bg-sky-500/10 p-3 text-center">
-            <p className="text-[10px] text-sky-700 dark:text-sky-300">Destination</p>
+            <p className="text-[10px] text-sky-700 dark:text-sky-300">Điểm đến</p>
             <p className="mt-0.5 text-xl font-bold tabular-nums text-sky-700 dark:text-sky-300">
               {warehouse._count?.shipmentsDestination ?? 0}
             </p>
           </div>
           <div className="rounded-lg bg-violet-500/10 p-3 text-center">
-            <p className="text-[10px] text-violet-700 dark:text-violet-300">Total</p>
+            <p className="text-[10px] text-violet-700 dark:text-violet-300">Tổng</p>
             <p className="mt-0.5 text-xl font-bold tabular-nums text-violet-700 dark:text-violet-300">
               {handled}
             </p>
@@ -456,7 +456,7 @@ function WarehouseDetailContent({ warehouse }: { warehouse: Warehouse }) {
 
       {/* Map */}
       <div>
-        <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">Location</p>
+        <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">Vị trí</p>
         <LogisticsMap
           markers={[{
             id: warehouse.id,

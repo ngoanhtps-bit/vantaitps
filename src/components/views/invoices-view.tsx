@@ -119,11 +119,11 @@ export function InvoicesView() {
     <div className="space-y-4">
       {/* KPI cards */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        <KpiCard title="Total Invoices" value={total} icon={Receipt} accent="emerald" />
-        <KpiCard title="Paid" value={paid.length} icon={CheckCircle2} accent="teal" footer={formatCurrency(totalRevenue)} />
-        <KpiCard title="Outstanding" value={outstanding.length} icon={Clock} accent="amber" footer={formatCurrency(outstandingAmount)} />
-        <KpiCard title="Overdue" value={overdue.length} icon={AlertCircle} accent="rose" />
-        <KpiCard title="Avg Invoice" value={formatCurrency(total > 0 ? totalRevenue / paid.length : 0)} icon={DollarSign} accent="violet" />
+        <KpiCard title="Tổng hóa đơn" value={total} icon={Receipt} accent="emerald" />
+        <KpiCard title="Đã thanh toán" value={paid.length} icon={CheckCircle2} accent="teal" footer={formatCurrency(totalRevenue)} />
+        <KpiCard title="Chưa thanh toán" value={outstanding.length} icon={Clock} accent="amber" footer={formatCurrency(outstandingAmount)} />
+        <KpiCard title="Quá hạn" value={overdue.length} icon={AlertCircle} accent="rose" />
+        <KpiCard title="Hóa đơn TB" value={formatCurrency(total > 0 ? totalRevenue / paid.length : 0)} icon={DollarSign} accent="violet" />
       </div>
 
       {/* Filter bar */}
@@ -133,23 +133,23 @@ export function InvoicesView() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search invoice #, customer, company…"
+                placeholder="Tìm số hóa đơn, khách hàng, công ty…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9"
               />
             </div>
             <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="w-full sm:w-[160px]"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-[160px]"><SelectValue placeholder="Trạng thái" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="all">Tất cả trạng thái</SelectItem>
                 {INVOICE_STATUSES.map((s) => (
                   <SelectItem key={s} value={s}>{INVOICE_STATUS_META[s].label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
-              <Plus className="h-4 w-4" /> Generate
+              <Plus className="h-4 w-4" /> Tạo hóa đơn
             </Button>
           </div>
         </CardContent>
@@ -168,11 +168,11 @@ export function InvoicesView() {
                 <Receipt className="h-6 w-6" />
               </div>
               <div>
-                <p className="text-sm font-medium">No invoices yet</p>
-                <p className="text-xs text-muted-foreground">Generate invoices from delivered shipments to get started.</p>
+                <p className="text-sm font-medium">Chưa có hóa đơn</p>
+                <p className="text-xs text-muted-foreground">Tạo hóa đơn từ đơn hàng đã giao để bắt đầu.</p>
               </div>
               <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
-                <Plus className="h-4 w-4" /> Generate Invoice
+                <Plus className="h-4 w-4" /> Tạo hóa đơn
               </Button>
             </div>
           ) : (
@@ -180,13 +180,13 @@ export function InvoicesView() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/40 hover:bg-muted/40">
-                    <TableHead className="min-w-[140px]">Invoice #</TableHead>
-                    <TableHead className="min-w-[180px]">Customer</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="hidden md:table-cell">Period</TableHead>
-                    <TableHead className="hidden sm:table-cell">Due Date</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                    <TableHead className="hidden lg:table-cell">Issued</TableHead>
+                    <TableHead className="min-w-[140px]">Số hóa đơn</TableHead>
+                    <TableHead className="min-w-[180px]">Khách hàng</TableHead>
+                    <TableHead>Trạng thái</TableHead>
+                    <TableHead className="hidden md:table-cell">Kỳ hạn</TableHead>
+                    <TableHead className="hidden sm:table-cell">Hạn thanh toán</TableHead>
+                    <TableHead className="text-right">Tổng cộng</TableHead>
+                    <TableHead className="hidden lg:table-cell">Ngày phát hành</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -214,7 +214,7 @@ export function InvoicesView() {
                       </TableCell>
                       <TableCell className="hidden sm:table-cell text-xs">
                         {inv.status === "paid" && inv.paidAt ? (
-                          <span className="text-emerald-600 dark:text-emerald-400">Paid {formatDate(inv.paidAt)}</span>
+                          <span className="text-emerald-600 dark:text-emerald-400">Đã thanh toán {formatDate(inv.paidAt)}</span>
                         ) : (
                           <span className={cn(inv.status === "overdue" && "text-rose-600 dark:text-rose-400 font-medium")}>
                             {formatDate(inv.dueDate)}
@@ -317,12 +317,12 @@ function CreateInvoiceDialog({
       taxRate: Number(form.taxRate),
     }),
     onSuccess: (data) => {
-      toast.success("Invoice generated");
+      toast.success("Đã tạo hóa đơn");
       qc.invalidateQueries({ queryKey: ["invoices"] });
       onCreated(data.id);
       onOpenChange(false);
     },
-    onError: (e: Error) => toast.error("Failed to generate invoice", { description: e.message }),
+    onError: (e: Error) => toast.error("Tạo hóa đơn thất bại", { description: e.message }),
   });
 
   const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
@@ -331,15 +331,15 @@ function CreateInvoiceDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto custom-scroll">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2"><Plus className="h-5 w-5 text-emerald-500" /> Generate Invoice</DialogTitle>
-          <DialogDescription>Create an invoice from delivered shipments in a billing period.</DialogDescription>
+          <DialogTitle className="flex items-center gap-2"><Plus className="h-5 w-5 text-emerald-500" /> Tạo hóa đơn</DialogTitle>
+          <DialogDescription>Tạo hóa đơn từ đơn hàng đã giao trong kỳ thanh toán.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           <div className="space-y-1.5">
-            <Label>Customer *</Label>
+            <Label>Khách hàng *</Label>
             <Select value={form.customerId} onValueChange={(v) => set("customerId", v)}>
-              <SelectTrigger><SelectValue placeholder="Select customer" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Chọn khách hàng" /></SelectTrigger>
               <SelectContent>
                 {customersData?.items.map((c) => (
                   <SelectItem key={c.id} value={c.id}>{c.name} · {c.company || c.city}</SelectItem>
@@ -350,26 +350,26 @@ function CreateInvoiceDialog({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Period Start *</Label>
+              <Label>Từ ngày *</Label>
               <Input type="date" value={form.periodStart} onChange={(e) => set("periodStart", e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label>Period End *</Label>
+              <Label>Đến ngày *</Label>
               <Input type="date" value={form.periodEnd} onChange={(e) => set("periodEnd", e.target.value)} />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Due Date</Label>
+              <Label>Hạn thanh toán</Label>
               <Input type="date" value={form.dueDate} onChange={(e) => set("dueDate", e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label>Tax Rate</Label>
+              <Label>Thuế suất</Label>
               <Select value={form.taxRate} onValueChange={(v) => set("taxRate", v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="0">0% (No tax)</SelectItem>
+                  <SelectItem value="0">0% (Không thuế)</SelectItem>
                   <SelectItem value="0.05">5%</SelectItem>
                   <SelectItem value="0.08">8%</SelectItem>
                   <SelectItem value="0.1">10%</SelectItem>
@@ -389,11 +389,11 @@ function CreateInvoiceDialog({
                 <span className="text-xs font-medium">
                   {previewCount > 0 ? (
                     <span className="text-emerald-700 dark:text-emerald-400">
-                      ✓ {previewCount} delivered shipment{previewCount > 1 ? "s" : ""} found
+                      ✓ Tìm thấy {previewCount} đơn hàng đã giao
                     </span>
                   ) : (
                     <span className="text-amber-700 dark:text-amber-400">
-                      ⚠ No delivered shipments in this period
+                      ⚠ Không có đơn hàng đã giao trong kỳ này
                     </span>
                   )}
                 </span>
@@ -407,19 +407,19 @@ function CreateInvoiceDialog({
           )}
 
           <div className="space-y-1.5">
-            <Label>Notes</Label>
-            <Textarea value={form.notes} onChange={(e) => set("notes", e.target.value)} placeholder="Optional invoice notes…" rows={2} />
+            <Label>Ghi chú</Label>
+            <Textarea value={form.notes} onChange={(e) => set("notes", e.target.value)} placeholder="Ghi chú hóa đơn tùy chọn…" rows={2} />
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Hủy</Button>
           <Button
             disabled={create.isPending || !form.customerId || previewCount === 0}
             onClick={() => create.mutate()}
             className="gap-1.5"
           >
-            {create.isPending ? "Generating…" : (<><FileText className="h-4 w-4" /> Generate Invoice</>)}
+            {create.isPending ? "Đang tạo…" : (<><FileText className="h-4 w-4" /> Tạo hóa đơn</>)}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -446,9 +446,9 @@ function InvoiceDetailDrawer({
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["invoice", invoiceId] });
       qc.invalidateQueries({ queryKey: ["invoices"] });
-      toast.success("Invoice updated");
+      toast.success("Đã cập nhật hóa đơn");
     },
-    onError: (e: Error) => toast.error("Update failed", { description: e.message }),
+    onError: (e: Error) => toast.error("Cập nhật thất bại", { description: e.message }),
   });
 
   const handlePrint = () => {
@@ -459,7 +459,7 @@ function InvoiceDetailDrawer({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-xl overflow-y-auto custom-scroll p-0">
         <SheetHeader className="border-b px-5 py-4">
-          <SheetDescription className="sr-only">Invoice details</SheetDescription>
+          <SheetDescription className="sr-only">Chi tiết hóa đơn</SheetDescription>
           <SheetTitle className="flex items-center justify-between gap-2 text-base">
             <span className="flex items-center gap-2 min-w-0">
               {invoice ? (
@@ -468,11 +468,11 @@ function InvoiceDetailDrawer({
                   <span className="font-mono truncate">{invoice.invoiceNumber}</span>
                   <InvoiceStatusBadge status={invoice.status} />
                 </>
-              ) : "Loading…"}
+              ) : "Đang tải…"}
             </span>
             {invoice && (
               <Button size="sm" variant="ghost" className="h-8 gap-1.5 px-2 text-xs" onClick={handlePrint}>
-                <Printer className="h-3.5 w-3.5" /> Print
+                <Printer className="h-3.5 w-3.5" /> In
               </Button>
             )}
           </SheetTitle>
@@ -491,22 +491,22 @@ function InvoiceDetailDrawer({
               <div className="flex flex-wrap gap-2 print:hidden">
                 {invoice.status === "draft" && (
                   <Button size="sm" variant="outline" disabled={update.isPending} onClick={() => update.mutate({ status: "sent" })} className="gap-1.5">
-                    <ArrowRight className="h-3.5 w-3.5" /> Mark as Sent
+                    <ArrowRight className="h-3.5 w-3.5" /> Đánh dấu đã gửi
                   </Button>
                 )}
                 {(invoice.status === "sent" || invoice.status === "overdue") && (
                   <Button size="sm" disabled={update.isPending} onClick={() => update.mutate({ status: "paid" })} className="gap-1.5 bg-emerald-600 hover:bg-emerald-700">
-                    <CheckCircle2 className="h-3.5 w-3.5" /> Mark as Paid
+                    <CheckCircle2 className="h-3.5 w-3.5" /> Đánh dấu đã thanh toán
                   </Button>
                 )}
                 {invoice.status === "sent" && (
                   <Button size="sm" variant="outline" disabled={update.isPending} onClick={() => update.mutate({ status: "overdue" })} className="gap-1.5 text-rose-600">
-                    <AlertCircle className="h-3.5 w-3.5" /> Mark Overdue
+                    <AlertCircle className="h-3.5 w-3.5" /> Đánh dấu quá hạn
                   </Button>
                 )}
                 {invoice.status !== "cancelled" && invoice.status !== "paid" && (
                   <Button size="sm" variant="outline" disabled={update.isPending} onClick={() => update.mutate({ status: "cancelled" })} className="gap-1.5 text-rose-600">
-                    Cancel Invoice
+                    Hủy hóa đơn
                   </Button>
                 )}
               </div>
@@ -515,20 +515,20 @@ function InvoiceDetailDrawer({
               <div className="flex items-start justify-between border-b pb-4">
                 <div>
                   <h2 className="text-xl font-bold tracking-tight">LOGISTICS V2</h2>
-                  <p className="text-xs text-muted-foreground">Express Delivery Network</p>
+                  <p className="text-xs text-muted-foreground">Mạng lưới giao hàng nhanh</p>
                   <p className="mt-1 font-mono text-xs text-muted-foreground">{invoice.invoiceNumber}</p>
                 </div>
                 <div className="text-right">
                   <InvoiceStatusBadge status={invoice.status} />
-                  <p className="mt-1 text-xs text-muted-foreground">Issued: {formatDate(invoice.issueDate)}</p>
-                  <p className="text-xs text-muted-foreground">Due: {formatDate(invoice.dueDate)}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Ngày phát hành: {formatDate(invoice.issueDate)}</p>
+                  <p className="text-xs text-muted-foreground">Hạn thanh toán: {formatDate(invoice.dueDate)}</p>
                 </div>
               </div>
 
               {/* Bill to */}
               <div className="rounded-lg border p-3">
                 <p className="mb-1 flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground">
-                  <User className="h-3 w-3" /> Bill To
+                  <User className="h-3 w-3" /> Thanh toán cho
                 </p>
                 <p className="text-sm font-bold">{invoice.customer.name}</p>
                 {invoice.customer.company && <p className="text-xs text-muted-foreground">{invoice.customer.company}</p>}
@@ -540,7 +540,7 @@ function InvoiceDetailDrawer({
               {/* Period */}
               <div className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2 text-xs">
                 <span className="flex items-center gap-1.5 text-muted-foreground">
-                  <Calendar className="h-3.5 w-3.5" /> Billing Period
+                  <Calendar className="h-3.5 w-3.5" /> Kỳ thanh toán
                 </span>
                 <span className="font-medium">{formatDate(invoice.periodStart)} → {formatDate(invoice.periodEnd)}</span>
               </div>
@@ -548,14 +548,14 @@ function InvoiceDetailDrawer({
               {/* Line items */}
               {invoice.lineItems.length > 0 && (
                 <div>
-                  <h4 className="mb-2 text-sm font-semibold">Line Items ({invoice.lineItems.length})</h4>
+                  <h4 className="mb-2 text-sm font-semibold">Chi tiết hạng mục ({invoice.lineItems.length})</h4>
                   <div className="overflow-hidden rounded-lg border">
                     <Table>
                       <TableHeader>
                         <TableRow className="bg-muted/40">
-                          <TableHead className="text-xs">Tracking #</TableHead>
-                          <TableHead className="text-xs hidden sm:table-cell">Destination</TableHead>
-                          <TableHead className="text-xs text-right">Amount</TableHead>
+                          <TableHead className="text-xs">Mã vận đơn</TableHead>
+                          <TableHead className="text-xs hidden sm:table-cell">Điểm đến</TableHead>
+                          <TableHead className="text-xs text-right">Thành tiền</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -580,29 +580,29 @@ function InvoiceDetailDrawer({
               {/* Totals */}
               <div className="ml-auto max-w-xs space-y-1.5 border-t pt-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="text-muted-foreground">Tạm tính</span>
                   <span className="tabular-nums font-medium">{formatCurrency(invoice.subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="flex items-center gap-1 text-muted-foreground">
-                    <Percent className="h-3 w-3" /> Tax ({(invoice.taxRate * 100).toFixed(0)}%)
+                    <Percent className="h-3 w-3" /> Thuế ({(invoice.taxRate * 100).toFixed(0)}%)
                   </span>
                   <span className="tabular-nums font-medium">{formatCurrency(invoice.taxAmount)}</span>
                 </div>
                 <div className="flex justify-between border-t pt-1.5 text-base font-bold">
-                  <span>Total</span>
+                  <span>Tổng cộng</span>
                   <span className="tabular-nums">{formatCurrency(invoice.total)}</span>
                 </div>
                 {invoice.status === "paid" && invoice.paidAt && (
                   <div className="flex justify-between rounded bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
-                    <span>✓ Paid on {formatDate(invoice.paidAt)}</span>
+                    <span>✓ Đã thanh toán ngày {formatDate(invoice.paidAt)}</span>
                   </div>
                 )}
               </div>
 
               {invoice.notes && (
                 <div className="rounded-lg border bg-amber-50 dark:bg-amber-950/20 p-3">
-                  <p className="mb-1 text-[10px] uppercase tracking-wider text-amber-700 dark:text-amber-400">Notes</p>
+                  <p className="mb-1 text-[10px] uppercase tracking-wider text-amber-700 dark:text-amber-400">Ghi chú</p>
                   <p className="text-xs">{invoice.notes}</p>
                 </div>
               )}

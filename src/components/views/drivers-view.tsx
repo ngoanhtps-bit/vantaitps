@@ -109,9 +109,9 @@ export function DriversView() {
       qc.invalidateQueries({ queryKey: ["drivers"] });
       qc.invalidateQueries({ queryKey: ["driver", selectedId] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success("Driver status updated");
+      toast.success("Đã cập nhật trạng thái tài xế");
     },
-    onError: (e: Error) => toast.error(e.message || "Failed to update status"),
+    onError: (e: Error) => toast.error(e.message || "Cập nhật trạng thái thất bại"),
   });
 
   const createMutation = useMutation({
@@ -119,10 +119,10 @@ export function DriversView() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["drivers"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success("Driver created successfully");
+      toast.success("Đã tạo tài xế thành công");
       setCreateOpen(false);
     },
-    onError: (e: Error) => toast.error(e.message || "Failed to create driver"),
+    onError: (e: Error) => toast.error(e.message || "Tạo tài xế thất bại"),
   });
 
   const drivers = data?.items ?? [];
@@ -145,32 +145,32 @@ export function DriversView() {
       {/* KPI row */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <KpiCard
-          title="Total Drivers"
+          title="Tổng tài xế"
           value={formatNumber(stats.total)}
           icon={Truck}
           accent="emerald"
-          footer={`${stats.available} available now`}
+          footer={`${stats.available} sẵn sàng`}
         />
         <KpiCard
-          title="Available Now"
+          title="Sẵn sàng"
           value={formatNumber(stats.available)}
           icon={UserCheck}
           accent="sky"
-          footer="Ready for assignment"
+          footer="Sẵn sàng nhận việc"
         />
         <KpiCard
-          title="On Delivery"
+          title="Đang giao"
           value={formatNumber(stats.onDelivery)}
           icon={Package}
           accent="amber"
-          footer="Currently active"
+          footer="Đang hoạt động"
         />
         <KpiCard
-          title="Avg Rating"
+          title="Đánh giá TB"
           value={stats.avgRating.toFixed(1)}
           icon={Star}
           accent="violet"
-          footer="Across all drivers"
+          footer="Trên tất cả tài xế"
         />
       </div>
 
@@ -181,7 +181,7 @@ export function DriversView() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search name, phone, license #…"
+                placeholder="Tìm theo tên, điện thoại, bằng lái…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9"
@@ -190,10 +190,10 @@ export function DriversView() {
             <div className="flex flex-wrap items-center gap-2">
               <Select value={status} onValueChange={setStatus}>
                 <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="Status" />
+                  <SelectValue placeholder="Trạng thái" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All statuses</SelectItem>
+                  <SelectItem value="all">Tất cả trạng thái</SelectItem>
                   {DRIVER_STATUSES.map((s) => (
                     <SelectItem key={s} value={s}>{DRIVER_STATUS_META[s].label}</SelectItem>
                   ))}
@@ -201,11 +201,11 @@ export function DriversView() {
               </Select>
               {hasFilters && (
                 <Button variant="ghost" size="sm" onClick={resetFilters} className="gap-1 text-xs">
-                  <X className="h-3.5 w-3.5" /> Clear
+                  <X className="h-3.5 w-3.5" /> Xóa
                 </Button>
               )}
               <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
-                <Plus className="h-4 w-4" /> Add Driver
+                <Plus className="h-4 w-4" /> Thêm tài xế
               </Button>
             </div>
           </div>
@@ -222,9 +222,9 @@ export function DriversView() {
       ) : drivers.length === 0 ? (
         <EmptyState
           icon={Users}
-          title="No drivers found"
-          description="Try adjusting filters or add a new driver to your team."
-          action={<Button size="sm" variant="outline" onClick={resetFilters}>Reset filters</Button>}
+          title="Không tìm thấy tài xế"
+          description="Thử điều chỉnh bộ lọc hoặc thêm tài xế mới vào đội ngũ của bạn."
+          action={<Button size="sm" variant="outline" onClick={resetFilters}>Đặt lại bộ lọc</Button>}
         />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -241,8 +241,8 @@ export function DriversView() {
       >
         <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-lg">
           <SheetHeader className="border-b p-4">
-            <SheetTitle>Driver details</SheetTitle>
-            <SheetDescription>Full profile, stats, and recent shipments.</SheetDescription>
+            <SheetTitle>Chi tiết tài xế</SheetTitle>
+            <SheetDescription>Hồ sơ đầy đủ, thống kê và đơn hàng gần đây.</SheetDescription>
           </SheetHeader>
           <div className="flex-1 overflow-y-auto">
             {detailLoading || !detail ? (
@@ -316,16 +316,16 @@ function DriverCard({ driver, onView }: { driver: Driver; onView: () => void }) 
           {driver.licenseExpiry && (
             <div className="flex items-center gap-2 text-muted-foreground">
               <CalendarClock className="h-3.5 w-3.5 shrink-0" />
-              <span className="text-xs">Expires {formatDate(driver.licenseExpiry)}</span>
+              <span className="text-xs">Hết hạn {formatDate(driver.licenseExpiry)}</span>
             </div>
           )}
         </div>
 
         {/* Stats row */}
         <div className="grid grid-cols-3 gap-2 rounded-lg bg-muted/40 p-3">
-          <Stat label="Deliveries" value={formatNumber(driver.totalDeliveries)} icon={Package} />
-          <Stat label="Distance" value={formatDistance(driver.totalDistance)} icon={Navigation} />
-          <Stat label="Rating" value={driver.rating.toFixed(1)} icon={Star} />
+          <Stat label="Lần giao" value={formatNumber(driver.totalDeliveries)} icon={Package} />
+          <Stat label="Quãng đường" value={formatDistance(driver.totalDistance)} icon={Navigation} />
+          <Stat label="Đánh giá" value={driver.rating.toFixed(1)} icon={Star} />
         </div>
 
         {/* Vehicle */}
@@ -339,12 +339,12 @@ function DriverCard({ driver, onView }: { driver: Driver; onView: () => void }) 
               <p className="truncate text-[10px] text-muted-foreground capitalize">{driver.vehicle.model} · {driver.vehicle.type}</p>
             </div>
           ) : (
-            <p className="flex-1 text-xs text-muted-foreground">Unassigned</p>
+            <p className="flex-1 text-xs text-muted-foreground">Chưa gán</p>
           )}
         </div>
 
         <Button variant="outline" size="sm" className="mt-auto w-full gap-1.5" onClick={onView}>
-          View details <ArrowRight className="h-3.5 w-3.5" />
+          Xem chi tiết <ArrowRight className="h-3.5 w-3.5" />
         </Button>
       </CardContent>
     </Card>
@@ -399,7 +399,7 @@ function DriverDetailContent({
           <h3 className="truncate text-lg font-semibold">{driver.name}</h3>
           <div className="mt-1.5"><StatusBadge status={driver.status} kind="driver" /></div>
           <p className="mt-1 text-xs text-muted-foreground">
-            Joined {driver.hireDate ? formatDate(driver.hireDate) : "—"}
+            Vào làm {driver.hireDate ? formatDate(driver.hireDate) : "—"}
           </p>
         </div>
       </div>
@@ -409,30 +409,30 @@ function DriverDetailContent({
         {driver.email && (
           <DetailRow icon={Mail} label="Email" value={driver.email} />
         )}
-        <DetailRow icon={Phone} label="Phone" value={driver.phone} />
-        <DetailRow icon={CreditCard} label="License #" value={driver.licenseNumber} mono />
+        <DetailRow icon={Phone} label="Điện thoại" value={driver.phone} />
+        <DetailRow icon={CreditCard} label="Bằng lái" value={driver.licenseNumber} mono />
         <DetailRow
           icon={CalendarClock}
-          label="License expires"
+          label="Bằng lái hết hạn"
           value={driver.licenseExpiry ? formatDate(driver.licenseExpiry) : "—"}
         />
         <DetailRow
           icon={CalendarDays}
-          label="Hire date"
+          label="Ngày vào làm"
           value={driver.hireDate ? formatDate(driver.hireDate) : "—"}
         />
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-2 rounded-lg bg-muted/40 p-3">
-        <Stat label="Deliveries" value={formatNumber(driver.totalDeliveries)} icon={Package} />
-        <Stat label="Distance" value={formatDistance(driver.totalDistance)} icon={Navigation} />
-        <Stat label="Rating" value={driver.rating.toFixed(1)} icon={Star} />
+        <Stat label="Lần giao" value={formatNumber(driver.totalDeliveries)} icon={Package} />
+        <Stat label="Quãng đường" value={formatDistance(driver.totalDistance)} icon={Navigation} />
+        <Stat label="Đánh giá" value={driver.rating.toFixed(1)} icon={Star} />
       </div>
 
       {/* Vehicle */}
       <div>
-        <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">Assigned vehicle</p>
+        <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">Phương tiện được gán</p>
         <div className="flex items-center gap-2 rounded-lg border p-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400">
             <Truck className="h-4 w-4" />
@@ -443,21 +443,21 @@ function DriverDetailContent({
               <p className="truncate text-xs text-muted-foreground capitalize">{driver.vehicle.model} · {driver.vehicle.type}</p>
             </div>
           ) : (
-            <p className="flex-1 text-sm text-muted-foreground">Unassigned</p>
+            <p className="flex-1 text-sm text-muted-foreground">Chưa gán</p>
           )}
         </div>
       </div>
 
       {/* Status change control */}
       <div>
-        <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">Change status</p>
+        <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">Đổi trạng thái</p>
         <Select
           value={driver.status}
           onValueChange={(v) => onStatusChange(v as DriverStatus)}
           disabled={updating}
         >
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select status" />
+            <SelectValue placeholder="Chọn trạng thái" />
           </SelectTrigger>
           <SelectContent>
             {DRIVER_STATUSES.map((s) => (
@@ -470,12 +470,12 @@ function DriverDetailContent({
       {/* Recent shipments */}
       <div>
         <div className="mb-2 flex items-center justify-between">
-          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Recent shipments</p>
-          <Badge variant="secondary" className="text-[10px]">{driver._count.shipments} total</Badge>
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Đơn hàng gần đây</p>
+          <Badge variant="secondary" className="text-[10px]">{driver._count.shipments} tổng</Badge>
         </div>
         {driver.shipments.length === 0 ? (
           <p className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
-            No shipments yet
+            Chưa có đơn hàng
           </p>
         ) : (
           <div className="space-y-1.5">
@@ -529,7 +529,7 @@ function CreateDriverDialog({
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !phone || !licenseNumber) {
-      toast.error("Name, phone and license number are required");
+      toast.error("Tên, điện thoại và số bằng lái là bắt buộc");
       return;
     }
     onSubmit({
@@ -546,14 +546,14 @@ function CreateDriverDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add new driver</DialogTitle>
+          <DialogTitle>Thêm tài xế mới</DialogTitle>
           <DialogDescription>
-            Create a new driver profile. They will start with &ldquo;Available&rdquo; status.
+            Tạo hồ sơ tài xế mới. Họ sẽ bắt đầu với trạng thái &ldquo;Sẵn sàng&rdquo;.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-3">
           <div className="space-y-1.5">
-            <Label htmlFor="d-name">Full name *</Label>
+            <Label htmlFor="d-name">Họ và tên *</Label>
             <Input id="d-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nguyen Van A" required />
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -562,25 +562,25 @@ function CreateDriverDialog({
               <Input id="d-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="a@company.com" />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="d-phone">Phone *</Label>
+              <Label htmlFor="d-phone">Điện thoại *</Label>
               <Input id="d-phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+84 90x xxx xxx" required />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="d-license">License # *</Label>
+              <Label htmlFor="d-license">Số bằng lái *</Label>
               <Input id="d-license" value={licenseNumber} onChange={(e) => setLicenseNumber(e.target.value)} placeholder="DL-00001234" required />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="d-expiry">License expiry</Label>
+              <Label htmlFor="d-expiry">Bằng lái hết hạn</Label>
               <Input id="d-expiry" type="date" value={licenseExpiry} onChange={(e) => setLicenseExpiry(e.target.value)} />
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="d-color">Avatar color</Label>
+            <Label htmlFor="d-color">Màu đại diện</Label>
             <Select value={avatarColor} onValueChange={setAvatarColor}>
               <SelectTrigger id="d-color" className="w-full">
-                <SelectValue placeholder="Pick a color" />
+                <SelectValue placeholder="Chọn màu" />
               </SelectTrigger>
               <SelectContent>
                 {Object.keys(AVATAR_COLORS).map((c) => (
@@ -590,9 +590,9 @@ function CreateDriverDialog({
             </Select>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Hủy</Button>
             <Button type="submit" disabled={submitting}>
-              {submitting ? "Creating…" : "Create driver"}
+              {submitting ? "Đang tạo…" : "Tạo tài xế"}
             </Button>
           </DialogFooter>
         </form>

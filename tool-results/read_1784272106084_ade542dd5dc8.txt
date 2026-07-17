@@ -1,0 +1,756 @@
+     1→"use client";
+     2→
+     3→import * as React from "react";
+     4→import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+     5→import { api } from "@/lib/api-client";
+     6→import { StatusBadge } from "@/components/status-badge";
+     7→import { KpiCard, EmptyState } from "@/components/kpi-card";
+     8→import { Button } from "@/components/ui/button";
+     9→import { Input } from "@/components/ui/input";
+    10→import { Card, CardContent } from "@/components/ui/card";
+    11→import {
+    12→  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+    13→} from "@/components/ui/select";
+    14→import {
+    15→  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
+    16→} from "@/components/ui/sheet";
+    17→import {
+    18→  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+    19→} from "@/components/ui/dialog";
+    20→import { Label } from "@/components/ui/label";
+    21→import { Badge } from "@/components/ui/badge";
+    22→import { Skeleton } from "@/components/ui/skeleton";
+    23→import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+    24→import { Progress } from "@/components/ui/progress";
+    25→import { Slider } from "@/components/ui/slider";
+    26→import {
+    27→  Truck, Bike, Container, Search, Plus, Fuel, Wrench, Gauge,
+    28→  CalendarClock, X, ArrowRight, User, AlertTriangle,
+    29→} from "lucide-react";
+    30→import {
+    31→  VEHICLE_STATUSES, VEHICLE_STATUS_META, VEHICLE_TYPES,
+    32→} from "@/lib/constants";
+    33→import {
+    34→  formatNumber, formatWeight, formatDistance, formatRelativeTime, formatDate, initials,
+    35→} from "@/lib/format";
+    36→import { toast } from "sonner";
+    37→import { avatarColorClass } from "@/components/avatar-color";
+    38→import { cn } from "@/lib/utils";
+    39→import { useAppStore } from "@/lib/store";
+    40→
+    41→// Static color map (NO dynamic class names — Tailwind purges them)
+    42→const VEHICLE_COLOR_MAP: Record<string, { bg: string; text: string }> = {
+    43→  slate: { bg: "bg-slate-500/10", text: "text-slate-600 dark:text-slate-300" },
+    44→  red: { bg: "bg-red-500/10", text: "text-red-600 dark:text-red-400" },
+    45→  blue: { bg: "bg-blue-500/10", text: "text-blue-600 dark:text-blue-400" },
+    46→  white: { bg: "bg-slate-200/70 dark:bg-slate-200/10", text: "text-slate-700 dark:text-slate-200" },
+    47→  black: { bg: "bg-slate-800/10 dark:bg-slate-200/10", text: "text-slate-800 dark:text-slate-200" },
+    48→  green: { bg: "bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400" },
+    49→  yellow: { bg: "bg-amber-500/10", text: "text-amber-600 dark:text-amber-400" },
+    50→  orange: { bg: "bg-orange-500/10", text: "text-orange-600 dark:text-orange-400" },
+    51→  silver: { bg: "bg-slate-300/40 dark:bg-slate-400/20", text: "text-slate-600 dark:text-slate-300" },
+    52→  gray: { bg: "bg-slate-400/20", text: "text-slate-600 dark:text-slate-300" },
+    53→};
+    54→
+    55→const VEHICLE_TYPE_ICON: Record<string, React.ElementType> = {
+    56→  truck: Truck,
+    57→  van: Truck,
+    58→  motorbike: Bike,
+    59→  container: Container,
+    60→};
+    61→
+    62→const VEHICLE_COLORS_LIST = Object.keys(VEHICLE_COLOR_MAP);
+    63→const FUEL_TYPES = ["diesel", "petrol", "electric"] as const;
+    64→
+    65→function vehicleColorMeta(color: string) {
+    66→  return VEHICLE_COLOR_MAP[color] || VEHICLE_COLOR_MAP.slate;
+    67→}
+    68→
+    69→function vehicleTypeIcon(type: string): React.ElementType {
+    70→  return VEHICLE_TYPE_ICON[type] || Truck;
+    71→}
+    72→
+    73→function fuelColorClass(level: number): string {
+    74→  if (level > 50) return "[&>div]:bg-emerald-500";
+    75→  if (level > 25) return "[&>div]:bg-amber-500";
+    76→  return "[&>div]:bg-rose-500";
+    77→}
+    78→
+    79→type VehicleDriver = { id: string; name: string; avatarColor: string; status: string };
+    80→
+    81→type Vehicle = {
+    82→  id: string;
+    83→  plateNumber: string;
+    84→  model: string;
+    85→  brand: string;
+    86→  type: string;
+    87→  capacityKg: number;
+    88→  fuelType: string;
+    89→  fuelLevel: number;
+    90→  mileage: number;
+    91→  status: string;
+    92→  lastMaintenance: string | null;
+    93→  nextMaintenance: string | null;
+    94→  color: string;
+    95→  createdAt: string;
+    96→  driver: VehicleDriver | null;
+    97→  _count: { shipments: number };
+    98→};
+    99→
+   100→type VehicleShipment = {
+   101→  id: string;
+   102→  trackingNumber: string;
+   103→  status: string;
+   104→  originCity: string;
+   105→  destinationCity: string;
+   106→  createdAt: string;
+   107→};
+   108→
+   109→type VehicleDetail = Vehicle & {
+   110→  shipments: VehicleShipment[];
+   111→};
+   112→
+   113→export function VehiclesView() {
+   114→  const qc = useQueryClient();
+   115→  const { setSelectedShipmentId, setView } = useAppStore();
+   116→  const [search, setSearch] = React.useState("");
+   117→  const [status, setStatus] = React.useState("all");
+   118→  const [type, setType] = React.useState("all");
+   119→  const [selectedId, setSelectedId] = React.useState<string | null>(null);
+   120→  const [createOpen, setCreateOpen] = React.useState(false);
+   121→
+   122→  const debouncedSearch = useDebounce(search, 350);
+   123→
+   124→  const queryKey = React.useMemo(
+   125→    () => ["vehicles", { debouncedSearch, status, type }] as const,
+   126→    [debouncedSearch, status, type]
+   127→  );
+   128→
+   129→  const { data, isLoading } = useQuery<{ items: Vehicle[] }>({
+   130→    queryKey,
+   131→    queryFn: () => {
+   132→      const params = new URLSearchParams();
+   133→      if (debouncedSearch) params.set("q", debouncedSearch);
+   134→      if (status !== "all") params.set("status", status);
+   135→      if (type !== "all") params.set("type", type);
+   136→      return api.get(`/api/vehicles?${params.toString()}`);
+   137→    },
+   138→  });
+   139→
+   140→  const { data: detail, isLoading: detailLoading } = useQuery<VehicleDetail>({
+   141→    queryKey: ["vehicle", selectedId],
+   142→    queryFn: () => api.get(`/api/vehicles/${selectedId}`),
+   143→    enabled: !!selectedId,
+   144→  });
+   145→
+   146→  const updateMutation = useMutation({
+   147→    mutationFn: ({ id, body }: { id: string; body: Record<string, unknown> }) =>
+   148→      api.patch(`/api/vehicles/${id}`, body),
+   149→    onSuccess: (_data, vars) => {
+   150→      qc.invalidateQueries({ queryKey: ["vehicles"] });
+   151→      qc.invalidateQueries({ queryKey: ["vehicle", vars.id] });
+   152→      qc.invalidateQueries({ queryKey: ["dashboard"] });
+   153→      toast.success("Vehicle updated");
+   154→    },
+   155→    onError: (e: Error) => toast.error(e.message || "Failed to update vehicle"),
+   156→  });
+   157→
+   158→  const createMutation = useMutation({
+   159→    mutationFn: (body: Record<string, unknown>) => api.post("/api/vehicles", body),
+   160→    onSuccess: () => {
+   161→      qc.invalidateQueries({ queryKey: ["vehicles"] });
+   162→      qc.invalidateQueries({ queryKey: ["dashboard"] });
+   163→      toast.success("Vehicle added to fleet");
+   164→      setCreateOpen(false);
+   165→    },
+   166→    onError: (e: Error) => toast.error(e.message || "Failed to add vehicle"),
+   167→  });
+   168→
+   169→  const vehicles = data?.items ?? [];
+   170→
+   171→  const stats = React.useMemo(() => {
+   172→    const total = vehicles.length;
+   173→    const active = vehicles.filter((v) => v.status === "active").length;
+   174→    const maintenance = vehicles.filter((v) => v.status === "maintenance").length;
+   175→    const totalCapacity = vehicles.reduce((s, v) => s + (v.capacityKg || 0), 0);
+   176→    return { total, active, maintenance, totalCapacity };
+   177→  }, [vehicles]);
+   178→
+   179→  const hasFilters = search !== "" || status !== "all" || type !== "all";
+   180→  const resetFilters = () => { setSearch(""); setStatus("all"); setType("all"); };
+   181→
+   182→  return (
+   183→    <div className="space-y-4">
+   184→      {/* KPI row */}
+   185→      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+   186→        <KpiCard
+   187→          title="Total Vehicles"
+   188→          value={formatNumber(stats.total)}
+   189→          icon={Truck}
+   190→          accent="emerald"
+   191→          footer="In fleet"
+   192→        />
+   193→        <KpiCard
+   194→          title="Active"
+   195→          value={formatNumber(stats.active)}
+   196→          icon={Truck}
+   197→          accent="sky"
+   198→          footer="On the road"
+   199→        />
+   200→        <KpiCard
+   201→          title="In Maintenance"
+   202→          value={formatNumber(stats.maintenance)}
+   203→          icon={Wrench}
+   204→          accent="orange"
+   205→          footer="Being serviced"
+   206→        />
+   207→        <KpiCard
+   208→          title="Total Capacity"
+   209→          value={formatWeight(stats.totalCapacity)}
+   210→          icon={Gauge}
+   211→          accent="violet"
+   212→          footer="Combined payload"
+   213→        />
+   214→      </div>
+   215→
+   216→      {/* Filter bar */}
+   217→      <Card>
+   218→        <CardContent className="p-4">
+   219→          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+   220→            <div className="relative flex-1">
+   221→              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+   222→              <Input
+   223→                placeholder="Search plate, model, brand…"
+   224→                value={search}
+   225→                onChange={(e) => setSearch(e.target.value)}
+   226→                className="pl-9"
+   227→              />
+   228→            </div>
+   229→            <div className="flex flex-wrap items-center gap-2">
+   230→              <Select value={status} onValueChange={setStatus}>
+   231→                <SelectTrigger className="w-[150px]">
+   232→                  <SelectValue placeholder="Status" />
+   233→                </SelectTrigger>
+   234→                <SelectContent>
+   235→                  <SelectItem value="all">All statuses</SelectItem>
+   236→                  {VEHICLE_STATUSES.map((s) => (
+   237→                    <SelectItem key={s} value={s}>{VEHICLE_STATUS_META[s].label}</SelectItem>
+   238→                  ))}
+   239→                </SelectContent>
+   240→              </Select>
+   241→              <Select value={type} onValueChange={setType}>
+   242→                <SelectTrigger className="w-[140px]">
+   243→                  <SelectValue placeholder="Type" />
+   244→                </SelectTrigger>
+   245→                <SelectContent>
+   246→                  <SelectItem value="all">All types</SelectItem>
+   247→                  {VEHICLE_TYPES.map((t) => (
+   248→                    <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>
+   249→                  ))}
+   250→                </SelectContent>
+   251→              </Select>
+   252→              {hasFilters && (
+   253→                <Button variant="ghost" size="sm" onClick={resetFilters} className="gap-1 text-xs">
+   254→                  <X className="h-3.5 w-3.5" /> Clear
+   255→                </Button>
+   256→              )}
+   257→              <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
+   258→                <Plus className="h-4 w-4" /> Add Vehicle
+   259→              </Button>
+   260→            </div>
+   261→          </div>
+   262→        </CardContent>
+   263→      </Card>
+   264→
+   265→      {/* Cards grid */}
+   266→      {isLoading ? (
+   267→        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+   268→          {Array.from({ length: 6 }).map((_, i) => (
+   269→            <Skeleton key={i} className="h-80 rounded-xl" />
+   270→          ))}
+   271→        </div>
+   272→      ) : vehicles.length === 0 ? (
+   273→        <EmptyState
+   274→          icon={Truck}
+   275→          title="No vehicles found"
+   276→          description="Try adjusting filters or add a new vehicle to your fleet."
+   277→          action={<Button size="sm" variant="outline" onClick={resetFilters}>Reset filters</Button>}
+   278→        />
+   279→      ) : (
+   280→        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+   281→          {vehicles.map((v) => (
+   282→            <VehicleCard key={v.id} vehicle={v} onView={() => setSelectedId(v.id)} />
+   283→          ))}
+   284→        </div>
+   285→      )}
+   286→
+   287→      {/* Detail drawer */}
+   288→      <Sheet
+   289→        open={!!selectedId}
+   290→        onOpenChange={(o) => { if (!o) setSelectedId(null); }}
+   291→      >
+   292→        <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-lg">
+   293→          <SheetHeader className="border-b p-4">
+   294→            <SheetTitle>Vehicle details</SheetTitle>
+   295→            <SheetDescription>Full specs, maintenance, and recent shipments.</SheetDescription>
+   296→          </SheetHeader>
+   297→          <div className="flex-1 overflow-y-auto">
+   298→            {detailLoading || !detail ? (
+   299→              <div className="space-y-3 p-4">
+   300→                <Skeleton className="h-24 w-full" />
+   301→                <Skeleton className="h-48 w-full" />
+   302→                <Skeleton className="h-32 w-full" />
+   303→              </div>
+   304→            ) : (
+   305→              <VehicleDetailContent
+   306→                vehicle={detail}
+   307→                onUpdate={(body) => updateMutation.mutate({ id: detail.id, body })}
+   308→                updating={updateMutation.isPending}
+   309→                onShipmentClick={(id) => {
+   310→                  setSelectedShipmentId(id);
+   311→                  setSelectedId(null);
+   312→                  setView("shipments");
+   313→                }}
+   314→              />
+   315→            )}
+   316→          </div>
+   317→        </SheetContent>
+   318→      </Sheet>
+   319→
+   320→      {/* Create dialog */}
+   321→      <CreateVehicleDialog
+   322→        open={createOpen}
+   323→        onOpenChange={setCreateOpen}
+   324→        onSubmit={(body) => createMutation.mutate(body)}
+   325→        submitting={createMutation.isPending}
+   326→      />
+   327→    </div>
+   328→  );
+   329→}
+   330→
+   331→function SpecItem({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
+   332→  return (
+   333→    <div>
+   334→      <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+   335→      <p className="mt-1 text-sm font-semibold tabular-nums">{value}</p>
+   336→      <p className="text-[10px] text-muted-foreground">{label}</p>
+   337→    </div>
+   338→  );
+   339→}
+   340→
+   341→function VehicleCard({ vehicle, onView }: { vehicle: Vehicle; onView: () => void }) {
+   342→  const Icon = vehicleTypeIcon(vehicle.type);
+   343→  const color = vehicleColorMeta(vehicle.color);
+   344→  const maintenanceOverdue = vehicle.nextMaintenance
+   345→    ? new Date(vehicle.nextMaintenance).getTime() < Date.now()
+   346→    : false;
+   347→
+   348→  return (
+   349→    <Card className="h-full py-0">
+   350→      <CardContent className="flex h-full flex-col gap-3 p-4">
+   351→        {/* Header */}
+   352→        <div className="flex items-start gap-3">
+   353→          <div className={cn("flex h-12 w-12 items-center justify-center rounded-xl ring-1 ring-inset", color.bg, color.text)}>
+   354→            <Icon className="h-6 w-6" />
+   355→          </div>
+   356→          <div className="min-w-0 flex-1">
+   357→            <p className="font-mono text-base font-bold tracking-tight">{vehicle.plateNumber}</p>
+   358→            <p className="truncate text-xs text-muted-foreground capitalize">{vehicle.model} · {vehicle.brand}</p>
+   359→          </div>
+   360→          <StatusBadge status={vehicle.status} kind="vehicle" />
+   361→        </div>
+   362→
+   363→        {/* Type & fuel badges */}
+   364→        <div className="flex flex-wrap gap-1.5">
+   365→          <Badge variant="secondary" className="capitalize">{vehicle.type}</Badge>
+   366→          <Badge variant="outline" className="capitalize">{vehicle.fuelType}</Badge>
+   367→        </div>
+   368→
+   369→        {/* Specs */}
+   370→        <div className="grid grid-cols-2 gap-2 rounded-lg bg-muted/40 p-3">
+   371→          <SpecItem icon={Gauge} label="Capacity" value={formatWeight(vehicle.capacityKg)} />
+   372→          <SpecItem icon={Container} label="Mileage" value={formatDistance(vehicle.mileage)} />
+   373→        </div>
+   374→
+   375→        {/* Fuel */}
+   376→        <div>
+   377→          <div className="mb-1 flex items-center justify-between text-xs">
+   378→            <span className="flex items-center gap-1 text-muted-foreground">
+   379→              <Fuel className="h-3 w-3" /> Fuel
+   380→            </span>
+   381→            <span className="font-semibold tabular-nums">{vehicle.fuelLevel}%</span>
+   382→          </div>
+   383→          <Progress value={vehicle.fuelLevel} className={cn("h-1.5", fuelColorClass(vehicle.fuelLevel))} />
+   384→        </div>
+   385→
+   386→        {/* Maintenance */}
+   387→        <div className={cn(
+   388→          "flex items-center gap-2 rounded-lg border p-2.5",
+   389→          maintenanceOverdue && "border-rose-200 bg-rose-50 dark:border-rose-900 dark:bg-rose-950/30"
+   390→        )}>
+   391→          <Wrench className={cn("h-3.5 w-3.5 shrink-0", maintenanceOverdue ? "text-rose-500" : "text-muted-foreground")} />
+   392→          <div className="min-w-0 flex-1">
+   393→            <p className="text-xs font-medium">
+   394→              {vehicle.nextMaintenance ? `Next: ${formatRelativeTime(vehicle.nextMaintenance)}` : "No scheduled maintenance"}
+   395→            </p>
+   396→            {maintenanceOverdue && (
+   397→              <p className="flex items-center gap-1 text-[10px] font-medium text-rose-600 dark:text-rose-400">
+   398→                <AlertTriangle className="h-2.5 w-2.5" /> Overdue — service required
+   399→              </p>
+   400→            )}
+   401→          </div>
+   402→        </div>
+   403→
+   404→        {/* Driver */}
+   405→        <div className="flex items-center gap-2 rounded-lg border p-2.5">
+   406→          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+   407→            <User className="h-4 w-4" />
+   408→          </div>
+   409→          {vehicle.driver ? (
+   410→            <div className="flex min-w-0 flex-1 items-center gap-2">
+   411→              <Avatar className="h-6 w-6">
+   412→                <AvatarFallback className={cn("text-[10px] font-semibold text-white", avatarColorClass(vehicle.driver.avatarColor))}>
+   413→                  {initials(vehicle.driver.name)}
+   414→                </AvatarFallback>
+   415→              </Avatar>
+   416→              <div className="min-w-0">
+   417→                <p className="truncate text-xs font-medium">{vehicle.driver.name}</p>
+   418→                <p className="text-[10px] text-muted-foreground">Assigned driver</p>
+   419→              </div>
+   420→            </div>
+   421→          ) : (
+   422→            <p className="flex-1 text-xs text-muted-foreground">Unassigned</p>
+   423→          )}
+   424→        </div>
+   425→
+   426→        <Button variant="outline" size="sm" className="mt-auto w-full gap-1.5" onClick={onView}>
+   427→          View details <ArrowRight className="h-3.5 w-3.5" />
+   428→        </Button>
+   429→      </CardContent>
+   430→    </Card>
+   431→  );
+   432→}
+   433→
+   434→function VehicleDetailContent({
+   435→  vehicle,
+   436→  onUpdate,
+   437→  updating,
+   438→  onShipmentClick,
+   439→}: {
+   440→  vehicle: VehicleDetail;
+   441→  onUpdate: (body: Record<string, unknown>) => void;
+   442→  updating: boolean;
+   443→  onShipmentClick: (id: string) => void;
+   444→}) {
+   445→  const [fuelLevel, setFuelLevel] = React.useState(vehicle.fuelLevel);
+   446→
+   447→  React.useEffect(() => {
+   448→    setFuelLevel(vehicle.fuelLevel);
+   449→  }, [vehicle.fuelLevel]);
+   450→
+   451→  const Icon = vehicleTypeIcon(vehicle.type);
+   452→  const color = vehicleColorMeta(vehicle.color);
+   453→  const maintenanceOverdue = vehicle.nextMaintenance
+   454→    ? new Date(vehicle.nextMaintenance).getTime() < Date.now()
+   455→    : false;
+   456→
+   457→  return (
+   458→    <div className="flex flex-col gap-4 p-4">
+   459→      {/* Header */}
+   460→      <div className="flex items-start gap-3">
+   461→        <div className={cn("flex h-14 w-14 items-center justify-center rounded-xl ring-1 ring-inset", color.bg, color.text)}>
+   462→          <Icon className="h-7 w-7" />
+   463→        </div>
+   464→        <div className="min-w-0 flex-1">
+   465→          <h3 className="font-mono text-lg font-bold tracking-tight">{vehicle.plateNumber}</h3>
+   466→          <p className="text-xs text-muted-foreground capitalize">{vehicle.brand} · {vehicle.model}</p>
+   467→          <div className="mt-1.5"><StatusBadge status={vehicle.status} kind="vehicle" /></div>
+   468→        </div>
+   469→      </div>
+   470→
+   471→      {/* Badges */}
+   472→      <div className="flex flex-wrap gap-1.5">
+   473→        <Badge variant="secondary" className="capitalize">{vehicle.type}</Badge>
+   474→        <Badge variant="outline" className="capitalize">{vehicle.fuelType} fuel</Badge>
+   475→        <Badge variant="outline" className="capitalize">{vehicle.color}</Badge>
+   476→      </div>
+   477→
+   478→      {/* Specs */}
+   479→      <div className="grid grid-cols-2 gap-2 rounded-lg bg-muted/40 p-3">
+   480→        <SpecItem icon={Gauge} label="Capacity" value={formatWeight(vehicle.capacityKg)} />
+   481→        <SpecItem icon={Container} label="Mileage" value={formatDistance(vehicle.mileage)} />
+   482→      </div>
+   483→
+   484→      {/* Maintenance */}
+   485→      <div>
+   486→        <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">Maintenance</p>
+   487→        <div className={cn(
+   488→          "space-y-1.5 rounded-lg border p-3",
+   489→          maintenanceOverdue && "border-rose-200 bg-rose-50 dark:border-rose-900 dark:bg-rose-950/30"
+   490→        )}>
+   491→          <div className="flex items-center justify-between text-xs">
+   492→            <span className="flex items-center gap-1.5 text-muted-foreground">
+   493→              <Wrench className="h-3 w-3" /> Last service
+   494→            </span>
+   495→            <span className="font-medium">
+   496→              {vehicle.lastMaintenance ? formatDate(vehicle.lastMaintenance) : "—"}
+   497→            </span>
+   498→          </div>
+   499→          <div className="flex items-center justify-between text-xs">
+   500→            <span className="flex items-center gap-1.5 text-muted-foreground">
+   501→              <CalendarClock className="h-3 w-3" /> Next service
+   502→            </span>
+   503→            <span className={cn("font-medium", maintenanceOverdue && "text-rose-600 dark:text-rose-400")}>
+   504→              {vehicle.nextMaintenance ? formatDate(vehicle.nextMaintenance) : "—"}
+   505→            </span>
+   506→          </div>
+   507→          {maintenanceOverdue && (
+   508→            <p className="flex items-center gap-1 text-[11px] font-medium text-rose-600 dark:text-rose-400">
+   509→              <AlertTriangle className="h-3 w-3" /> Maintenance overdue — please service this vehicle
+   510→            </p>
+   511→          )}
+   512→        </div>
+   513→      </div>
+   514→
+   515→      {/* Driver */}
+   516→      <div>
+   517→        <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">Assigned driver</p>
+   518→        {vehicle.driver ? (
+   519→          <div className="flex items-center gap-2 rounded-lg border p-2.5">
+   520→            <Avatar className="h-9 w-9">
+   521→              <AvatarFallback className={cn("text-xs font-semibold text-white", avatarColorClass(vehicle.driver.avatarColor))}>
+   522→                {initials(vehicle.driver.name)}
+   523→              </AvatarFallback>
+   524→            </Avatar>
+   525→            <div className="min-w-0 flex-1">
+   526→              <p className="truncate text-sm font-medium">{vehicle.driver.name}</p>
+   527→              <div className="mt-0.5"><StatusBadge status={vehicle.driver.status} kind="driver" /></div>
+   528→            </div>
+   529→          </div>
+   530→        ) : (
+   531→          <p className="rounded-lg border border-dashed p-3 text-center text-xs text-muted-foreground">
+   532→            No driver assigned
+   533→          </p>
+   534→        )}
+   535→      </div>
+   536→
+   537→      {/* Status control */}
+   538→      <div>
+   539→        <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">Update status</p>
+   540→        <Select
+   541→          value={vehicle.status}
+   542→          onValueChange={(v) => onUpdate({ status: v })}
+   543→          disabled={updating}
+   544→        >
+   545→          <SelectTrigger className="w-full">
+   546→            <SelectValue placeholder="Select status" />
+   547→          </SelectTrigger>
+   548→          <SelectContent>
+   549→            {VEHICLE_STATUSES.map((s) => (
+   550→              <SelectItem key={s} value={s}>{VEHICLE_STATUS_META[s].label}</SelectItem>
+   551→            ))}
+   552→          </SelectContent>
+   553→        </Select>
+   554→      </div>
+   555→
+   556→      {/* Fuel control */}
+   557→      <div>
+   558→        <div className="mb-1.5 flex items-center justify-between">
+   559→          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Fuel level</p>
+   560→          <span className="text-xs font-semibold tabular-nums">{fuelLevel}%</span>
+   561→        </div>
+   562→        <Progress value={fuelLevel} className={cn("h-2", fuelColorClass(fuelLevel))} />
+   563→        <Slider
+   564→          className="mt-3"
+   565→          value={[fuelLevel]}
+   566→          max={100}
+   567→          step={1}
+   568→          onValueChange={(v) => setFuelLevel(v[0])}
+   569→          onValueCommit={(v) => onUpdate({ fuelLevel: v[0] })}
+   570→          disabled={updating}
+   571→        />
+   572→        <p className="mt-1 text-[10px] text-muted-foreground">Drag to adjust — releases to update.</p>
+   573→      </div>
+   574→
+   575→      {/* Recent shipments */}
+   576→      <div>
+   577→        <div className="mb-2 flex items-center justify-between">
+   578→          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Recent shipments</p>
+   579→          <Badge variant="secondary" className="text-[10px]">{vehicle._count.shipments} total</Badge>
+   580→        </div>
+   581→        {vehicle.shipments.length === 0 ? (
+   582→          <p className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
+   583→            No shipments yet
+   584→          </p>
+   585→        ) : (
+   586→          <div className="space-y-1.5">
+   587→            {vehicle.shipments.map((s) => (
+   588→              <button
+   589→                key={s.id}
+   590→                onClick={() => onShipmentClick(s.id)}
+   591→                className="flex w-full items-center gap-2 rounded-lg border p-2.5 text-left transition-colors hover:bg-muted/50"
+   592→              >
+   593→                <div className="min-w-0 flex-1">
+   594→                  <p className="truncate font-mono text-xs font-semibold">{s.trackingNumber}</p>
+   595→                  <p className="truncate text-[10px] text-muted-foreground">
+   596→                    {s.originCity} → {s.destinationCity}
+   597→                  </p>
+   598→                </div>
+   599→                <div className="flex flex-col items-end gap-1">
+   600→                  <StatusBadge status={s.status} kind="shipment" />
+   601→                  <span className="text-[10px] text-muted-foreground">{formatRelativeTime(s.createdAt)}</span>
+   602→                </div>
+   603→              </button>
+   604→            ))}
+   605→          </div>
+   606→        )}
+   607→      </div>
+   608→    </div>
+   609→  );
+   610→}
+   611→
+   612→function CreateVehicleDialog({
+   613→  open, onOpenChange, onSubmit, submitting,
+   614→}: {
+   615→  open: boolean;
+   616→  onOpenChange: (o: boolean) => void;
+   617→  onSubmit: (body: Record<string, unknown>) => void;
+   618→  submitting: boolean;
+   619→}) {
+   620→  const [plateNumber, setPlateNumber] = React.useState("");
+   621→  const [model, setModel] = React.useState("");
+   622→  const [brand, setBrand] = React.useState("");
+   623→  const [type, setType] = React.useState<string>("truck");
+   624→  const [capacityKg, setCapacityKg] = React.useState("");
+   625→  const [fuelType, setFuelType] = React.useState<string>("diesel");
+   626→  const [color, setColor] = React.useState<string>("slate");
+   627→
+   628→  React.useEffect(() => {
+   629→    if (!open) {
+   630→      setPlateNumber(""); setModel(""); setBrand("");
+   631→      setType("truck"); setCapacityKg(""); setFuelType("diesel"); setColor("slate");
+   632→    }
+   633→  }, [open]);
+   634→
+   635→  const submit = (e: React.FormEvent) => {
+   636→    e.preventDefault();
+   637→    if (!plateNumber || !model || !brand) {
+   638→      toast.error("Plate number, model and brand are required");
+   639→      return;
+   640→    }
+   641→    onSubmit({
+   642→      plateNumber,
+   643→      model,
+   644→      brand,
+   645→      type,
+   646→      capacityKg: capacityKg ? Number(capacityKg) : 0,
+   647→      fuelType,
+   648→      color,
+   649→    });
+   650→  };
+   651→
+   652→  return (
+   653→    <Dialog open={open} onOpenChange={onOpenChange}>
+   654→      <DialogContent className="sm:max-w-md">
+   655→        <DialogHeader>
+   656→          <DialogTitle>Add new vehicle</DialogTitle>
+   657→          <DialogDescription>
+   658→            Register a new vehicle in the fleet. It will start with &ldquo;Active&rdquo; status.
+   659→          </DialogDescription>
+   660→        </DialogHeader>
+   661→        <form onSubmit={submit} className="space-y-3">
+   662→          <div className="space-y-1.5">
+   663→            <Label htmlFor="v-plate">Plate number *</Label>
+   664→            <Input
+   665→              id="v-plate"
+   666→              value={plateNumber}
+   667→              onChange={(e) => setPlateNumber(e.target.value.toUpperCase())}
+   668→              placeholder="51A-12345"
+   669→              required
+   670→            />
+   671→          </div>
+   672→          <div className="grid grid-cols-2 gap-3">
+   673→            <div className="space-y-1.5">
+   674→              <Label htmlFor="v-model">Model *</Label>
+   675→              <Input id="v-model" value={model} onChange={(e) => setModel(e.target.value)} placeholder="Actros" required />
+   676→            </div>
+   677→            <div className="space-y-1.5">
+   678→              <Label htmlFor="v-brand">Brand *</Label>
+   679→              <Input id="v-brand" value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="Mercedes-Benz" required />
+   680→            </div>
+   681→          </div>
+   682→          <div className="grid grid-cols-2 gap-3">
+   683→            <div className="space-y-1.5">
+   684→              <Label htmlFor="v-type">Type</Label>
+   685→              <Select value={type} onValueChange={setType}>
+   686→                <SelectTrigger id="v-type" className="w-full">
+   687→                  <SelectValue placeholder="Type" />
+   688→                </SelectTrigger>
+   689→                <SelectContent>
+   690→                  {VEHICLE_TYPES.map((t) => (
+   691→                    <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>
+   692→                  ))}
+   693→                </SelectContent>
+   694→              </Select>
+   695→            </div>
+   696→            <div className="space-y-1.5">
+   697→              <Label htmlFor="v-cap">Capacity (kg)</Label>
+   698→              <Input
+   699→                id="v-cap"
+   700→                type="number"
+   701→                min={0}
+   702→                value={capacityKg}
+   703→                onChange={(e) => setCapacityKg(e.target.value)}
+   704→                placeholder="5000"
+   705→              />
+   706→            </div>
+   707→          </div>
+   708→          <div className="grid grid-cols-2 gap-3">
+   709→            <div className="space-y-1.5">
+   710→              <Label htmlFor="v-fuel">Fuel type</Label>
+   711→              <Select value={fuelType} onValueChange={setFuelType}>
+   712→                <SelectTrigger id="v-fuel" className="w-full">
+   713→                  <SelectValue placeholder="Fuel" />
+   714→                </SelectTrigger>
+   715→                <SelectContent>
+   716→                  {FUEL_TYPES.map((f) => (
+   717→                    <SelectItem key={f} value={f} className="capitalize">{f}</SelectItem>
+   718→                  ))}
+   719→                </SelectContent>
+   720→              </Select>
+   721→            </div>
+   722→            <div className="space-y-1.5">
+   723→              <Label htmlFor="v-color">Color</Label>
+   724→              <Select value={color} onValueChange={setColor}>
+   725→                <SelectTrigger id="v-color" className="w-full">
+   726→                  <SelectValue placeholder="Color" />
+   727→                </SelectTrigger>
+   728→                <SelectContent>
+   729→                  {VEHICLE_COLORS_LIST.map((c) => (
+   730→                    <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>
+   731→                  ))}
+   732→                </SelectContent>
+   733→              </Select>
+   734→            </div>
+   735→          </div>
+   736→          <DialogFooter>
+   737→            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+   738→            <Button type="submit" disabled={submitting}>
+   739→              {submitting ? "Adding…" : "Add vehicle"}
+   740→            </Button>
+   741→          </DialogFooter>
+   742→        </form>
+   743→      </DialogContent>
+   744→    </Dialog>
+   745→  );
+   746→}
+   747→
+   748→function useDebounce<T>(value: T, delay: number): T {
+   749→  const [v, setV] = React.useState(value);
+   750→  React.useEffect(() => {
+   751→    const t = setTimeout(() => setV(value), delay);
+   752→    return () => clearTimeout(t);
+   753→  }, [value, delay]);
+   754→  return v;
+   755→}
+   756→
