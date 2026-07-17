@@ -14,6 +14,7 @@ import {
   Route as RouteIcon,
   Receipt,
   FileBarChart,
+  Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppStore, type ViewKey } from "@/lib/store";
@@ -29,6 +30,7 @@ const NAV: {
   { key: "tracking", label: "Theo dõi trực tuyến", icon: MapPin, hint: "Trực tiếp" },
   { key: "drivers", label: "Tài xế", icon: Truck },
   { key: "vehicles", label: "Đội xe", icon: CarFront },
+  { key: "nha-cung-cap", label: "NCC xe", icon: Building2 },
   { key: "customers", label: "Khách hàng", icon: Users },
   { key: "warehouses", label: "Kho hàng", icon: Warehouse },
   { key: "routes", label: "Lập kế hoạch tuyến", icon: RouteIcon },

@@ -26,6 +26,7 @@ const VIEW_TITLES: Record<ViewKey, { title: string; subtitle: string }> = {
   tracking: { title: "Theo dõi trực tuyến", subtitle: "Bản đồ đội xe và đơn hàng thời gian thực" },
   drivers: { title: "Tài xế", subtitle: "Danh sách tài xế và hiệu suất" },
   vehicles: { title: "Đội xe", subtitle: "Phương tiện và tình trạng bảo trì" },
+  "nha-cung-cap": { title: "Nhà cung cấp xe", subtitle: "Đơn vị cho thuê xe, danh sách xe và tài xế" },
   customers: { title: "Khách hàng", subtitle: "Danh bạ khách hàng và lịch sử" },
   warehouses: { title: "Kho hàng", subtitle: "Trung tâm phân phối và công suất" },
   routes: { title: "Lập kế hoạch tuyến", subtitle: "Tối ưu hóa tuyến đường giao hàng" },

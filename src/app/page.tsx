@@ -10,6 +10,7 @@ import { DriversView } from "@/components/views/drivers-view";
 import { VehiclesView } from "@/components/views/vehicles-view";
 import { CustomersView } from "@/components/views/customers-view";
 import { WarehousesView } from "@/components/views/warehouses-view";
+import { NhaCungCapView } from "@/components/views/nha-cung-cap-view";
 import { RoutesView } from "@/components/views/routes-view";
 import { InvoicesView } from "@/components/views/invoices-view";
 import { ReportsView } from "@/components/views/reports-view";
@@ -27,6 +28,7 @@ export default function Home() {
       {view === "vehicles" && <VehiclesView />}
       {view === "customers" && <CustomersView />}
       {view === "warehouses" && <WarehousesView />}
+      {view === "nha-cung-cap" && <NhaCungCapView />}
       {view === "routes" && <RoutesView />}
       {view === "invoices" && <InvoicesView />}
       {view === "reports" && <ReportsView />}

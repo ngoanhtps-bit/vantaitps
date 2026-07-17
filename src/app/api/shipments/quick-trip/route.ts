@@ -71,6 +71,7 @@ export async function POST(req: NextRequest) {
           model: "Container",
           brand: "Container",
           type: "container",
+          loaiXe: containerNumber ? "CONT 40 HC" : null, // guess from container presence
           capacityKg: 30000,
           fuelType: "diesel",
           status: "active",

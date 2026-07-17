@@ -849,3 +849,83 @@ Tính năng "Tạo chuyến nhanh" đã được xây dựng qua nhiều bước
 2. Thêm validation: kiểm tra biển số trùng, SĐT định dạng
 3. Thêm nút "Tạo chuyến tiếp" sau khi tạo thành công (tạo nhanh chuyến khác)
 4. Lưu lịch sử dán gần đây để tái sử dụng
+
+---
+Task ID: NCC-FINAL
+Agent: main
+Task: Hoàn thiện danh mục NCC xe + gộp tài xế với dòng xe + danh mục loại xe container
+
+## Mô tả trạng thái dự án
+Người dùng yêu cầu: (1) gộp tài xế + dòng xe thành 1 entity để dễ theo dõi, (2) thêm danh mục NCC xe (nhà cung cấp) với thông tin đơn vị + danh sách biển xe + tài xế/SĐT, (3) hỗ trợ 16 dòng xe container (CONT 40 RF, MOOC RÀO, v.v.).
+
+## Các thay đổi đã hoàn thành
+
+### 1. Schema: Thêm model NhaCungCap + trường loaiXe/nhaCungCapId
+- **Model NhaCungCap mới**: id, tenDonVi, maNCC (unique), sdt, email, diaChi, nguoiLienHe, sdtLienHe, msThue, ghiChu + relations vehicles[], drivers[]
+- **Vehicle**: thêm `loaiXe` (String? — dòng xe: "CONT 40 RF", "MOOC RÀO", v.v.), `nhaCungCapId` (FK → NhaCungCap)
+- **Driver**: thêm `nhaCungCapId` (FK → NhaCungCap)
+- Indexes: loaiXe, nhaCungCapId trên Vehicle và Driver
+- Push schema thành công
+
+### 2. Constants: Danh mục dòng xe container
+- `LOAI_XE_OPTIONS`: 16 dòng xe — CONT 40 RF, CONT 45 RF, CONT 48 RF, CONT 50 RF, CONT 52 RF, CONT 53 RF, CONT 40 HC, CONT 45 HC, CONT 50 HC, CONT 48 HC, MOOC RÀO, MOOC SÀN, XE TẢI, XE GHÉP, CONT TÀU, FOOC
+- `LOAI_XE_NHOM`: map dòng xe → nhóm (Container RF, Container HC, Mooc, Xe tải, v.v.)
+
+### 3. API NhaCungCap
+- `GET /api/nha-cung-cap` — list với search, include vehicles + drivers + _count
+- `POST /api/nha-cung-cap` — tạo NCC (tenDonVi, maNCC, sdt, email, diaChi, nguoiLienHe, sdtLienHe, msThue, ghiChu)
+- `GET /api/nha-cung-cap/[id]` — chi tiết NCC với đầy đủ vehicles (kèm driver) + drivers (kèm vehicle)
+- `PATCH /api/nha-cung-cap/[id]` — cập nhật
+- `DELETE /api/nha-cung-cap/[id]` — xóa
+
+### 4. API Vehicles: hỗ trợ loaiXe + nhaCungCapId
+- POST /api/vehicles chấp nhận thêm `loaiXe` và `nhaCungCapId`
+- Quick-trip API: tự động set loaiXe="CONT 40 HC" khi có container
+
+### 5. View NhaCungCap (`nha-cung-cap-view.tsx`) — 12th view
+- **4 KPI cards**: Tổng NCC, Tổng xe, Tổng tài xế, Số loại xe
+- **Filter bar**: search + nút "Thêm NCC"
+- **NCC cards grid** (responsive 1/2 cols): mỗi card hiển thị tenDonVi, maNCC, SĐT, 3 stat tiles (xe/tx/tổng), thông tin liên hệ
+- **Create NCC dialog**: form đầy đủ (tenDonVi, maNCC, sdt, email, msThue, diaChi, nguoiLienHe, sdtLienHe, ghiChu)
+- **Detail drawer**: 
+  - Thông tin đơn vị (maNCC, SĐT, email, MST, địa chỉ, người liên hệ)
+  - Danh sách xe: biển số, loaiXe badge, brand/model, tài xế + SĐT, status
+  - Danh sách tài xế: avatar, tên, SĐT, xe gán (biển số + loaiXe), rating
+  - Ghi chú
+  - Nút "Thêm xe" → AddVehicleDialog với Select loaiXe (16 options)
+
+### 6. Tích hợp vào app
+- Store: thêm "nha-cung-cap" vào ViewKey
+- Sidebar: nav item "NCC xe" (Building2 icon) giữa "Đội xe" và "Khách hàng"
+- Topbar: title "Nhà cung cấp xe" + subtitle
+- Command palette: nav item "NCC xe"
+- Page.tsx: render NhaCungCapView
+
+### 7. Seed data
+- 4 NCC mẫu: Công ty CP Vận tải container Phương Đông, Công ty TNHH Vận tải Bình Minh, Doanh nghiệp tư Vận tải Đại Nam, Công ty CP Logistics Việt Thái
+- 18 xe: 14 xe liên kết NCC, mỗi xe container có loaiXe (CONT 40 RF, MOOC RÀO, v.v.)
+- 16 tài xế: 12 liên kết NCC (cùng NCC với xe gán)
+- Re-seed thành công
+
+### 8. Fix Prisma client cache
+- db.ts: check cả `nhaCungCap` model AND `trailerNumber` field — discard cached client nếu thiếu bất kỳ cái nào
+
+## Kết quả kiểm tra
+- **Lint**: 0 lỗi (1 cảnh báo có sẵn trong seed.ts)
+- **API**: 
+  - GET /api/nha-cung-cap → 200, trả 4 NCC với _count
+  - POST /api/nha-cung-cap → 201, tạo thành công
+  - GET /api/nha-cung-cap/[id] → 200
+- **Seed**: 4 NCC, 18 xe (14 có NCC), 16 tx (12 có NCC), 120 đơn hàng
+- **Dev server**: hoạt động (thỉnh thoảng crash do memory, restart bằng `npx next dev`)
+
+## Vấn đề chưa giải quyết
+- Dev server không ổn định khi agent-browser mở (crash do memory) — code và API verified qua curl
+- Chưa test UI NCC view trong browser do server instability
+
+## Khuyến nghị giai đoạn tiếp theo
+1. Test UI NCC view trong browser khi server ổn định
+2. Thêm nút "Gán tài xế cho xe" trong NCC detail drawer
+3. Thêm filter theo loaiXe trong Đội xe view
+4. Thêm cột "Dòng xe" (loaiXe) trong bảng đơn hàng và bảng đội xe
+5. Xuất báo cáo NCC: danh sách xe + tài xế theo đơn vị (Excel/CSV)

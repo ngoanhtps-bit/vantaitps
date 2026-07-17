@@ -34,6 +34,26 @@ model Customer {
   @@index([city])
 }
 
+model NhaCungCap {
+  id          String   @id @default(cuid())
+  tenDonVi    String
+  maNCC       String?  @unique
+  sdt         String?
+  email       String?
+  diaChi      String?
+  nguoiLienHe String?
+  sdtLienHe   String?
+  msThue      String?
+  ghiChu      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  vehicles Vehicle[]
+  drivers  Driver[]
+
+  @@index([tenDonVi])
+}
+
 model Driver {
   id            String   @id @default(cuid())
   name          String
@@ -53,10 +73,15 @@ model Driver {
   vehicleId String? @unique
   vehicle   Vehicle? @relation(fields: [vehicleId], references: [id])
 
+  // Liên kết nhà cung cấp xe
+  nhaCungCapId String?
+  nhaCungCap   NhaCungCap? @relation(fields: [nhaCungCapId], references: [id])
+
   shipments Shipment[]
   routes    Route[]
 
   @@index([status])
+  @@index([nhaCungCapId])
 }
 
 model Vehicle {
@@ -65,6 +90,7 @@ model Vehicle {
   model         String
   brand         String
   type          String   @default("truck") // "truck" | "van" | "motorbike" | "container"
+  loaiXe        String?  // Dòng xe: "CONT 40 RF", "MOOC RÀO", "XE TẢI", v.v.
   capacityKg    Float
   fuelType      String   @default("diesel") // "diesel" | "petrol" | "electric"
   fuelLevel     Float    @default(100) // percentage 0-100
@@ -80,8 +106,14 @@ model Vehicle {
   shipments Shipment[]
   routes    Route[]
 
+  // Liên kết nhà cung cấp xe
+  nhaCungCapId String?
+  nhaCungCap   NhaCungCap? @relation(fields: [nhaCungCapId], references: [id])
+
   @@index([status])
   @@index([type])
+  @@index([loaiXe])
+  @@index([nhaCungCapId])
 }
 
 model Warehouse {

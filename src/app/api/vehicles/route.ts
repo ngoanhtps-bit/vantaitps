@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { plateNumber, model, brand, type, capacityKg, fuelType, color } = body;
+  const { plateNumber, model, brand, type, capacityKg, fuelType, color, loaiXe, nhaCungCapId } = body;
   if (!plateNumber || !model || !brand) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
@@ -43,6 +43,8 @@ export async function POST(req: NextRequest) {
       model,
       brand,
       type: type || "truck",
+      loaiXe: loaiXe || null,
+      nhaCungCapId: nhaCungCapId || null,
       capacityKg: Number(capacityKg) || 0,
       fuelType: fuelType || "diesel",
       color: color || "slate",

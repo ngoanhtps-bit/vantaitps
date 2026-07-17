@@ -81,6 +81,7 @@ async function main() {
   await db.warehouse.deleteMany();
   await db.driver.deleteMany();
   await db.vehicle.deleteMany();
+  await db.nhaCungCap.deleteMany();
   await db.customer.deleteMany();
 
   // --- Warehouses ---
@@ -135,17 +136,35 @@ async function main() {
     customers.push(cust);
   }
 
+  // --- NhaCungCap (suppliers) ---
+  const nccData = [
+    { tenDonVi: "Công ty CP Vận tải container Phương Đông", maNCC: "NCC001", sdt: "02838901234", nguoiLienHe: "Trần Văn Hùng", sdtLienHe: "0901234567", diaChi: "Khu công nghiệp Tân Cảng, TP.HCM" },
+    { tenDonVi: "Công ty TNHH Vận tải Bình Minh", maNCC: "NCC002", sdt: "02439876543", nguoiLienHe: "Lê Thị Mai", sdtLienHe: "0912345678", diaChi: "Cảng Hải Phòng, Hải Phòng" },
+    { tenDonVi: "Doanh nghiệp tư Vận tải Đại Nam", maNCC: "NCC003", sdt: "02363654321", nguoiLienHe: "Phạm Quốc Bảo", sdtLienHe: "0923456789", diaChi: "Cảng Tiên Sa, Đà Nẵng" },
+    { tenDonVi: "Công ty CP Logistics Việt Thái", maNCC: "NCC004", sdt: "02743888888", nguoiLienHe: "Nguyễn Thanh Tùng", sdtLienHe: "0934567890", diaChi: "KCN Long Hậu, Đồng Nai" },
+  ];
+  const nccs = [];
+  for (const n of nccData) {
+    const ncc = await db.nhaCungCap.create({ data: n });
+    nccs.push(ncc);
+  }
+
   // --- Vehicles ---
+  const loaiXeOptions = ["CONT 40 RF", "CONT 45 RF", "CONT 48 RF", "CONT 50 RF", "CONT 40 HC", "CONT 45 HC", "CONT 50 HC", "MOOC RÀO", "MOOC SÀN", "XE TẢI", "XE GHÉP", "CONT TÀU", "FOOC"];
   const vehicles = [];
   for (let i = 0; i < 18; i++) {
     const b = pick(vehicleBrands);
     const type = pick(["truck", "truck", "van", "van", "container", "motorbike"]);
+    const loaiXe = type === "container" ? pick(loaiXeOptions) : type === "truck" ? pick(["XE TẢI", "XE GHÉP"]) : null;
+    const nccId = i < 14 ? pick(nccs).id : null; // most vehicles belong to a supplier
     const v = await db.vehicle.create({
       data: {
         plateNumber: genPlate(),
         model: b.model,
         brand: b.brand,
         type,
+        loaiXe,
+        nhaCungCapId: nccId,
         capacityKg: type === "motorbike" ? randInt(50, 150) : type === "van" ? randInt(800, 2000) : randInt(3000, 15000),
         fuelType: pick(["diesel", "diesel", "petrol", "electric"]),
         fuelLevel: randInt(20, 100),
@@ -164,6 +183,9 @@ async function main() {
   for (let i = 0; i < 16; i++) {
     const availVehicles = vehicles.filter((v) => !drivers.some((d: any) => d.vehicleId === v.id));
     const vehicleId = Math.random() > 0.3 && availVehicles.length ? pick(availVehicles).id : null;
+    // Link driver to the same NCC as their vehicle
+    const linkedVehicle = vehicleId ? vehicles.find((v) => v.id === vehicleId) : null;
+    const nccId = linkedVehicle?.nhaCungCapId || (i < 12 ? pick(nccs).id : null);
     const d = await db.driver.create({
       data: {
         name: `${pick(firstNames)} ${pick(lastNames)}`,
@@ -178,6 +200,7 @@ async function main() {
         hireDate: new Date(Date.now() - randInt(60, 2000) * 86400000).toISOString(),
         avatarColor: pick(avatarColors),
         vehicleId,
+        nhaCungCapId: nccId,
       },
     });
     drivers.push(d);
@@ -320,6 +343,7 @@ async function main() {
   const counts = {
     warehouses: await db.warehouse.count(),
     customers: await db.customer.count(),
+    nhaCungCap: await db.nhaCungCap.count(),
     vehicles: await db.vehicle.count(),
     drivers: await db.driver.count(),
     shipments: await db.shipment.count(),

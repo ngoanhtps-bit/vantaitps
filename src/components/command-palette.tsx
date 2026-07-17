@@ -15,6 +15,7 @@ import {
   Route as RouteIcon,
   Receipt,
   FileBarChart,
+  Building2,
 } from "lucide-react";
 import {
   CommandDialog,
@@ -42,6 +43,7 @@ const NAV_ITEMS: { key: ViewKey; label: string; icon: React.ElementType; desc: s
   { key: "tracking", label: "Theo dõi trực tuyến", icon: MapPin, desc: "Bản đồ thời gian thực" },
   { key: "drivers", label: "Tài xế", icon: Truck, desc: "Danh sách tài xế" },
   { key: "vehicles", label: "Đội xe", icon: CarFront, desc: "Phương tiện" },
+  { key: "nha-cung-cap", label: "NCC xe", icon: Building2, desc: "Đơn vị cho thuê xe" },
   { key: "customers", label: "Khách hàng", icon: Users, desc: "Khách hàng" },
   { key: "warehouses", label: "Kho hàng", icon: Warehouse, desc: "Trung tâm phân phối" },
   { key: "routes", label: "Lập kế hoạch tuyến", icon: RouteIcon, desc: "Tuyến giao hàng" },

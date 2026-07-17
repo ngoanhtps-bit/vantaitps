@@ -13,6 +13,7 @@ export type ViewKey =
   | "routes"
   | "invoices"
   | "reports"
+  | "nha-cung-cap"
   | "analytics";
 
 interface AppState {

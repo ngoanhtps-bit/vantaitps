@@ -136,6 +136,45 @@ export const VEHICLE_STATUS_META: Record<VehicleStatus, { label: string; badge: 
 
 export const VEHICLE_TYPES = ["truck", "van", "motorbike", "container"] as const;
 
+// Danh mục dòng xe container/xe tải (theo yêu cầu NCC)
+export const LOAI_XE_OPTIONS = [
+  "CONT 40 RF",
+  "CONT 45 RF",
+  "CONT 48 RF",
+  "CONT 50 RF",
+  "CONT 52 RF",
+  "CONT 53 RF",
+  "CONT 40 HC",
+  "CONT 45 HC",
+  "CONT 50 HC",
+  "CONT 48 HC",
+  "MOOC RÀO",
+  "MOOC SÀN",
+  "XE TẢI",
+  "XE GHÉP",
+  "CONT TÀU",
+  "FOOC",
+] as const;
+
+export const LOAI_XE_NHOM: Record<string, string> = {
+  "CONT 40 RF": "Container RF",
+  "CONT 45 RF": "Container RF",
+  "CONT 48 RF": "Container RF",
+  "CONT 50 RF": "Container RF",
+  "CONT 52 RF": "Container RF",
+  "CONT 53 RF": "Container RF",
+  "CONT 40 HC": "Container HC",
+  "CONT 45 HC": "Container HC",
+  "CONT 50 HC": "Container HC",
+  "CONT 48 HC": "Container HC",
+  "MOOC RÀO": "Mooc",
+  "MOOC SÀN": "Mooc",
+  "XE TẢI": "Xe tải",
+  "XE GHÉP": "Xe ghép",
+  "CONT TÀU": "Container tàu",
+  "FOOC": "Khác",
+};
+
 export const VEHICLE_TYPE_LABELS: Record<string, string> = {
   truck: "Xe tải",
   van: "Xe tải nhỏ",
