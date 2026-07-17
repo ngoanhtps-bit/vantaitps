@@ -929,3 +929,60 @@ Người dùng yêu cầu: (1) gộp tài xế + dòng xe thành 1 entity để 
 3. Thêm filter theo loaiXe trong Đội xe view
 4. Thêm cột "Dòng xe" (loaiXe) trong bảng đơn hàng và bảng đội xe
 5. Xuất báo cáo NCC: danh sách xe + tài xế theo đơn vị (Excel/CSV)
+
+---
+Task ID: DANH-MUC-XE
+Agent: main
+Task: Gộp dòng xe + tài xế vào 1 danh mục, hiển thị số xe theo dòng, tự động cập nhật khi tạo chuyến nhanh
+
+## Mô tả trạng thái dự án
+Người dùng yêu cầu: (1) gộp phần dòng xe và tài xế vào 1 danh mục (thay vì tách Đội xe + Tài xế), (2) mỗi dòng xe hiển thị bao nhiêu xe, (3) tự động cập nhật thông tin xe mới khi tạo chuyến nhanh thành công, (4) theo dõi kiểu Google Sheet.
+
+## Các thay đổi đã hoàn thành
+
+### 1. API xe-thong-ke
+- `GET /api/xe-thong-ke` — thống kê xe theo dòng xe (loaiXe)
+- Trả về: tongXe, tongTaiXe, tongDongXe, groups[] (mỗi group: loaiXe, soLuong, soTaiXe, xes[])
+- Mỗi xe kèm: driver (name, phone, avatarColor, status, rating) + nhaCungCap (tenDonVi, maNCC, sdt)
+- Nhóm "Chưa phân loại" cho xe không có loaiXe
+
+### 2. View DanhMucXe (`danh-muc-xe-view.tsx`) — gộp xe + tài xế
+- **4 KPI cards**: Tổng số xe, Tài xế đã gán, Dòng xe, Đang hoạt động
+- **Search**: tìm biển số, tài xế, SĐT, đơn vị NCC
+- **Danh sách theo dòng xe** (Collapsible groups):
+  - Mỗi group: icon container + tên dòng xe + badge nhóm + "N xe · M tài xế · K hoạt động" + số lượng lớn
+  - Click để expand → table-style list (kiểu Google Sheet):
+    - Cột: Biển số | Tài xế (avatar + tên) | SĐT | Đơn vị NCC | Hãng/Mẫu | Trạng thái
+  - Sắp xếp theo số lượng xe giảm dần
+
+### 3. Tự động cập nhật khi tạo chuyến nhanh
+- QuickTripDialog: thêm `qc.invalidateQueries({ queryKey: ["xe-thong-ke"] })` trong onSuccess
+- Dispatch event `quick-trip-created` để DanhMucXeView refresh
+- DanhMucXeView: lắng nghe event + refetchInterval 5s
+
+### 4. Bảng đơn hàng: thêm cột Biển số + SĐT (kiểu Google Sheet)
+- API shipments: thêm `phone` vào driver select
+- ShipmentListItem type: thêm `phone` cho driver
+- Table headers: Biển số (lg), Tài xế (lg), SĐT (xl)
+- Table cells: biển số (mono), tài xế (avatar + tên), SĐT (mono)
+
+### 5. Gộp điều hướng
+- Xóa "Tài xế" và "Đội xe" tách biệt khỏi sidebar
+- Thay bằng "Danh mục xe" (Truck icon) — gộp cả xe + tài xế theo dòng xe
+- Cập nhật store, sidebar, topbar, command palette, page.tsx
+
+## Kết quả kiểm tra
+- **Lint**: 0 lỗi (1 cảnh báo có sẵn trong seed.ts)
+- **API xe-thong-ke**: 200, trả 18 xe, 3 dòng xe (XE TẢI: 5, XE GHÉP: 2, CONT 40 RF: 1) + 10 chưa phân loại
+- **API shipments**: driver phone đã có trong response
+- **Dev server**: hoạt động (thỉnh thoảng crash do memory, restart bằng `npx next dev`)
+
+## Vấn đề chưa giải quyết
+- Dev server crash khi agent-browser mở (memory issue) — code và API verified qua curl
+- 10 xe "Chưa phân loại" — cần cập nhật loaiXe cho xe cũ hoặc re-seed
+
+## Khuyến nghị giai đoạn tiếp theo
+1. Test UI Danh mục xe trong browser khi server ổn định
+2. Thêm nút "Sửa dòng xe" để gán loaiXe cho xe chưa phân loại
+3. Thêm filter theo dòng xe trong bảng đơn hàng
+4. Xuất Excel/CSV danh mục xe theo dòng (giống Google Sheet)

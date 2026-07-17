@@ -68,7 +68,7 @@ type ShipmentListItem = {
   progress: number;
   sender: { id: string; name: string; city: string; phone?: string };
   receiver: { id: string; name: string; city: string; phone?: string };
-  driver: { id: string; name: string; avatarColor: string; status: string } | null;
+  driver: { id: string; name: string; avatarColor: string; status: string; phone: string } | null;
   vehicle: { id: string; plateNumber: string; model: string; type: string } | null;
 };
 
@@ -378,10 +378,12 @@ export function ShipmentsView() {
                         />
                       </TableHead>
                       <TableHead className="min-w-[140px]">Mã vận đơn</TableHead>
-                      <TableHead className="min-w-[200px]">Tuyến đường</TableHead>
+                      <TableHead className="min-w-[180px]">Tuyến đường</TableHead>
                       <TableHead>Trạng thái</TableHead>
                       <TableHead className="hidden md:table-cell">Ưu tiên</TableHead>
+                      <TableHead className="hidden lg:table-cell">Biển số</TableHead>
                       <TableHead className="hidden lg:table-cell">Tài xế</TableHead>
+                      <TableHead className="hidden xl:table-cell">SĐT</TableHead>
                       <TableHead className="text-right">Chi phí</TableHead>
                       <TableHead className="hidden sm:table-cell">Ngày tạo</TableHead>
                     </TableRow>
@@ -425,6 +427,13 @@ export function ShipmentsView() {
                           <TableCell><StatusBadge status={s.status} kind="shipment" /></TableCell>
                           <TableCell className="hidden md:table-cell"><PriorityBadge priority={s.priority} /></TableCell>
                           <TableCell className="hidden lg:table-cell">
+                            {s.vehicle ? (
+                              <span className="font-mono text-xs font-semibold">{s.vehicle.plateNumber}</span>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="hidden lg:table-cell">
                             {s.driver ? (
                               <div className="flex items-center gap-2">
                                 <Avatar className="h-7 w-7">
@@ -436,6 +445,13 @@ export function ShipmentsView() {
                               </div>
                             ) : (
                               <span className="text-xs text-muted-foreground">Chưa gán</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="hidden xl:table-cell">
+                            {s.driver ? (
+                              <span className="font-mono text-xs">{s.driver.phone}</span>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
                             )}
                           </TableCell>
                           <TableCell className="text-right font-semibold tabular-nums">{formatCurrency(s.cost)}</TableCell>

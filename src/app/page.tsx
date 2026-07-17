@@ -6,8 +6,7 @@ import { useAppStore } from "@/lib/store";
 import { DashboardView } from "@/components/views/dashboard-view";
 import { ShipmentsView } from "@/components/views/shipments-view";
 import { TrackingView } from "@/components/views/tracking-view";
-import { DriversView } from "@/components/views/drivers-view";
-import { VehiclesView } from "@/components/views/vehicles-view";
+import { DanhMucXeView } from "@/components/views/danh-muc-xe-view";
 import { CustomersView } from "@/components/views/customers-view";
 import { WarehousesView } from "@/components/views/warehouses-view";
 import { NhaCungCapView } from "@/components/views/nha-cung-cap-view";
@@ -24,8 +23,7 @@ export default function Home() {
       {view === "dashboard" && <DashboardView />}
       {view === "shipments" && <ShipmentsView />}
       {view === "tracking" && <TrackingView />}
-      {view === "drivers" && <DriversView />}
-      {view === "vehicles" && <VehiclesView />}
+      {view === "danh-muc-xe" && <DanhMucXeView />}
       {view === "customers" && <CustomersView />}
       {view === "warehouses" && <WarehousesView />}
       {view === "nha-cung-cap" && <NhaCungCapView />}

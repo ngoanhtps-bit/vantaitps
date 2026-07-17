@@ -188,6 +188,9 @@ export function QuickTripDialog({
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       qc.invalidateQueries({ queryKey: ["tracking"] });
       qc.invalidateQueries({ queryKey: ["notifications"] });
+      qc.invalidateQueries({ queryKey: ["xe-thong-ke"] }); // Refresh danh mục xe
+      // Dispatch event để DanhMucXeView tự refresh
+      window.dispatchEvent(new CustomEvent("quick-trip-created"));
       onOpenChange(false);
       onCreated?.(data.id);
     },

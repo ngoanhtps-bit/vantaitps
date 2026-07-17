@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 const SHIPMENT_INCLUDE = {
   sender: { select: { id: true, name: true, city: true, phone: true } },
   receiver: { select: { id: true, name: true, city: true, phone: true } },
-  driver: { select: { id: true, name: true, avatarColor: true, status: true } },
+  driver: { select: { id: true, name: true, avatarColor: true, status: true, phone: true } },
   vehicle: { select: { id: true, plateNumber: true, model: true, type: true } },
   originWarehouse: { select: { id: true, name: true, city: true } },
   destinationWarehouse: { select: { id: true, name: true, city: true } },
