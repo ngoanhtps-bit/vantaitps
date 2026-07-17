@@ -1,0 +1,252 @@
+Module not found: Can't resolve '@/components/views/analytics-view'
+[0m [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/analytics-view' inside of [project]/
+Module not found: Can't resolve '@/components/views/analytics-view'
+[0m [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/analytics-view' inside of [project]/
+Module not found: Can't resolve '@/components/views/analytics-view'
+[0m [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/analytics-view' inside of [project]/
+Module not found: Can't resolve '@/components/views/analytics-view'
+[0m [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/analytics-view' inside of [project]/
+Module not found: Can't resolve '@/components/views/customers-view'
+[31m[1m>[22m[39m[90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/customers-view' inside of [project]/
+Module not found: Can't resolve '@/components/views/customers-view'
+[31m[1m>[22m[39m[90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/customers-view' inside of [project]/
+Module not found: Can't resolve '@/components/views/customers-view'
+[31m[1m>[22m[39m[90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/customers-view' inside of [project]/
+Module not found: Can't resolve '@/components/views/customers-view'
+[31m[1m>[22m[39m[90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/customers-view' inside of [project]/
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m[0m
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m[0m
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m[0m
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m[0m
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m[0m
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m[0m
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m[0m
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m[0m
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m[0m
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m[0m
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m[0m
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m[0m
+Module not found: Can't resolve '@/components/views/warehouses-view'
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/warehouses-view' inside of [project]/
+Module not found: Can't resolve '@/components/views/warehouses-view'
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/warehouses-view' inside of [project]/
+Module not found: Can't resolve '@/components/views/warehouses-view'
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/warehouses-view' inside of [project]/
+Module not found: Can't resolve '@/components/views/warehouses-view'
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/warehouses-view' inside of [project]/
+Module not found: Can't resolve '@/components/views/analytics-view'
+[0m [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/analytics-view' inside of [project]/
+Module not found: Can't resolve '@/components/views/analytics-view'
+[0m [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/analytics-view' inside of [project]/
+Module not found: Can't resolve '@/components/views/analytics-view'
+[0m [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/analytics-view' inside of [project]/
+Module not found: Can't resolve '@/components/views/analytics-view'
+[0m [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/analytics-view' inside of [project]/
+Module not found: Can't resolve '@/components/views/customers-view'
+[31m[1m>[22m[39m[90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/customers-view' inside of [project]/
+Module not found: Can't resolve '@/components/views/customers-view'
+[31m[1m>[22m[39m[90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/customers-view' inside of [project]/
+Module not found: Can't resolve '@/components/views/customers-view'
+[31m[1m>[22m[39m[90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/customers-view' inside of [project]/
+Module not found: Can't resolve '@/components/views/customers-view'
+[31m[1m>[22m[39m[90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/customers-view' inside of [project]/
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m[0m
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m[0m
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m[0m
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m[0m
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m[0m
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m[0m
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m[0m
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m[0m
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m[0m
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m[0m
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m[0m
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m[0m
+Module not found: Can't resolve '@/components/views/warehouses-view'
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/warehouses-view' inside of [project]/
+Module not found: Can't resolve '@/components/views/warehouses-view'
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/warehouses-view' inside of [project]/
+Module not found: Can't resolve '@/components/views/warehouses-view'
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/warehouses-view' inside of [project]/
+Module not found: Can't resolve '@/components/views/warehouses-view'
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/warehouses-view' inside of [project]/
+Module not found: Can't resolve '@/components/views/analytics-view'
+[0m [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/analytics-view' inside of [project]/
+Module not found: Can't resolve '@/components/views/analytics-view'
+[0m [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/analytics-view' inside of [project]/
+Module not found: Can't resolve '@/components/views/analytics-view'
+[0m [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/analytics-view' inside of [project]/
+Module not found: Can't resolve '@/components/views/analytics-view'
+[0m [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/analytics-view' inside of [project]/
+Module not found: Can't resolve '@/components/views/customers-view'
+[31m[1m>[22m[39m[90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/customers-view' inside of [project]/
+Module not found: Can't resolve '@/components/views/customers-view'
+[31m[1m>[22m[39m[90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/customers-view' inside of [project]/
+Module not found: Can't resolve '@/components/views/customers-view'
+[31m[1m>[22m[39m[90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/customers-view' inside of [project]/
+Module not found: Can't resolve '@/components/views/customers-view'
+[31m[1m>[22m[39m[90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/customers-view' inside of [project]/
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m[0m
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m[0m
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m[0m
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m[0m
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m[0m
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m[0m
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m[0m
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m[0m
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m[0m
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m[0m
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m[0m
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m[0m
+Module not found: Can't resolve '@/components/views/warehouses-view'
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/warehouses-view' inside of [project]/
+Module not found: Can't resolve '@/components/views/warehouses-view'
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/warehouses-view' inside of [project]/
+Module not found: Can't resolve '@/components/views/warehouses-view'
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAnalyticsView[39m } [36mfrom[39m [32m"@/components/views/analytics-view"[39m[33m;[39m
+Import map: aliased to relative './src/components/views/warehouses-view' inside of [project]/
+Module not found: Can't resolve '@/components/views/warehouses-view'
+ [90m 11 |[39m [36mimport[39m { [33mCustomersView[39m } [36mfrom[39m [32m"@/components/views/customers-view"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 12 |[39m [36mimport[39m { [33mWarehousesView[39m } [36mfrom[39m [32m"@/components/views/warehouses-view"[39m[33m;[39m
+
+[Showing results with pagination = limit: 250]

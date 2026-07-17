@@ -1,0 +1,30 @@
+"use client";
+
+import * as React from "react";
+import { AppShell } from "@/components/app-shell";
+import { useAppStore } from "@/lib/store";
+import { DashboardView } from "@/components/views/dashboard-view";
+import { ShipmentsView } from "@/components/views/shipments-view";
+import { TrackingView } from "@/components/views/tracking-view";
+import { DriversView } from "@/components/views/drivers-view";
+import { VehiclesView } from "@/components/views/vehicles-view";
+import { CustomersView } from "@/components/views/customers-view";
+import { WarehousesView } from "@/components/views/warehouses-view";
+import { AnalyticsView } from "@/components/views/analytics-view";
+
+export default function Home() {
+  const view = useAppStore((s) => s.view);
+
+  return (
+    <AppShell>
+      {view === "dashboard" && <DashboardView />}
+      {view === "shipments" && <ShipmentsView />}
+      {view === "tracking" && <TrackingView />}
+      {view === "drivers" && <DriversView />}
+      {view === "vehicles" && <VehiclesView />}
+      {view === "customers" && <CustomersView />}
+      {view === "warehouses" && <WarehousesView />}
+      {view === "analytics" && <AnalyticsView />}
+    </AppShell>
+  );
+}

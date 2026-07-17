@@ -1,0 +1,771 @@
+     1→     1→"use client";
+     2→     2→
+     3→     3→import * as React from "react";
+     4→     4→import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+     5→     5→import { api } from "@/lib/api-client";
+     6→     6→import { StatusBadge, PriorityBadge } from "@/components/status-badge";
+     7→     7→import { Button } from "@/components/ui/button";
+     8→     8→import { Input } from "@/components/ui/input";
+     9→     9→import { Card, CardContent } from "@/components/ui/card";
+    10→    10→import {
+    11→    11→  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+    12→    12→} from "@/components/ui/select";
+    13→    13→import {
+    14→    14→  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
+    15→    15→} from "@/components/ui/sheet";
+    16→    16→import {
+    17→    17→  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+    18→    18→} from "@/components/ui/dialog";
+    19→    19→import { Label } from "@/components/ui/label";
+    20→    20→import { Textarea } from "@/components/ui/textarea";
+    21→    21→import { Badge } from "@/components/ui/badge";
+    22→    22→import { Skeleton } from "@/components/ui/skeleton";
+    23→    23→import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+    24→    24→import { Progress } from "@/components/ui/progress";
+    25→    25→import {
+    26→    26→  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+    27→    27→} from "@/components/ui/table";
+    28→    28→import { Checkbox } from "@/components/ui/checkbox";
+    29→    29→import {
+    30→    30→  Package, Search, Plus, Filter, Download, ArrowRight, MapPin, Truck,
+    31→    31→  User, Calendar, DollarSign, Weight, Box, ChevronLeft, ChevronRight,
+    32→    32→  X, Clock, CheckCircle2, AlertTriangle, PackageCheck, XCircle, RotateCcw,
+    33→    33→} from "lucide-react";
+    34→    34→import {
+    35→    35→  SHIPMENT_STATUSES, SHIPMENT_STATUS_META, PRIORITIES, PRIORITY_META,
+    36→    36→  SERVICE_TYPES, SERVICE_META, VIETNAM_CITIES,
+    37→    37→} from "@/lib/constants";
+    38→    38→import {
+    39→    39→  formatCurrency, formatRelativeTime, formatDateTime, formatWeight, initials,
+    40→    40→} from "@/lib/format";
+    41→    41→import { useAppStore } from "@/lib/store";
+    42→    42→import { useToast } from "@/hooks/use-toast";
+    43→    43→import { toast } from "sonner";
+    44→    44→import { avatarColorClass } from "@/components/avatar-color";
+    45→    45→import { cn } from "@/lib/utils";
+    46→    46→
+    47→    47→type ShipmentListItem = {
+    48→    48→  id: string;
+    49→    49→  trackingNumber: string;
+    50→    50→  status: string;
+    51→    51→  priority: string;
+    52→    52→  serviceType: string;
+    53→    53→  originCity: string;
+    54→    54→  destinationCity: string;
+    55→    55→  originAddress: string;
+    56→    56→  destinationAddress: string;
+    57→    57→  distanceKm: number;
+    58→    58→  weightKg: number;
+    59→    59→  pieces: number;
+    60→    60→  cost: number;
+    61→    61→  createdAt: string;
+    62→    62→  estimatedDelivery: string | null;
+    63→    63→  progress: number;
+    64→    64→  sender: { id: string; name: string; city: string };
+    65→    65→  receiver: { id: string; name: string; city: string };
+    66→    66→  driver: { id: string; name: string; avatarColor: string; status: string } | null;
+    67→    67→  vehicle: { id: string; plateNumber: string; model: string; type: string } | null;
+    68→    68→};
+    69→    69→
+    70→    70→type ShipmentDetail = ShipmentListItem & {
+    71→    71→  volumeM3: number;
+    72→    72→  description: string | null;
+    73→    73→  notes: string | null;
+    74→    74→  insurance: number;
+    75→    75→  currency: string;
+    76→    76→  pickedUpAt: string | null;
+    77→    77→  deliveredAt: string | null;
+    78→    78→  currentLat: number | null;
+    79→    79→  currentLng: number | null;
+    80→    80→  originWarehouse: { id: string; name: string; city: string } | null;
+    81→    81→  destinationWarehouse: { id: string; name: string; city: string } | null;
+    82→    82→  trackingEvents: Array<{
+    83→    83→    id: string; status: string; location: string | null; note: string | null;
+    84→    84→    lat: number | null; lng: number | null; timestamp: string;
+    85→    85→  }>;
+    86→    86→};
+    87→    87→
+    88→    88→const SERVICE_ICON: Record<string, React.ElementType> = {
+    89→    89→  standard: Package, express: Truck, same_day: Clock, freight: Box, cold_chain: PackageCheck,
+    90→    90→};
+    91→    91→
+    92→    92→export function ShipmentsView() {
+    93→    93→  const { toast: legacyToast } = useToast();
+    94→    94→  const qc = useQueryClient();
+    95→    95→  const { selectedShipmentId, setSelectedShipmentId, shipmentsFilter, setShipmentsFilter } = useAppStore();
+    96→    96→
+    97→    97→  const [search, setSearch] = React.useState("");
+    98→    98→  const [status, setStatus] = React.useState(shipmentsFilter || "all");
+    99→    99→  const [priority, setPriority] = React.useState("all");
+   100→   100→  const [service, setService] = React.useState("all");
+   101→   101→  const [city, setCity] = React.useState("all");
+   102→   102→  const [page, setPage] = React.useState(1);
+   103→   103→  const [pageSize] = React.useState(12);
+   104→   104→  const [createOpen, setCreateOpen] = React.useState(false);
+   105→   105→  const [detailOpen, setDetailOpen] = React.useState(false);
+   106→   106→
+   107→   107→  // React to external "open-new-shipment" event
+   108→   108→  React.useEffect(() => {
+   109→   109→    const handler = () => setCreateOpen(true);
+   110→   110→    window.addEventListener("open-new-shipment", handler);
+   111→   111→    return () => window.removeEventListener("open-new-shipment", handler);
+   112→   112→  }, []);
+   113→   113→
+   114→   114→  // Open detail when a shipment is selected
+   115→   115→  React.useEffect(() => {
+   116→   116→    if (selectedShipmentId) setDetailOpen(true);
+   117→   117→    else setDetailOpen(false);
+   118→   118→  }, [selectedShipmentId]);
+   119→   119→
+   120→   120→  // Reset filter state when shipmentsFilter changes externally
+   121→   121→  React.useEffect(() => {
+   122→   122→    if (shipmentsFilter) {
+   123→   123→      setStatus(shipmentsFilter);
+   124→   124→      setShipmentsFilter(null);
+   125→   125→      setPage(1);
+   126→   126→    }
+   127→   127→  }, [shipmentsFilter, setShipmentsFilter]);
+   128→   128→
+   129→   129→  const debouncedSearch = useDebounce(search, 350);
+   130→   130→
+   131→   131→  const queryKey = React.useMemo(
+   132→   132→    () => ["shipments", { debouncedSearch, status, priority, service, city, page, pageSize }],
+   133→   133→    [debouncedSearch, status, priority, service, city, page, pageSize]
+   134→   134→  );
+   135→   135→
+   136→   136→  const { data, isLoading } = useQuery({
+   137→   137→    queryKey,
+   138→   138→    queryFn: () => {
+   139→   139→      const params = new URLSearchParams({
+   140→   140→        page: String(page),
+   141→   141→        pageSize: String(pageSize),
+   142→   142→      });
+   143→   143→      if (debouncedSearch) params.set("q", debouncedSearch);
+   144→   144→      if (status !== "all") params.set("status", status);
+   145→   145→      if (priority !== "all") params.set("priority", priority);
+   146→   146→      if (service !== "all") params.set("service", service);
+   147→   147→      if (city !== "all") params.set("city", city);
+   148→   148→      return api.get<{ items: ShipmentListItem[]; total: number; totalPages: number }>(`/api/shipments?${params}`);
+   149→   149→    },
+   150→   150→  });
+   151→   151→
+   152→   152→  const resetFilters = () => {
+   153→   153→    setSearch(""); setStatus("all"); setPriority("all"); setService("all"); setCity("all"); setPage(1);
+   154→   154→  };
+   155→   155→
+   156→   156→  const hasFilters = status !== "all" || priority !== "all" || service !== "all" || city !== "all" || search !== "";
+   157→   157→
+   158→   158→  return (
+   159→   159→    <div className="space-y-4">
+   160→   160→      {/* Filter bar */}
+   161→   161→      <Card>
+   162→   162→        <CardContent className="p-4">
+   163→   163→          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+   164→   164→            <div className="relative flex-1">
+   165→   165→              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+   166→   166→              <Input
+   167→   167→                placeholder="Search tracking #, sender, route…"
+   168→   168→                value={search}
+   169→   169→                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+   170→   170→                className="pl-9"
+   171→   171→              />
+   172→   172→            </div>
+   173→   173→            <div className="flex flex-wrap items-center gap-2">
+   174→   174→              <Select value={status} onValueChange={(v) => { setStatus(v); setPage(1); }}>
+   175→   175→                <SelectTrigger className="w-[150px]"><SelectValue placeholder="Status" /></SelectTrigger>
+   176→   176→                <SelectContent>
+   177→   177→                  <SelectItem value="all">All statuses</SelectItem>
+   178→   178→                  {SHIPMENT_STATUSES.map((s) => (
+   179→   179→                    <SelectItem key={s} value={s}>{SHIPMENT_STATUS_META[s].label}</SelectItem>
+   180→   180→                  ))}
+   181→   181→                </SelectContent>
+   182→   182→              </Select>
+   183→   183→              <Select value={priority} onValueChange={(v) => { setPriority(v); setPage(1); }}>
+   184→   184→                <SelectTrigger className="w-[130px]"><SelectValue placeholder="Priority" /></SelectTrigger>
+   185→   185→                <SelectContent>
+   186→   186→                  <SelectItem value="all">All priority</SelectItem>
+   187→   187→                  {PRIORITIES.map((p) => (
+   188→   188→                    <SelectItem key={p} value={p}>{PRIORITY_META[p].label}</SelectItem>
+   189→   189→                  ))}
+   190→   190→                </SelectContent>
+   191→   191→              </Select>
+   192→   192→              <Select value={service} onValueChange={(v) => { setService(v); setPage(1); }}>
+   193→   193→                <SelectTrigger className="w-[140px]"><SelectValue placeholder="Service" /></SelectTrigger>
+   194→   194→                <SelectContent>
+   195→   195→                  <SelectItem value="all">All services</SelectItem>
+   196→   196→                  {SERVICE_TYPES.map((s) => (
+   197→   197→                    <SelectItem key={s} value={s}>{SERVICE_META[s].label}</SelectItem>
+   198→   198→                  ))}
+   199→   199→                </SelectContent>
+   200→   200→              </Select>
+   201→   201→              <Select value={city} onValueChange={(v) => { setCity(v); setPage(1); }}>
+   202→   202→                <SelectTrigger className="w-[150px]"><SelectValue placeholder="City" /></SelectTrigger>
+   203→   203→                <SelectContent>
+   204→   204→                  <SelectItem value="all">All cities</SelectItem>
+   205→   205→                  {VIETNAM_CITIES.map((c) => (
+   206→   206→                    <SelectItem key={c} value={c}>{c}</SelectItem>
+   207→   207→                  ))}
+   208→   208→                </SelectContent>
+   209→   209→              </Select>
+   210→   210→              {hasFilters && (
+   211→   211→                <Button variant="ghost" size="sm" onClick={resetFilters} className="gap-1 text-xs">
+   212→   212→                  <X className="h-3.5 w-3.5" /> Clear
+   213→   213→                </Button>
+   214→   214→              )}
+   215→   215→              <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
+   216→   216→                <Plus className="h-4 w-4" /> New
+   217→   217→              </Button>
+   218→   218→            </div>
+   219→   219→          </div>
+   220→   220→        </CardContent>
+   221→   221→      </Card>
+   222→   222→
+   223→   223→      {/* Table */}
+   224→   224→      <Card>
+   225→   225→        <CardContent className="p-0">
+   226→   226→          {isLoading ? (
+   227→   227→            <div className="space-y-2 p-4">
+   228→   228→              {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-14 w-full" />)}
+   229→   229→            </div>
+   230→   230→          ) : !data?.items?.length ? (
+   231→   231→            <div className="flex flex-col items-center justify-center gap-3 p-12 text-center">
+   232→   232→              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
+   233→   233→                <Package className="h-6 w-6" />
+   234→   234→              </div>
+   235→   235→              <div>
+   236→   236→                <p className="text-sm font-medium">No shipments found</p>
+   237→   237→                <p className="text-xs text-muted-foreground">Try adjusting filters or create a new shipment.</p>
+   238→   238→              </div>
+   239→   239→              <Button size="sm" variant="outline" onClick={resetFilters}>Reset filters</Button>
+   240→   240→            </div>
+   241→   241→          ) : (
+   242→   242→            <>
+   243→   243→              <div className="overflow-x-auto custom-scroll">
+   244→   244→                <Table>
+   245→   245→                  <TableHeader>
+   246→   246→                    <TableRow className="bg-muted/40 hover:bg-muted/40">
+   247→   247→                      <TableHead className="w-[40px]"><Checkbox aria-label="Select all" /></TableHead>
+   248→   248→                      <TableHead className="min-w-[140px]">Tracking #</TableHead>
+   249→   249→                      <TableHead className="min-w-[200px]">Route</TableHead>
+   250→   250→                      <TableHead>Status</TableHead>
+   251→   251→                      <TableHead className="hidden md:table-cell">Priority</TableHead>
+   252→   252→                      <TableHead className="hidden lg:table-cell">Driver</TableHead>
+   253→   253→                      <TableHead className="text-right">Cost</TableHead>
+   254→   254→                      <TableHead className="hidden sm:table-cell">Created</TableHead>
+   255→   255→                    </TableRow>
+   256→   256→                  </TableHeader>
+   257→   257→                  <TableBody>
+   258→   258→                    {data.items.map((s) => {
+   259→   259→                      const SIcon = SERVICE_ICON[s.serviceType] || Package;
+   260→   260→                      return (
+   261→   261→                        <TableRow
+   262→   262→                          key={s.id}
+   263→   263→                          onClick={() => setSelectedShipmentId(s.id)}
+   264→   264→                          className="cursor-pointer transition-colors hover:bg-muted/50"
+   265→   265→                        >
+   266→   266→                          <TableCell onClick={(e) => e.stopPropagation()}>
+   267→   267→                            <Checkbox aria-label={`Select ${s.trackingNumber}`} />
+   268→   268→                          </TableCell>
+   269→   269→                          <TableCell>
+   270→   270→                            <div className="flex items-center gap-2">
+   271→   271→                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+   272→   272→                                <SIcon className="h-4 w-4" />
+   273→   273→                              </div>
+   274→   274→                              <div className="flex flex-col">
+   275→   275→                                <span className="font-mono text-xs font-semibold">{s.trackingNumber}</span>
+   276→   276→                                <span className="text-[10px] text-muted-foreground">{SERVICE_META[s.serviceType as keyof typeof SERVICE_META]?.label}</span>
+   277→   277→                              </div>
+   278→   278→                            </div>
+   279→   279→                          </TableCell>
+   280→   280→                          <TableCell>
+   281→   281→                            <div className="flex items-center gap-1.5 text-sm">
+   282→   282→                              <span className="font-medium">{s.originCity}</span>
+   283→   283→                              <ArrowRight className="h-3 w-3 text-muted-foreground" />
+   284→   284→                              <span className="font-medium">{s.destinationCity}</span>
+   285→   285→                            </div>
+   286→   286→                            <p className="text-[10px] text-muted-foreground">{s.sender.name} → {s.receiver.name}</p>
+   287→   287→                          </TableCell>
+   288→   288→                          <TableCell><StatusBadge status={s.status} kind="shipment" /></TableCell>
+   289→   289→                          <TableCell className="hidden md:table-cell"><PriorityBadge priority={s.priority} /></TableCell>
+   290→   290→                          <TableCell className="hidden lg:table-cell">
+   291→   291→                            {s.driver ? (
+   292→   292→                              <div className="flex items-center gap-2">
+   293→   293→                                <Avatar className="h-7 w-7">
+   294→   294→                                  <AvatarFallback className={cn("text-[10px] font-semibold text-white", avatarColorClass(s.driver.avatarColor))}>
+   295→   295→                                    {initials(s.driver.name)}
+   296→   296→                                  </AvatarFallback>
+   297→   297→                                </Avatar>
+   298→   298→                                <span className="text-xs">{s.driver.name}</span>
+   299→   299→                              </div>
+   300→   300→                            ) : (
+   301→   301→                              <span className="text-xs text-muted-foreground">Unassigned</span>
+   302→   302→                            )}
+   303→   303→                          </TableCell>
+   304→   304→                          <TableCell className="text-right font-semibold tabular-nums">{formatCurrency(s.cost)}</TableCell>
+   305→   305→                          <TableCell className="hidden sm:table-cell text-xs text-muted-foreground">{formatRelativeTime(s.createdAt)}</TableCell>
+   306→   306→                        </TableRow>
+   307→   307→                      );
+   308→   308→                    })}
+   309→   309→                  </TableBody>
+   310→   310→                </Table>
+   311→   311→              </div>
+   312→   312→
+   313→   313→              {/* Pagination */}
+   314→   314→              <div className="flex items-center justify-between gap-3 border-t px-4 py-3">
+   315→   315→                <p className="text-xs text-muted-foreground">
+   316→   316→                  Showing <span className="font-medium text-foreground">{(page - 1) * pageSize + 1}</span>–
+   317→   317→                  <span className="font-medium text-foreground">{Math.min(page * pageSize, data.total)}</span> of{" "}
+   318→   318→                  <span className="font-medium text-foreground">{data.total}</span>
+   319→   319→                </p>
+   320→   320→                <div className="flex items-center gap-1">
+   321→   321→                  <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))} className="gap-1">
+   322→   322→                    <ChevronLeft className="h-3.5 w-3.5" /> Prev
+   323→   323→                  </Button>
+   324→   324→                  <span className="px-2 text-xs text-muted-foreground">{page} / {data.totalPages || 1}</span>
+   325→   325→                  <Button variant="outline" size="sm" disabled={page >= data.totalPages} onClick={() => setPage((p) => p + 1)} className="gap-1">
+   326→   326→                    Next <ChevronRight className="h-3.5 w-3.5" />
+   327→   327→                  </Button>
+   328→   328→                </div>
+   329→   329→              </div>
+   330→   330→            </>
+   331→   331→          )}
+   332→   332→        </CardContent>
+   333→   333→      </Card>
+   334→   334→
+   335→   335→      {/* Create dialog */}
+   336→   336→      <CreateShipmentDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={(s) => {
+   337→   337→        setSelectedShipmentId(s.id);
+   338→   338→        qc.invalidateQueries({ queryKey: ["shipments"] });
+   339→   339→        qc.invalidateQueries({ queryKey: ["dashboard"] });
+   340→   340→        toast.success("Shipment created", { description: s.trackingNumber });
+   341→   341→      }} />
+   342→   342→
+   343→   343→      {/* Detail drawer */}
+   344→   344→      <ShipmentDetailDrawer
+   345→   345→        shipmentId={selectedShipmentId}
+   346→   346→        open={detailOpen}
+   347→   347→        onOpenChange={(o) => { setDetailOpen(o); if (!o) setSelectedShipmentId(null); }}
+   348→   348→      />
+   349→   349→    </div>
+   350→   350→  );
+   351→   351→}
+   352→   352→
+   353→   353→// ---------- Create dialog ----------
+   354→   354→function CreateShipmentDialog({
+   355→   355→  open, onOpenChange, onCreated,
+   356→   356→}: {
+   357→   357→  open: boolean;
+   358→   358→  onOpenChange: (o: boolean) => void;
+   359→   359→  onCreated: (s: ShipmentListItem) => void;
+   360→   360→}) {
+   361→   361→  const qc = useQueryClient();
+   362→   362→  const [form, setForm] = React.useState({
+   363→   363→    senderId: "", receiverId: "", originAddress: "", originCity: "",
+   364→   364→    destinationAddress: "", destinationCity: "", weightKg: "", pieces: "1",
+   365→   365→    description: "", priority: "standard", serviceType: "standard",
+   366→   366→    driverId: "", vehicleId: "", notes: "",
+   367→   367→  });
+   368→   368→
+   369→   369→  const { data: customers } = useQuery({
+   370→   370→    queryKey: ["customers", "all"],
+   371→   371→    queryFn: () => api.get<{ items: { id: string; name: string; city: string }[] }>("/api/customers?pageSize=100"),
+   372→   372→    enabled: open,
+   373→   373→  });
+   374→   374→  const { data: drivers } = useQuery({
+   375→   375→    queryKey: ["drivers", "all"],
+   376→   376→    queryFn: () => api.get<{ items: { id: string; name: string; status: string }[] }>("/api/drivers"),
+   377→   377→    enabled: open,
+   378→   378→  });
+   379→   379→  const { data: vehicles } = useQuery({
+   380→   380→    queryKey: ["vehicles", "all"],
+   381→   381→    queryFn: () => api.get<{ items: { id: string; plateNumber: string; model: string }[] }>("/api/vehicles"),
+   382→   382→    enabled: open,
+   383→   383→  });
+   384→   384→
+   385→   385→  const create = useMutation({
+   386→   386→    mutationFn: () => api.post<ShipmentListItem>("/api/shipments", {
+   387→   387→      ...form,
+   388→   388→      weightKg: Number(form.weightKg) || 0,
+   389→   389→      pieces: Number(form.pieces) || 1,
+   390→   390→      cost: (Number(form.weightKg) || 1) * 0.5 + 20,
+   391→   391→    }),
+   392→   392→    onSuccess: (s) => {
+   393→   393→      onCreated(s);
+   394→   394→      onOpenChange(false);
+   395→   395→      setForm({ senderId: "", receiverId: "", originAddress: "", originCity: "", destinationAddress: "", destinationCity: "", weightKg: "", pieces: "1", description: "", priority: "standard", serviceType: "standard", driverId: "", vehicleId: "", notes: "" });
+   396→   396→    },
+   397→   397→    onError: (e: Error) => toast.error("Failed to create shipment", { description: e.message }),
+   398→   398→  });
+   399→   399→
+   400→   400→  const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
+   401→   401→
+   402→   402→  return (
+   403→   403→    <Dialog open={open} onOpenChange={onOpenChange}>
+   404→   404→      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto custom-scroll">
+   405→   405→        <DialogHeader>
+   406→   406→          <DialogTitle className="flex items-center gap-2"><Plus className="h-5 w-5 text-emerald-500" /> Create New Shipment</DialogTitle>
+   407→   407→          <DialogDescription>Fill in the shipment details. Tracking number is auto-generated.</DialogDescription>
+   408→   408→        </DialogHeader>
+   409→   409→
+   410→   410→        <div className="grid grid-cols-1 gap-4 py-2 sm:grid-cols-2">
+   411→   411→          <div className="space-y-1.5 sm:col-span-2">
+   412→   412→            <Label>Service Type</Label>
+   413→   413→            <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+   414→   414→              {SERVICE_TYPES.map((s) => {
+   415→   415→                const Icon = SERVICE_ICON[s] || Package;
+   416→   416→                const active = form.serviceType === s;
+   417→   417→                return (
+   418→   418→                  <button
+   419→   419→                    key={s}
+   420→   420→                    type="button"
+   421→   421→                    onClick={() => set("serviceType", s)}
+   422→   422→                    className={cn(
+   423→   423→                      "flex flex-col items-center gap-1 rounded-lg border p-2 text-xs transition-all",
+   424→   424→                      active ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300" : "hover:bg-muted"
+   425→   425→                    )}
+   426→   426→                  >
+   427→   427→                    <Icon className="h-4 w-4" />
+   428→   428→                    {SERVICE_META[s].label}
+   429→   429→                  </button>
+   430→   430→                );
+   431→   431→              })}
+   432→   432→            </div>
+   433→   433→          </div>
+   434→   434→
+   435→   435→          <div className="space-y-1.5">
+   436→   436→            <Label>Sender *</Label>
+   437→   437→            <Select value={form.senderId} onValueChange={(v) => set("senderId", v)}>
+   438→   438→              <SelectTrigger><SelectValue placeholder="Select sender" /></SelectTrigger>
+   439→   439→              <SelectContent>
+   440→   440→                {customers?.items.map((c) => <SelectItem key={c.id} value={c.id}>{c.name} · {c.city}</SelectItem>)}
+   441→   441→              </SelectContent>
+   442→   442→            </Select>
+   443→   443→          </div>
+   444→   444→          <div className="space-y-1.5">
+   445→   445→            <Label>Receiver *</Label>
+   446→   446→            <Select value={form.receiverId} onValueChange={(v) => set("receiverId", v)}>
+   447→   447→              <SelectTrigger><SelectValue placeholder="Select receiver" /></SelectTrigger>
+   448→   448→              <SelectContent>
+   449→   449→                {customers?.items.map((c) => <SelectItem key={c.id} value={c.id}>{c.name} · {c.city}</SelectItem>)}
+   450→   450→              </SelectContent>
+   451→   451→            </Select>
+   452→   452→          </div>
+   453→   453→
+   454→   454→          <div className="space-y-1.5">
+   455→   455→            <Label>Origin Address *</Label>
+   456→   456→            <Input value={form.originAddress} onChange={(e) => set("originAddress", e.target.value)} placeholder="Street address" />
+   457→   457→          </div>
+   458→   458→          <div className="space-y-1.5">
+   459→   459→            <Label>Origin City *</Label>
+   460→   460→            <Select value={form.originCity} onValueChange={(v) => set("originCity", v)}>
+   461→   461→              <SelectTrigger><SelectValue placeholder="Select city" /></SelectTrigger>
+   462→   462→              <SelectContent>
+   463→   463→                {VIETNAM_CITIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+   464→   464→              </SelectContent>
+   465→   465→            </Select>
+   466→   466→          </div>
+   467→   467→
+   468→   468→          <div className="space-y-1.5">
+   469→   469→            <Label>Destination Address *</Label>
+   470→   470→            <Input value={form.destinationAddress} onChange={(e) => set("destinationAddress", e.target.value)} placeholder="Street address" />
+   471→   471→          </div>
+   472→   472→          <div className="space-y-1.5">
+   473→   473→            <Label>Destination City *</Label>
+   474→   474→            <Select value={form.destinationCity} onValueChange={(v) => set("destinationCity", v)}>
+   475→   475→              <SelectTrigger><SelectValue placeholder="Select city" /></SelectTrigger>
+   476→   476→              <SelectContent>
+   477→   477→                {VIETNAM_CITIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+   478→   478→              </SelectContent>
+   479→   479→            </Select>
+   480→   480→          </div>
+   481→   481→
+   482→   482→          <div className="space-y-1.5">
+   483→   483→            <Label>Weight (kg)</Label>
+   484→   484→            <Input type="number" value={form.weightKg} onChange={(e) => set("weightKg", e.target.value)} placeholder="0.0" />
+   485→   485→          </div>
+   486→   486→          <div className="space-y-1.5">
+   487→   487→            <Label>Pieces</Label>
+   488→   488→            <Input type="number" value={form.pieces} onChange={(e) => set("pieces", e.target.value)} placeholder="1" />
+   489→   489→          </div>
+   490→   490→
+   491→   491→          <div className="space-y-1.5">
+   492→   492→            <Label>Priority</Label>
+   493→   493→            <Select value={form.priority} onValueChange={(v) => set("priority", v)}>
+   494→   494→              <SelectTrigger><SelectValue /></SelectTrigger>
+   495→   495→              <SelectContent>
+   496→   496→                {PRIORITIES.map((p) => <SelectItem key={p} value={p}>{PRIORITY_META[p].label}</SelectItem>)}
+   497→   497→              </SelectContent>
+   498→   498→            </Select>
+   499→   499→          </div>
+   500→   500→          <div className="space-y-1.5">
+   501→   501→            <Label>Description</Label>
+   502→   502→            <Input value={form.description} onChange={(e) => set("description", e.target.value)} placeholder="e.g. Electronics" />
+   503→   503→          </div>
+   504→   504→
+   505→   505→          <div className="space-y-1.5">
+   506→   506→            <Label>Assign Driver</Label>
+   507→   507→            <Select value={form.driverId} onValueChange={(v) => set("driverId", v)}>
+   508→   508→              <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
+   509→   509→              <SelectContent>
+   510→   510→                <SelectItem value="">Unassigned</SelectItem>
+   511→   511→                {drivers?.items.map((d) => <SelectItem key={d.id} value={d.id}>{d.name} · {d.status}</SelectItem>)}
+   512→   512→              </SelectContent>
+   513→   513→            </Select>
+   514→   514→          </div>
+   515→   515→          <div className="space-y-1.5">
+   516→   516→            <Label>Assign Vehicle</Label>
+   517→   517→            <Select value={form.vehicleId} onValueChange={(v) => set("vehicleId", v)}>
+   518→   518→              <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
+   519→   519→              <SelectContent>
+   520→   520→                <SelectItem value="">Unassigned</SelectItem>
+   521→   521→                {vehicles?.items.map((v) => <SelectItem key={v.id} value={v.id}>{v.plateNumber} · {v.model}</SelectItem>)}
+   522→   522→              </SelectContent>
+   523→   523→            </Select>
+   524→   524→          </div>
+   525→   525→
+   526→   526→          <div className="space-y-1.5 sm:col-span-2">
+   527→   527→            <Label>Notes</Label>
+   528→   528→            <Textarea value={form.notes} onChange={(e) => set("notes", e.target.value)} placeholder="Optional handling notes…" rows={2} />
+   529→   529→          </div>
+   530→   530→        </div>
+   531→   531→
+   532→   532→        <DialogFooter>
+   533→   533→          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+   534→   534→          <Button
+   535→   535→            disabled={create.isPending || !form.senderId || !form.receiverId || !form.originAddress || !form.destinationAddress}
+   536→   536→            onClick={() => create.mutate()}
+   537→   537→            className="gap-1.5"
+   538→   538→          >
+   539→   539→            {create.isPending ? "Creating…" : (<><Plus className="h-4 w-4" /> Create Shipment</>)}
+   540→   540→          </Button>
+   541→   541→        </DialogFooter>
+   542→   542→      </DialogContent>
+   543→   543→    </Dialog>
+   544→   544→  );
+   545→   545→}
+   546→   546→
+   547→   547→// ---------- Detail drawer ----------
+   548→   548→function ShipmentDetailDrawer({
+   549→   549→  shipmentId, open, onOpenChange,
+   550→   550→}: {
+   551→   551→  shipmentId: string | null;
+   552→   552→  open: boolean;
+   553→   553→  onOpenChange: (o: boolean) => void;
+   554→   554→}) {
+   555→   555→  const qc = useQueryClient();
+   556→   556→  const { data: shipment, isLoading } = useQuery({
+   557→   557→    queryKey: ["shipment", shipmentId],
+   558→   558→    queryFn: () => api.get<ShipmentDetail>(`/api/shipments/${shipmentId}`),
+   559→   559→    enabled: !!shipmentId && open,
+   560→   560→  });
+   561→   561→
+   562→   562→  const update = useMutation({
+   563→   563→    mutationFn: (body: Record<string, unknown>) => api.patch<ShipmentDetail>(`/api/shipments/${shipmentId}`, body),
+   564→   564→    onSuccess: () => {
+   565→   565→      qc.invalidateQueries({ queryKey: ["shipment", shipmentId] });
+   566→   566→      qc.invalidateQueries({ queryKey: ["shipments"] });
+   567→   567→      qc.invalidateQueries({ queryKey: ["dashboard"] });
+   568→   568→      toast.success("Shipment updated");
+   569→   569→    },
+   570→   570→    onError: (e: Error) => toast.error("Update failed", { description: e.message }),
+   571→   571→  });
+   572→   572→
+   573→   573→  return (
+   574→   574→    <Sheet open={open} onOpenChange={onOpenChange}>
+   575→   575→      <SheetContent className="w-full sm:max-w-xl overflow-y-auto custom-scroll p-0">
+   576→   576→        <SheetHeader className="border-b px-5 py-4">
+   577→   577→          <SheetDescription className="sr-only">Shipment details</SheetDescription>
+   578→   578→          <SheetTitle className="flex items-center gap-2 text-base">
+   579→   579→            {shipment ? (
+   580→   580→              <>
+   581→   581→                <Package className="h-5 w-5 text-emerald-500" />
+   582→   582→                <span className="font-mono">{shipment.trackingNumber}</span>
+   583→   583→                <StatusBadge status={shipment.status} kind="shipment" />
+   584→   584→              </>
+   585→   585→            ) : "Loading…"}
+   586→   586→          </SheetTitle>
+   587→   587→        </SheetHeader>
+   588→   588→
+   589→   589→        {isLoading || !shipment ? (
+   590→   590→          <div className="space-y-3 p-5">
+   591→   591→            <Skeleton className="h-24 w-full" />
+   592→   592→            <Skeleton className="h-48 w-full" />
+   593→   593→          </div>
+   594→   594→        ) : (
+   595→   595→          <div className="space-y-5 p-5">
+   596→   596→            {/* Route */}
+   597→   597→            <div className="rounded-xl border bg-muted/30 p-4">
+   598→   598→              <div className="flex items-center justify-between gap-3">
+   599→   599→                <div className="flex-1">
+   600→   600→                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">From</p>
+   601→   601→                  <p className="font-semibold">{shipment.originCity}</p>
+   602→   602→                  <p className="text-xs text-muted-foreground">{shipment.originAddress}</p>
+   603→   603→                </div>
+   604→   604→                <div className="flex flex-col items-center">
+   605→   605→                  <ArrowRight className="h-5 w-5 text-emerald-500" />
+   606→   606→                  <span className="mt-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+   607→   607→                    {shipment.distanceKm} km
+   608→   608→                  </span>
+   609→   609→                </div>
+   610→   610→                <div className="flex-1 text-right">
+   611→   611→                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">To</p>
+   612→   612→                  <p className="font-semibold">{shipment.destinationCity}</p>
+   613→   613→                  <p className="text-xs text-muted-foreground">{shipment.destinationAddress}</p>
+   614→   614→                </div>
+   615→   615→              </div>
+   616→   616→              {shipment.status !== "pending" && shipment.status !== "cancelled" && (
+   617→   617→                <div className="mt-3">
+   618→   618→                  <div className="mb-1 flex items-center justify-between text-xs">
+   619→   619→                    <span className="text-muted-foreground">Progress</span>
+   620→   620→                    <span className="font-semibold tabular-nums">{shipment.progress}%</span>
+   621→   621→                  </div>
+   622→   622→                  <Progress value={shipment.progress} className="h-2" />
+   623→   623→                </div>
+   624→   624→              )}
+   625→   625→            </div>
+   626→   626→
+   627→   627→            {/* Quick actions */}
+   628→   628→            <div className="flex flex-wrap gap-2">
+   629→   629→              {shipment.status !== "delivered" && shipment.status !== "cancelled" && (
+   630→   630→                <>
+   631→   631→                  <Button size="sm" variant="outline" disabled={update.isPending} onClick={() => update.mutate({ status: "picked_up" })} className="gap-1.5">
+   632→   632→                    <PackageCheck className="h-3.5 w-3.5" /> Pick Up
+   633→   633→                  </Button>
+   634→   634→                  <Button size="sm" variant="outline" disabled={update.isPending} onClick={() => update.mutate({ status: "in_transit" })} className="gap-1.5">
+   635→   635→                    <Truck className="h-3.5 w-3.5" /> In Transit
+   636→   636→                  </Button>
+   637→   637→                  <Button size="sm" variant="outline" disabled={update.isPending} onClick={() => update.mutate({ status: "out_for_delivery" })} className="gap-1.5">
+   638→   638→                    <MapPin className="h-3.5 w-3.5" /> Out for Delivery
+   639→   639→                  </Button>
+   640→   640→                  <Button size="sm" disabled={update.isPending} onClick={() => update.mutate({ status: "delivered", progress: 100 })} className="gap-1.5 bg-emerald-600 hover:bg-emerald-700">
+   641→   641→                    <CheckCircle2 className="h-3.5 w-3.5" /> Mark Delivered
+   642→   642→                  </Button>
+   643→   643→                </>
+   644→   644→              )}
+   645→   645→              {shipment.status !== "delayed" && shipment.status !== "cancelled" && shipment.status !== "delivered" && (
+   646→   646→                <Button size="sm" variant="outline" disabled={update.isPending} onClick={() => update.mutate({ status: "delayed" })} className="gap-1.5 text-orange-600">
+   647→   647→                  <AlertTriangle className="h-3.5 w-3.5" /> Delay
+   648→   648→                </Button>
+   649→   649→              )}
+   650→   650→              {shipment.status !== "cancelled" && shipment.status !== "delivered" && (
+   651→   651→                <Button size="sm" variant="outline" disabled={update.isPending} onClick={() => update.mutate({ status: "cancelled" })} className="gap-1.5 text-rose-600">
+   652→   652→                  <XCircle className="h-3.5 w-3.5" /> Cancel
+   653→   653→                </Button>
+   654→   654→              )}
+   655→   655→              {shipment.status === "delivered" && (
+   656→   656→                <Button size="sm" variant="outline" disabled={update.isPending} onClick={() => update.mutate({ status: "returned" })} className="gap-1.5">
+   657→   657→                  <RotateCcw className="h-3.5 w-3.5" /> Mark Returned
+   658→   658→                </Button>
+   659→   659→              )}
+   660→   660→            </div>
+   661→   661→
+   662→   662→            {/* Parties */}
+   663→   663→            <div className="grid grid-cols-2 gap-3">
+   664→   664→              <div className="rounded-lg border p-3">
+   665→   665→                <p className="mb-1 flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground"><User className="h-3 w-3" /> Sender</p>
+   666→   666→                <p className="text-sm font-medium">{shipment.sender.name}</p>
+   667→   667→                <p className="text-xs text-muted-foreground">{shipment.sender.city}</p>
+   668→   668→              </div>
+   669→   669→              <div className="rounded-lg border p-3">
+   670→   670→                <p className="mb-1 flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground"><User className="h-3 w-3" /> Receiver</p>
+   671→   671→                <p className="text-sm font-medium">{shipment.receiver.name}</p>
+   672→   672→                <p className="text-xs text-muted-foreground">{shipment.receiver.city}</p>
+   673→   673→              </div>
+   674→   674→            </div>
+   675→   675→
+   676→   676→            {/* Cargo & cost grid */}
+   677→   677→            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+   678→   678→              <Stat label="Weight" value={formatWeight(shipment.weightKg)} icon={Weight} />
+   679→   679→              <Stat label="Pieces" value={String(shipment.pieces)} icon={Box} />
+   680→   680→              <Stat label="Cost" value={formatCurrency(shipment.cost)} icon={DollarSign} />
+   681→   681→              <Stat label="Insurance" value={formatCurrency(shipment.insurance)} icon={DollarSign} />
+   682→   682→            </div>
+   683→   683→
+   684→   684→            {/* Driver / Vehicle */}
+   685→   685→            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+   686→   686→              <div className="rounded-lg border p-3">
+   687→   687→                <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">Assigned Driver</p>
+   688→   688→                {shipment.driver ? (
+   689→   689→                  <div className="flex items-center gap-2">
+   690→   690→                    <Avatar className="h-8 w-8">
+   691→   691→                      <AvatarFallback className="bg-emerald-500 text-xs font-semibold text-white">{initials(shipment.driver.name)}</AvatarFallback>
+   692→   692→                    </Avatar>
+   693→   693→                    <div>
+   694→   694→                      <p className="text-sm font-medium">{shipment.driver.name}</p>
+   695→   695→                      <p className="text-xs text-muted-foreground capitalize">{shipment.driver.status.replace("_", " ")}</p>
+   696→   696→                    </div>
+   697→   697→                  </div>
+   698→   698→                ) : <p className="text-xs text-muted-foreground">Unassigned</p>}
+   699→   699→              </div>
+   700→   700→              <div className="rounded-lg border p-3">
+   701→   701→                <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">Vehicle</p>
+   702→   702→                {shipment.vehicle ? (
+   703→   703→                  <div className="flex items-center gap-2">
+   704→   704→                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400">
+   705→   705→                      <Truck className="h-4 w-4" />
+   706→   706→                    </div>
+   707→   707→                    <div>
+   708→   708→                      <p className="text-sm font-medium">{shipment.vehicle.plateNumber}</p>
+   709→   709→                      <p className="text-xs text-muted-foreground">{shipment.vehicle.model}</p>
+   710→   710→                    </div>
+   711→   711→                  </div>
+   712→   712→                ) : <p className="text-xs text-muted-foreground">Unassigned</p>}
+   713→   713→              </div>
+   714→   714→            </div>
+   715→   715→
+   716→   716→            {/* Tracking timeline */}
+   717→   717→            <div>
+   718→   718→              <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold">
+   719→   719→                <Clock className="h-4 w-4 text-muted-foreground" /> Tracking History
+   720→   720→              </h4>
+   721→   721→              <div className="relative space-y-3 border-l-2 border-muted pl-4">
+   722→   722→                {shipment.trackingEvents.map((ev, i) => {
+   723→   723→                  const meta = SHIPMENT_STATUS_META[ev.status as keyof typeof SHIPMENT_STATUS_META];
+   724→   724→                  return (
+   725→   725→                    <div key={ev.id} className="relative">
+   726→   726→                      <span className={cn("absolute -left-[21px] top-1 h-3 w-3 rounded-full border-2 border-background", meta?.dot || "bg-slate-400")} />
+   727→   727→                      <div className="flex items-center justify-between gap-2">
+   728→   728→                        <span className="text-sm font-medium">{meta?.label || ev.status}</span>
+   729→   729→                        <span className="text-[10px] text-muted-foreground">{formatDateTime(ev.timestamp)}</span>
+   730→   730→                      </div>
+   731→   731→                      {ev.note && <p className="text-xs text-muted-foreground">{ev.note}</p>}
+   732→   732→                      {ev.location && <p className="text-[10px] text-muted-foreground">📍 {ev.location}</p>}
+   733→   733→                    </div>
+   734→   734→                  );
+   735→   735→                })}
+   736→   736→              </div>
+   737→   737→            </div>
+   738→   738→
+   739→   739→            {shipment.notes && (
+   740→   740→              <div className="rounded-lg border bg-amber-50 dark:bg-amber-950/20 p-3">
+   741→   741→                <p className="mb-1 text-[10px] uppercase tracking-wider text-amber-700 dark:text-amber-400">Notes</p>
+   742→   742→                <p className="text-xs">{shipment.notes}</p>
+   743→   743→              </div>
+   744→   744→            )}
+   745→   745→          </div>
+   746→   746→        )}
+   747→   747→      </SheetContent>
+   748→   748→    </Sheet>
+   749→   749→  );
+   750→   750→}
+   751→   751→
+   752→   752→function Stat({ label, value, icon: Icon }: { label: string; value: string; icon: React.ElementType }) {
+   753→   753→  return (
+   754→   754→    <div className="rounded-lg border p-3">
+   755→   755→      <p className="mb-1 flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+   756→   756→        <Icon className="h-3 w-3" /> {label}
+   757→   757→      </p>
+   758→   758→      <p className="text-sm font-semibold tabular-nums">{value}</p>
+   759→   759→    </div>
+   760→   760→  );
+   761→   761→}
+   762→   762→
+   763→   763→function useDebounce<T>(value: T, delay: number): T {
+   764→   764→  const [v, setV] = React.useState(value);
+   765→   765→  React.useEffect(() => {
+   766→   766→    const t = setTimeout(() => setV(value), delay);
+   767→   767→    return () => clearTimeout(t);
+   768→   768→  }, [value, delay]);
+   769→   769→  return v;
+   770→   770→}
+   771→   771→

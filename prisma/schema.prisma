@@ -1,0 +1,208 @@
+// Logistics App V2 — Prisma schema
+// SQLite-compatible (no native enums; status fields are String with app-level constants)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Customer {
+  id        String    @id @default(cuid())
+  name      String
+  email     String?
+  phone     String
+  company   String?
+  address   String
+  city      String
+  country   String    @default("Vietnam")
+  zipCode   String?
+  type      String    @default("business") // "business" | "individual"
+  status    String    @default("active")   // "active" | "inactive" | "vip"
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  shipmentsAsSender   Shipment[] @relation("SenderShipments")
+  shipmentsAsReceiver Shipment[] @relation("ReceiverShipments")
+
+  @@index([status])
+  @@index([city])
+}
+
+model Driver {
+  id            String   @id @default(cuid())
+  name          String
+  email         String?  @unique
+  phone         String
+  licenseNumber String
+  licenseExpiry String?
+  status        String   @default("available") // "available" | "on_delivery" | "off_duty" | "on_leave"
+  rating        Float    @default(5.0)
+  totalDeliveries Int    @default(0)
+  totalDistance  Float   @default(0) // km
+  hireDate      String?
+  avatarColor   String   @default("emerald")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  vehicleId String? @unique
+  vehicle   Vehicle? @relation(fields: [vehicleId], references: [id])
+
+  shipments Shipment[]
+  routes    Route[]
+
+  @@index([status])
+}
+
+model Vehicle {
+  id            String   @id @default(cuid())
+  plateNumber   String   @unique
+  model         String
+  brand         String
+  type          String   @default("truck") // "truck" | "van" | "motorbike" | "container"
+  capacityKg    Float
+  fuelType      String   @default("diesel") // "diesel" | "petrol" | "electric"
+  fuelLevel     Float    @default(100) // percentage 0-100
+  mileage       Float    @default(0)   // km
+  status        String   @default("active") // "active" | "maintenance" | "retired"
+  lastMaintenance String?
+  nextMaintenance String?
+  color         String   @default("slate")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  driver    Driver?
+  shipments Shipment[]
+  routes    Route[]
+
+  @@index([status])
+  @@index([type])
+}
+
+model Warehouse {
+  id        String   @id @default(cuid())
+  name      String
+  code      String   @unique
+  address   String
+  city      String
+  country   String   @default("Vietnam")
+  capacity  Float    @default(1000) // m^3
+  used      Float    @default(0)
+  manager   String?
+  phone     String?
+  status    String   @default("operational") // "operational" | "full" | "maintenance" | "closed"
+  lat       Float?
+  lng       Float?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shipmentsOrigin      Shipment[] @relation("OriginWarehouse")
+  shipmentsDestination Shipment[] @relation("DestinationWarehouse")
+
+  @@index([city])
+  @@index([status])
+}
+
+model Shipment {
+  id              String   @id @default(cuid())
+  trackingNumber  String   @unique
+  status          String   @default("pending")
+  // "pending" | "picked_up" | "in_transit" | "out_for_delivery" | "delivered" | "delayed" | "cancelled" | "returned"
+  priority        String   @default("standard") // "low" | "standard" | "high" | "express"
+  serviceType     String   @default("standard") // "standard" | "express" | "same_day" | "freight" | "cold_chain"
+
+  // parties
+  senderId        String
+  sender          Customer @relation("SenderShipments", fields: [senderId], references: [id])
+  receiverId      String
+  receiver        Customer @relation("ReceiverShipments", fields: [receiverId], references: [id])
+
+  // routing
+  originWarehouseId      String?
+  originWarehouse        Warehouse? @relation("OriginWarehouse", fields: [originWarehouseId], references: [id])
+  destinationWarehouseId String?
+  destinationWarehouse   Warehouse? @relation("DestinationWarehouse", fields: [destinationWarehouseId], references: [id])
+
+  // addresses
+  originAddress      String
+  originCity         String
+  destinationAddress String
+  destinationCity    String
+  distanceKm         Float     @default(0)
+
+  // cargo
+  weightKg   Float
+  volumeM3   Float    @default(0)
+  pieces     Int      @default(1)
+  description String?
+
+  // assignment
+  driverId  String?
+  driver    Driver?  @relation(fields: [driverId], references: [id])
+  vehicleId String?
+  vehicle   Vehicle? @relation(fields: [vehicleId], references: [id])
+
+  // money & time
+  cost          Float    @default(0)
+  insurance     Float    @default(0)
+  currency      String   @default("USD")
+  estimatedDelivery String? // ISO date string
+  pickedUpAt    String?
+  deliveredAt   String?
+
+  // live tracking
+  currentLat    Float?
+  currentLng    Float?
+  progress      Float    @default(0) // 0-100 percentage
+
+  notes         String?
+  signature     String?  // base64 or url
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  trackingEvents TrackingEvent[]
+
+  @@index([status])
+  @@index([priority])
+  @@index([driverId])
+  @@index([createdAt])
+}
+
+model TrackingEvent {
+  id         String   @id @default(cuid())
+  shipmentId String
+  shipment   Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  status     String
+  location   String?
+  lat        Float?
+  lng        Float?
+  note       String?
+  timestamp  DateTime @default(now())
+
+  @@index([shipmentId])
+  @@index([timestamp])
+}
+
+model Route {
+  id          String   @id @default(cuid())
+  name        String
+  driverId    String?
+  driver      Driver?  @relation(fields: [driverId], references: [id])
+  vehicleId   String?
+  vehicle     Vehicle? @relation(fields: [vehicleId], references: [id])
+  status      String   @default("planned") // "planned" | "active" | "completed" | "cancelled"
+  stopsCount  Int      @default(0)
+  distanceKm  Float    @default(0)
+  durationMin Int      @default(0)
+  startedAt   String?
+  endedAt     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+}
