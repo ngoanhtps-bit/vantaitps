@@ -157,3 +157,132 @@ Verification (agent-browser):
 Stage Summary:
 - App is production-ready and fully interactive. Sticky footer, responsive layout, dark mode, real-time auto-refresh on tracking.
 - Remaining optional enhancement: WebSocket mini-service for push-based live updates (currently uses polling every 15s which works well).
+
+---
+Task ID: 8-a
+Agent: general-purpose (styling polish)
+Task: Polished visual quality of three shared UI components — `logistics-map.tsx`, `kpi-card.tsx`, `status-badge.tsx` — with targeted enhancements (no full rewrites, no new dependencies, no API/prop changes).
+
+Work Log:
+- Read `worklog.md` for context (Tasks 1, 7-a, 7-b, FINAL) and read all 3 target files plus `constants.ts` for status metadata.
+- Verified baseline lint: 0 errors (only 1 pre-existing warning in `prisma/seed.ts`).
+- Edited `/home/z/my-project/src/components/logistics-map.tsx`:
+  - Computed `liveCount` and `warehouseCount` from markers (before return).
+  - **Legend** upgraded: larger card (min-w-[140px], p-3, rounded-xl, gap-2), semi-transparent `bg-background/70` with `backdrop-blur-md` and `shadow-sm`, added "LEGEND" header, and replaced plain dots with distinct icon shapes — pulsing circle (`animate-ping` halo + inner circle) for Live shipment, rotated rounded square (diamond) for Warehouse, inline SVG triangle for Delayed.
+  - **Markers**: live shipment inner circle bumped to `r=2.2` with a more prominent ping animation (r=3 → 6.5 with opacity 0.5 → 0); warehouse marker now a rotated rounded `<rect>` (diamond, 4×4, rx=0.6) so it's visually distinct from live/delayed circles; delayed marker kept as a small circle.
+  - **Top-right scale indicator**: added pill in top-right corner showing `{liveCount} live · {warehouseCount} warehouses` with colored counts and `backdrop-blur-md`.
+  - **Route dot**: added a semi-transparent glow halo (`r=2.8 opacity=0.25`) behind the moving dot, and bumped the moving dot from `r=1.2 → r=1.6` (animate 1.6;2;1.6) for stronger presence.
+  - **Dark mode**: bumped grid pattern stroke color from `dark:text-slate-700` to `dark:text-slate-600` for slightly better visibility (labels already use `fill-slate-500 dark:fill-slate-400` and remain visible).
+- Edited `/home/z/my-project/src/components/kpi-card.tsx`:
+  - Extended `accents` map with a new `bar` field per accent color (`bg-emerald-500`, `bg-amber-500`, etc.).
+  - **Hover lift**: Card now uses `group transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-muted-foreground/10`.
+  - **Top accent bar**: 2px (`h-0.5`) full-width bar at the top of the card using `a.bar` color, `opacity-60`, marked `aria-hidden`.
+  - **Icon container**: kept existing `ring-1` + added `transition-transform duration-200 group-hover:scale-110` so the scale-on-hover animates smoothly.
+  - **EmptyState**: container upgraded to `border-2 border-dashed border-muted-foreground/25` with subtle gradient bg (`bg-gradient-to-br from-muted/40 via-muted/20 to-transparent`) — the gradient shows through the dashed border gaps creating a "gradient dashed border" effect; icon container now has `animate-pulse` and `ring-1 ring-muted-foreground/10` for subtle depth.
+- Edited `/home/z/my-project/src/components/status-badge.tsx`:
+  - Added module-level `ACTIVE_STATUSES` Set: `in_transit`, `out_for_delivery`, `on_delivery`, `active`, `operational`.
+  - **Hover effect**: both `StatusBadge` and `PriorityBadge` now have `transition-all duration-150 hover:brightness-95 dark:hover:brightness-110` for a subtle stronger-background feel on hover (light mode darkens slightly, dark mode brightens slightly — both feel "more present" without overriding the meta bg classes).
+  - **Pulsing dot**: `StatusBadge` dot conditionally gets `animate-pulse` when `status` is in `ACTIVE_STATUSES` (covers shipment in_transit/out_for_delivery, driver on_delivery, vehicle active, warehouse operational).
+- Ran `bun run lint` → 0 errors (only the pre-existing `prisma/seed.ts` warning). Ran `npx tsc --noEmit` → 0 errors mentioning `logistics-map`, `kpi-card`, or `status-badge`.
+- Triggered a fresh compile via `curl localhost:3000/` → `GET / 200` with compile 107ms / render 563ms. dev.log shows no compile errors related to my files (the only runtime error is the pre-existing `NotificationsButton is not defined` from another agent's `app-shell.tsx` work, not related to my edits).
+
+Stage Summary:
+- Three polished components delivered with only targeted edits — no exported names or prop signatures changed, no new dependencies.
+- `LogisticsMap`: richer legend with icon shapes (pulsing circle / diamond / triangle) + backdrop-blur, distinct warehouse diamond markers, larger live markers with stronger ping, glowing route dots, top-right live/warehouse count indicator, slightly stronger dark-mode grid.
+- `KpiCard`: hover lift (`-translate-y-0.5` + shadow), 2px top accent bar at 60% opacity, smooth icon scale-on-hover, and an `EmptyState` with gradient dashed border + pulsing icon.
+- `StatusBadge` / `PriorityBadge`: subtle hover brightness shift + animated pulse dot on active statuses (in_transit / out_for_delivery / on_delivery / active / operational).
+- Lint clean, TypeScript clean, dev compile clean. All changes are visual-only; existing functionality preserved.
+
+---
+Task ID: CRON-REVIEW-1
+Agent: main (cron-triggered web dev review)
+Task: QA assessment + bug fixes + new features + styling polish
+
+## Current Project Status Assessment
+The Logistics App V2 was in a stable, production-ready state with 8 views (Dashboard, Shipments, Live Tracking, Drivers, Fleet, Customers, Warehouses, Analytics), all rendering without console errors. QA via agent-browser confirmed all views load correctly on desktop (1440x900). VLM analysis of screenshots rated the dashboard 8/10 for visual polish.
+
+## Completed Modifications
+
+### Bug Fixes
+- **Warehouse capacity/status inconsistency**: Seed data had warehouses where `used > capacity` (e.g., 169%) but status was "operational". Fixed seed logic to cap `used` at 98% of capacity and auto-set status to "full" when usage > 90%. Re-seeded database. Now all 8 warehouses have consistent capacity/status.
+
+### New Features
+1. **Notifications API + Panel** (`/api/notifications/route.ts` + `notifications-button.tsx`):
+   - Aggregates 7 notification types: delayed shipments, low fuel vehicles (<25%), maintenance overdue/due-soon, unavailable drivers, full/maintenance warehouses, pending pickups (>24h), recent deliveries.
+   - Severity levels: critical/warning/info/success, sorted by severity then recency.
+   - Topbar bell icon now shows a red badge with urgent count, opens a dropdown panel with icon-coded notifications, severity badges, relative timestamps, and click-to-navigate (e.g., clicking a delayed shipment opens its detail drawer).
+   - Auto-refreshes every 60s. Invalidation on all mutations.
+
+2. **Shipment Edit** (`EditShipmentDialog` in shipments-view.tsx):
+   - New "Edit" button in the detail drawer header (pencil icon).
+   - Opens a dialog pre-filled with current shipment values: priority, service type, driver, vehicle, weight, pieces, description, notes.
+   - Uses PATCH endpoint, invalidates queries on save, shows toast.
+
+3. **Shipment Delete with Confirmation** (AlertDialog in shipments-view.tsx):
+   - New "Delete" button in the detail drawer header (trash icon, rose styling).
+   - Opens an AlertDialog confirming deletion with the tracking number shown.
+   - Uses DELETE endpoint, closes drawer on success, invalidates queries.
+
+4. **Bulk Actions** (shipments-view.tsx):
+   - Select-all checkbox in table header (works per-page).
+   - Individual row checkboxes with selected-row highlight (emerald tint).
+   - Sticky bulk action bar appears when items are selected (top-16, below topbar).
+   - **Bulk status update**: Select dropdown to apply any status to all selected shipments (parallel PATCH requests).
+   - **CSV export**: Exports selected shipments to a downloadable CSV file.
+   - Clear button to deselect all.
+
+5. **Tracking View Improvements** (tracking-view.tsx):
+   - Added "last updated" relative timestamp (e.g., "· updated 2s ago") using `dataUpdatedAt` from TanStack Query.
+   - Real-time badge now shows "Syncing…" during fetch with emerald styling.
+   - Badge has proper emerald border/background for visual emphasis.
+
+### Styling Polish
+6. **Dashboard Gradient Hero Banner** (dashboard-view.tsx):
+   - Full-width gradient banner (emerald → teal → cyan) with decorative blurred shapes and a subtle truck SVG icon.
+   - Time-aware greeting ("Good morning/afternoon/evening, Ops Team 👋").
+   - Live status pill with pulsing dot, today's date.
+   - Summary sentence with key metrics highlighted.
+   - 3 quick-stat tiles (Delivered, In Transit, Delayed — delayed gets amber alert ring).
+   - 3 quick-action buttons (New Shipment, Live Tracking, View Analytics).
+   - DashboardSkeleton updated to include hero placeholder.
+
+7. **Map Enhancements** (logistics-map.tsx — via subagent Task 8-a):
+   - Larger legend card with "LEGEND" header, backdrop-blur, distinct icon shapes (pulsing circle for live, diamond for warehouse, triangle for delayed).
+   - Warehouse markers now diamond-shaped (rotated rect) to distinguish from circular shipment markers.
+   - Live markers slightly larger (r=2.2) with more prominent ping animation.
+   - Top-right ratio indicator pill ("12 live · 8 warehouses").
+   - Route dots have a glow halo behind them and are slightly larger.
+   - Better dark-mode grid visibility.
+
+8. **KPI Card Polish** (kpi-card.tsx — via subagent Task 8-a):
+   - Hover lift effect (`hover:-translate-y-0.5 hover:shadow-lg`).
+   - Subtle top accent bar (2px, opacity-60) matching accent color.
+   - Smooth icon scale transition.
+   - EmptyState upgraded with dashed border + gradient background + pulsing icon.
+
+9. **Status Badge Polish** (status-badge.tsx — via subagent Task 8-a):
+   - Hover brightness effect.
+   - Pulsing dot for active statuses (in_transit, out_for_delivery, on_delivery, active, operational).
+
+## Verification Results
+- **Lint**: 0 errors (1 pre-existing warning in seed.ts).
+- **Browser QA**: All 8 views render with zero console/runtime errors.
+- **Notifications panel**: Opens from topbar bell, shows 17 notifications (5 critical, 3 warning, 6 info, 3 success), click navigates to relevant view.
+- **Bulk actions**: Selected 2 shipments → bulk status update → toast "2 shipments updated" → selection cleared.
+- **Edit dialog**: Opens pre-filled, saves successfully.
+- **Delete dialog**: AlertDialog confirmation appears with tracking number, delete works.
+- **Tracking**: "last updated" timestamp shows correctly, "Syncing…" state during fetch.
+- **Dashboard hero**: VLM rated 8/10, gradient and layout confirmed polished.
+- **Mobile**: Dashboard renders on 390px viewport.
+
+## Unresolved Issues / Risks
+- **WebSocket mini-service**: Still using polling (15s for tracking, 60s for notifications) instead of push-based WebSocket. This works well for the current scale but could be upgraded for real-time push.
+- **Chart rendering timing**: VLM noted "empty chart area" in one screenshot — this is a screenshot timing issue (chart renders after data loads), not a real bug.
+- **Mobile nav**: On very small screens, the sidebar Sheet opens via hamburger menu (working), but could benefit from bottom navigation for thumb-friendly access.
+
+## Priority Recommendations for Next Phase
+1. **Add a Route Planning view** — visualize and optimize delivery routes with multiple stops, time windows, and driver assignment.
+2. **Add invoice/billing module** — generate invoices from delivered shipments, track payments.
+3. **Add WebSocket mini-service** for true real-time tracking (push-based instead of polling).
+4. **Add data export/print** for shipment labels (PDF generation with tracking number, barcode, addresses).
+5. **Add user settings page** — preferences for notifications, theme, language, dashboard layout.

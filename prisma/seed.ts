@@ -87,6 +87,10 @@ async function main() {
   for (let ci = 0; ci < cities.length; ci++) {
     const c = cities[ci];
     const code = "WH-" + c.city.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 4) + "-" + String(ci + 1).padStart(2, "0");
+    const capacity = randInt(3000, 8000);
+    const used = randInt(400, Math.floor(capacity * 0.98));
+    const pct = used / capacity;
+    const status = pct > 0.9 ? "full" : pick(["operational", "operational", "operational", "maintenance"]);
     const w = await db.warehouse.create({
       data: {
         name: c.city + " Distribution Center",
@@ -94,11 +98,11 @@ async function main() {
         address: `${randInt(1, 300)} Le Loi Street`,
         city: c.city,
         country: "Vietnam",
-        capacity: randInt(2000, 8000),
-        used: randInt(500, 5000),
+        capacity,
+        used,
         manager: pick(lastNames),
         phone: genPhone(),
-        status: pick(["operational", "operational", "operational", "full", "maintenance"]),
+        status,
         lat: c.lat,
         lng: c.lng,
       },

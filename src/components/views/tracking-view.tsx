@@ -42,13 +42,18 @@ type TrackingData = {
 };
 
 export function TrackingView() {
-  const { data, isLoading, refetch, isFetching } = useQuery<TrackingData>({
+  const { data, isLoading, refetch, isFetching, dataUpdatedAt } = useQuery<TrackingData>({
     queryKey: ["tracking"],
     queryFn: () => api.get("/api/tracking"),
     refetchInterval: 15000,
   });
   const { setSelectedShipmentId, setView } = useAppStore();
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = React.useState<number | null>(dataUpdatedAt ?? null);
+
+  React.useEffect(() => {
+    if (dataUpdatedAt) setLastUpdated(dataUpdatedAt);
+  }, [dataUpdatedAt]);
 
   const selected = data?.live.find((s) => s.id === selectedId) || null;
 
@@ -93,12 +98,15 @@ export function TrackingView() {
           <p className="text-sm">
             <span className="font-semibold">{data?.count ?? "—"}</span>
             <span className="text-muted-foreground"> shipments live · </span>
-            <span className="text-muted-foreground">auto-refresh every 15s</span>
+            <span className="text-muted-foreground">auto-refresh 15s</span>
+            {lastUpdated && (
+              <span className="ml-1 text-muted-foreground/70">· updated {formatRelativeTime(new Date(lastUpdated))}</span>
+            )}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="gap-1.5">
-            <Radio className="h-3 w-3 text-emerald-500" /> Real-time
+          <Badge variant="outline" className="gap-1.5 border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-400">
+            <Radio className="h-3 w-3" /> {isFetching ? "Syncing…" : "Real-time"}
           </Badge>
           <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching} className="gap-1.5">
             <RefreshCw className={cn("h-3.5 w-3.5", isFetching && "animate-spin")} /> Refresh

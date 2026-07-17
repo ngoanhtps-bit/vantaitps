@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Package, Truck, Users, DollarSign, TrendingUp, AlertTriangle,
   MapPin, ArrowRight, Activity, Clock, CheckCircle2, Boxes,
+  Plus, BarChart3,
 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
@@ -111,8 +112,77 @@ export function DashboardView() {
 
   const pieData = Object.entries(statusCounts).map(([k, v]) => ({ name: SHIPMENT_STATUS_META[k as keyof typeof SHIPMENT_STATUS_META]?.label ?? k, value: v, key: k }));
 
+  const now = new Date();
+  const hour = now.getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const today = now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+
   return (
     <div className="space-y-5">
+      {/* Hero banner */}
+      <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 p-6 text-white shadow-lg shadow-emerald-500/20 sm:p-7">
+        {/* decorative shapes */}
+        <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
+        <div className="pointer-events-none absolute -bottom-20 right-32 h-48 w-48 rounded-full bg-cyan-300/20 blur-2xl" />
+        <div className="pointer-events-none absolute right-10 top-8 hidden h-32 w-32 opacity-10 sm:block">
+          <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="3">
+            <path d="M20 70 L20 40 L50 20 L80 40 L80 70 M20 70 L80 70 M35 70 L35 50 L65 50 L65 70" />
+            <circle cx="30" cy="78" r="6" />
+            <circle cx="70" cy="78" r="6" />
+          </svg>
+        </div>
+
+        <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="mb-2 flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider backdrop-blur-sm">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-white" />
+                </span>
+                Live · {totals.activeShipments} active
+              </span>
+              <span className="text-[11px] font-medium text-emerald-50/80">{today}</span>
+            </div>
+            <h2 className="text-xl font-bold tracking-tight sm:text-2xl">{greeting}, Ops Team 👋</h2>
+            <p className="mt-1 max-w-lg text-sm text-emerald-50/90">
+              You have <span className="font-semibold text-white">{totals.inTransit}</span> shipments in transit,{" "}
+              <span className="font-semibold text-white">{totals.delayed}</span> delayed, and{" "}
+              <span className="font-semibold text-white">{formatCurrency(revenue.total)}</span> delivered revenue.
+            </p>
+          </div>
+
+          {/* quick stats tiles */}
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            <HeroStat label="Delivered" value={formatNumber(totals.delivered)} icon={CheckCircle2} />
+            <HeroStat label="In Transit" value={formatNumber(totals.inTransit)} icon={Truck} />
+            <HeroStat label="Delayed" value={formatNumber(totals.delayed)} icon={AlertTriangle} alert={totals.delayed > 0} />
+          </div>
+        </div>
+
+        {/* quick actions */}
+        <div className="relative mt-5 flex flex-wrap gap-2">
+          <button
+            onClick={() => { setView("shipments"); window.dispatchEvent(new CustomEvent("open-new-shipment")); }}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-white/15 px-3 py-1.5 text-xs font-medium backdrop-blur-sm transition-colors hover:bg-white/25"
+          >
+            <Plus className="h-3.5 w-3.5" /> New Shipment
+          </button>
+          <button
+            onClick={() => setView("tracking")}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-white/15 px-3 py-1.5 text-xs font-medium backdrop-blur-sm transition-colors hover:bg-white/25"
+          >
+            <MapPin className="h-3.5 w-3.5" /> Live Tracking
+          </button>
+          <button
+            onClick={() => setView("analytics")}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-white/15 px-3 py-1.5 text-xs font-medium backdrop-blur-sm transition-colors hover:bg-white/25"
+          >
+            <BarChart3 className="h-3.5 w-3.5" /> View Analytics
+          </button>
+        </div>
+      </div>
+
       {/* KPI cards */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         <KpiCard
@@ -406,6 +476,7 @@ export function DashboardView() {
 function DashboardSkeleton() {
   return (
     <div className="space-y-5">
+      <Skeleton className="h-40 rounded-2xl" />
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {Array.from({ length: 5 }).map((_, i) => (
           <Skeleton key={i} className="h-32 rounded-xl" />
@@ -419,6 +490,18 @@ function DashboardSkeleton() {
         <Skeleton className="h-80 rounded-xl lg:col-span-2" />
         <Skeleton className="h-80 rounded-xl" />
       </div>
+    </div>
+  );
+}
+
+function HeroStat({ label, value, icon: Icon, alert }: { label: string; value: string; icon: React.ElementType; alert?: boolean }) {
+  return (
+    <div className={`rounded-xl border border-white/20 bg-white/10 px-3 py-2.5 backdrop-blur-sm ${alert ? "ring-1 ring-amber-300/50" : ""}`}>
+      <div className="flex items-center gap-1.5 text-emerald-50/80">
+        <Icon className="h-3 w-3" />
+        <span className="text-[10px] font-medium uppercase tracking-wider">{label}</span>
+      </div>
+      <p className={`mt-1 text-lg font-bold tabular-nums ${alert ? "text-amber-200" : "text-white"}`}>{value}</p>
     </div>
   );
 }

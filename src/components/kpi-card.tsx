@@ -24,19 +24,20 @@ export function KpiCard({
   footer?: React.ReactNode;
   className?: string;
 }) {
-  const accents: Record<string, { bg: string; text: string; ring: string }> = {
-    emerald: { bg: "bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400", ring: "ring-emerald-500/20" },
-    amber: { bg: "bg-amber-500/10", text: "text-amber-600 dark:text-amber-400", ring: "ring-amber-500/20" },
-    sky: { bg: "bg-sky-500/10", text: "text-sky-600 dark:text-sky-400", ring: "ring-sky-500/20" },
-    violet: { bg: "bg-violet-500/10", text: "text-violet-600 dark:text-violet-400", ring: "ring-violet-500/20" },
-    rose: { bg: "bg-rose-500/10", text: "text-rose-600 dark:text-rose-400", ring: "ring-rose-500/20" },
-    orange: { bg: "bg-orange-500/10", text: "text-orange-600 dark:text-orange-400", ring: "ring-orange-500/20" },
-    teal: { bg: "bg-teal-500/10", text: "text-teal-600 dark:text-teal-400", ring: "ring-teal-500/20" },
+  const accents: Record<string, { bg: string; text: string; ring: string; bar: string }> = {
+    emerald: { bg: "bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400", ring: "ring-emerald-500/20", bar: "bg-emerald-500" },
+    amber: { bg: "bg-amber-500/10", text: "text-amber-600 dark:text-amber-400", ring: "ring-amber-500/20", bar: "bg-amber-500" },
+    sky: { bg: "bg-sky-500/10", text: "text-sky-600 dark:text-sky-400", ring: "ring-sky-500/20", bar: "bg-sky-500" },
+    violet: { bg: "bg-violet-500/10", text: "text-violet-600 dark:text-violet-400", ring: "ring-violet-500/20", bar: "bg-violet-500" },
+    rose: { bg: "bg-rose-500/10", text: "text-rose-600 dark:text-rose-400", ring: "ring-rose-500/20", bar: "bg-rose-500" },
+    orange: { bg: "bg-orange-500/10", text: "text-orange-600 dark:text-orange-400", ring: "ring-orange-500/20", bar: "bg-orange-500" },
+    teal: { bg: "bg-teal-500/10", text: "text-teal-600 dark:text-teal-400", ring: "ring-teal-500/20", bar: "bg-teal-500" },
   };
   const a = accents[accent];
 
   return (
-    <Card className={cn("relative overflow-hidden transition-shadow hover:shadow-md", className)}>
+    <Card className={cn("group relative overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-muted-foreground/10", className)}>
+      <div className={cn("absolute inset-x-0 top-0 h-0.5 opacity-60", a.bar)} aria-hidden />
       <CardContent className="p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
@@ -45,7 +46,7 @@ export function KpiCard({
             </p>
             <p className="mt-2 text-2xl font-bold tracking-tight tabular-nums">{value}</p>
           </div>
-          <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1", a.bg, a.text, a.ring)}>
+          <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1 transition-transform duration-200 group-hover:scale-110", a.bg, a.text, a.ring)}>
             <Icon className="h-5 w-5" />
           </div>
         </div>
@@ -87,8 +88,8 @@ export function EmptyState({
   className?: string;
 }) {
   return (
-    <div className={cn("flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed p-10 text-center", className)}>
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
+    <div className={cn("relative flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-muted-foreground/25 bg-gradient-to-br from-muted/40 via-muted/20 to-transparent p-10 text-center", className)}>
+      <div className="flex h-12 w-12 animate-pulse items-center justify-center rounded-full bg-muted text-muted-foreground ring-1 ring-muted-foreground/10">
         <Icon className="h-6 w-6" />
       </div>
       <div className="space-y-1">

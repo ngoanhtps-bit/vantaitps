@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { Menu, Search, Bell, Plus, Command } from "lucide-react";
+import { Menu, Search, Plus, Command } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { NotificationsButton } from "@/components/notifications-button";
 import { useAppStore, type ViewKey } from "@/lib/store";
 import {
   DropdownMenu,
@@ -77,19 +78,7 @@ export function AppTopbar() {
       </Button>
 
       {/* Notifications */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="relative rounded-full"
-        aria-label="Notifications"
-        onClick={() => setView("tracking")}
-      >
-        <Bell className="h-[1.15rem] w-[1.15rem]" />
-        <span className="absolute right-1.5 top-1.5 flex h-2 w-2">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75" />
-          <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-500" />
-        </span>
-      </Button>
+      <NotificationsButton />
 
       <ThemeToggle />
 

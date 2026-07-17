@@ -68,6 +68,9 @@ export function LogisticsMap({
   height?: number;
   onMarkerClick?: (m: MapMarker) => void;
 }) {
+  const liveCount = markers.filter((m) => m.type === "live").length;
+  const warehouseCount = markers.filter((m) => m.type === "warehouse").length;
+
   return (
     <div
       className={cn("relative w-full overflow-hidden rounded-xl border bg-gradient-to-br from-sky-50 via-emerald-50/40 to-teal-50 dark:from-slate-900 dark:via-slate-900 dark:to-emerald-950/30", className)}
@@ -77,7 +80,7 @@ export function LogisticsMap({
         {/* grid */}
         <defs>
           <pattern id="map-grid" width="5" height="5" patternUnits="userSpaceOnUse">
-            <path d="M 5 0 L 0 0 0 5" fill="none" stroke="currentColor" strokeWidth="0.15" className="text-slate-300 dark:text-slate-700" />
+            <path d="M 5 0 L 0 0 0 5" fill="none" stroke="currentColor" strokeWidth="0.15" className="text-slate-300/80 dark:text-slate-600" />
           </pattern>
           <linearGradient id="vn-grad" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0%" stopColor="oklch(0.85 0.15 160)" stopOpacity="0.25" />
@@ -121,8 +124,10 @@ export function LogisticsMap({
                 strokeDasharray="1.5 1.5"
                 className="opacity-60"
               />
-              <circle cx={dotX} cy={dotY} r="1.2" fill={color}>
-                <animate attributeName="r" values="1.2;1.6;1.2" dur="2s" repeatCount="indefinite" />
+              {/* glow halo behind moving dot */}
+              <circle cx={dotX} cy={dotY} r="2.8" fill={color} opacity="0.25" />
+              <circle cx={dotX} cy={dotY} r="1.6" fill={color}>
+                <animate attributeName="r" values="1.6;2;1.6" dur="2s" repeatCount="indefinite" />
               </circle>
             </g>
           );
@@ -138,19 +143,30 @@ export function LogisticsMap({
           return (
             <g key={m.id} className="cursor-pointer" onClick={() => onMarkerClick?.(m)}>
               {m.type === "live" && (
-                <circle cx={x} cy={y} r="2.5" fill={color} opacity="0.25">
-                  <animate attributeName="r" values="2.5;5;2.5" dur="2.5s" repeatCount="indefinite" />
-                  <animate attributeName="opacity" values="0.4;0;0.4" dur="2.5s" repeatCount="indefinite" />
-                </circle>
+                <>
+                  <circle cx={x} cy={y} r="3" fill={color} opacity="0.3">
+                    <animate attributeName="r" values="3;6.5;3" dur="2.5s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="0.5;0;0.5" dur="2.5s" repeatCount="indefinite" />
+                  </circle>
+                  <circle cx={x} cy={y} r="2.2" fill={color} stroke="white" strokeWidth="0.4" />
+                </>
               )}
-              <circle
-                cx={x}
-                cy={y}
-                r={m.type === "warehouse" ? 2 : 1.6}
-                fill={color}
-                stroke="white"
-                strokeWidth="0.4"
-              />
+              {m.type === "warehouse" && (
+                <rect
+                  x={x - 2}
+                  y={y - 2}
+                  width="4"
+                  height="4"
+                  rx="0.6"
+                  transform={`rotate(45 ${x} ${y})`}
+                  fill={color}
+                  stroke="white"
+                  strokeWidth="0.4"
+                />
+              )}
+              {m.type === "delayed" && (
+                <circle cx={x} cy={y} r="1.6" fill={color} stroke="white" strokeWidth="0.4" />
+              )}
             </g>
           );
         })}
@@ -171,19 +187,32 @@ export function LogisticsMap({
           ))}
       </svg>
 
+      {/* Scale / ratio indicator */}
+      <div className="absolute right-3 top-3 rounded-lg border border-border/50 bg-background/70 px-3 py-1.5 text-[11px] font-medium shadow-sm backdrop-blur-md">
+        <span className="text-emerald-600 dark:text-emerald-400">{liveCount} live</span>
+        <span className="mx-1.5 text-muted-foreground/60">·</span>
+        <span className="text-sky-600 dark:text-sky-400">{warehouseCount} warehouses</span>
+      </div>
+
       {/* Legend */}
-      <div className="absolute bottom-3 left-3 flex flex-col gap-1.5 rounded-lg border bg-background/80 p-2.5 text-[10px] backdrop-blur-sm">
-        <div className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-emerald-500" />
-          <span>Live shipment</span>
+      <div className="absolute bottom-3 left-3 flex min-w-[140px] flex-col gap-2 rounded-xl border border-border/50 bg-background/70 p-3 text-[11px] shadow-sm backdrop-blur-md">
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Legend</span>
+        <div className="flex items-center gap-2.5">
+          <span className="relative flex h-3 w-3 items-center justify-center">
+            <span className="absolute inline-flex h-3 w-3 animate-ping rounded-full bg-emerald-500 opacity-60" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+          </span>
+          <span className="font-medium">Live shipment</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-sky-600" />
-          <span>Warehouse</span>
+        <div className="flex items-center gap-2.5">
+          <span className="h-2.5 w-2.5 rotate-45 rounded-[2px] bg-sky-600" />
+          <span className="font-medium">Warehouse</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-orange-500" />
-          <span>Delayed</span>
+        <div className="flex items-center gap-2.5">
+          <svg width="11" height="11" viewBox="0 0 10 10" className="text-orange-500">
+            <polygon points="5,0.5 9.5,9 0.5,9" fill="currentColor" />
+          </svg>
+          <span className="font-medium">Delayed</span>
         </div>
       </div>
     </div>

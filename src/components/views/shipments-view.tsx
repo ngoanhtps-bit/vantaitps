@@ -16,6 +16,9 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +33,7 @@ import {
   Package, Search, Plus, Filter, Download, ArrowRight, MapPin, Truck,
   User, Calendar, DollarSign, Weight, Box, ChevronLeft, ChevronRight,
   X, Clock, CheckCircle2, AlertTriangle, PackageCheck, XCircle, RotateCcw,
+  Pencil, Trash2,
 } from "lucide-react";
 import {
   SHIPMENT_STATUSES, SHIPMENT_STATUS_META, PRIORITIES, PRIORITY_META,
@@ -39,7 +43,6 @@ import {
   formatCurrency, formatRelativeTime, formatDateTime, formatWeight, initials,
 } from "@/lib/format";
 import { useAppStore } from "@/lib/store";
-import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
 import { avatarColorClass } from "@/components/avatar-color";
 import { cn } from "@/lib/utils";
@@ -90,7 +93,6 @@ const SERVICE_ICON: Record<string, React.ElementType> = {
 };
 
 export function ShipmentsView() {
-  const { toast: legacyToast } = useToast();
   const qc = useQueryClient();
   const { selectedShipmentId, setSelectedShipmentId, shipmentsFilter, setShipmentsFilter } = useAppStore();
 
@@ -103,6 +105,7 @@ export function ShipmentsView() {
   const [pageSize] = React.useState(12);
   const [createOpen, setCreateOpen] = React.useState(false);
   const [detailOpen, setDetailOpen] = React.useState(false);
+  const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
 
   // React to external "open-new-shipment" event
   React.useEffect(() => {
@@ -154,6 +157,70 @@ export function ShipmentsView() {
   };
 
   const hasFilters = status !== "all" || priority !== "all" || service !== "all" || city !== "all" || search !== "";
+
+  const bulkUpdate = useMutation({
+    mutationFn: async (newStatus: string) => {
+      const ids = Array.from(selectedIds);
+      await Promise.all(ids.map((id) => api.patch(`/api/shipments/${id}`, { status: newStatus })));
+    },
+    onSuccess: () => {
+      toast.success(`${selectedIds.size} shipment${selectedIds.size > 1 ? "s" : ""} updated`);
+      setSelectedIds(new Set());
+      qc.invalidateQueries({ queryKey: ["shipments"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      qc.invalidateQueries({ queryKey: ["notifications"] });
+    },
+    onError: (e: Error) => toast.error("Bulk update failed", { description: e.message }),
+  });
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (!data) return;
+    const allOnPage = data.items.every((s) => selectedIds.has(s.id));
+    if (allOnPage) {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        data.items.forEach((s) => next.delete(s.id));
+        return next;
+      });
+    } else {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        data.items.forEach((s) => next.add(s.id));
+        return next;
+      });
+    }
+  };
+
+  const exportSelected = () => {
+    if (!data) return;
+    const toExport = data.items.filter((s) => selectedIds.has(s.id));
+    const rows = [
+      ["Tracking #", "Status", "Priority", "Service", "Origin", "Destination", "Sender", "Receiver", "Weight (kg)", "Pieces", "Cost", "Created"],
+      ...toExport.map((s) => [
+        s.trackingNumber, s.status, s.priority, s.serviceType,
+        s.originCity, s.destinationCity, s.sender.name, s.receiver.name,
+        String(s.weightKg), String(s.pieces), String(s.cost), new Date(s.createdAt).toISOString(),
+      ]),
+    ];
+    const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `shipments-export-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`Exported ${toExport.length} shipment${toExport.length > 1 ? "s" : ""} to CSV`);
+  };
 
   return (
     <div className="space-y-4">
@@ -220,6 +287,34 @@ export function ShipmentsView() {
         </CardContent>
       </Card>
 
+      {/* Bulk action bar */}
+      {selectedIds.size > 0 && (
+        <div className="sticky top-16 z-20 flex flex-wrap items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50/95 px-4 py-2.5 shadow-sm backdrop-blur dark:border-emerald-900 dark:bg-emerald-950/80">
+          <span className="flex items-center gap-2 text-sm font-medium text-emerald-700 dark:text-emerald-300">
+            <Checkbox checked={true} onCheckedChange={() => setSelectedIds(new Set())} className="border-emerald-400" />
+            {selectedIds.size} selected
+          </span>
+          <div className="ml-auto flex flex-wrap items-center gap-1.5">
+            <Select value="" onValueChange={(v) => { if (v) bulkUpdate.mutate(v); }}>
+              <SelectTrigger className="h-8 w-[160px] text-xs">
+                <SelectValue placeholder="Update status…" />
+              </SelectTrigger>
+              <SelectContent>
+                {SHIPMENT_STATUSES.map((s) => (
+                  <SelectItem key={s} value={s}>{SHIPMENT_STATUS_META[s].label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={exportSelected}>
+              <Download className="h-3.5 w-3.5" /> Export CSV
+            </Button>
+            <Button size="sm" variant="ghost" className="h-8 gap-1.5 text-xs" onClick={() => setSelectedIds(new Set())}>
+              <X className="h-3.5 w-3.5" /> Clear
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Table */}
       <Card>
         <CardContent className="p-0">
@@ -244,7 +339,13 @@ export function ShipmentsView() {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/40 hover:bg-muted/40">
-                      <TableHead className="w-[40px]"><Checkbox aria-label="Select all" /></TableHead>
+                      <TableHead className="w-[40px]">
+                        <Checkbox
+                          aria-label="Select all"
+                          checked={data.items.length > 0 && data.items.every((s) => selectedIds.has(s.id))}
+                          onCheckedChange={toggleSelectAll}
+                        />
+                      </TableHead>
                       <TableHead className="min-w-[140px]">Tracking #</TableHead>
                       <TableHead className="min-w-[200px]">Route</TableHead>
                       <TableHead>Status</TableHead>
@@ -257,14 +358,19 @@ export function ShipmentsView() {
                   <TableBody>
                     {data.items.map((s) => {
                       const SIcon = SERVICE_ICON[s.serviceType] || Package;
+                      const isSelected = selectedIds.has(s.id);
                       return (
                         <TableRow
                           key={s.id}
                           onClick={() => setSelectedShipmentId(s.id)}
-                          className="cursor-pointer transition-colors hover:bg-muted/50"
+                          className={cn("cursor-pointer transition-colors hover:bg-muted/50", isSelected && "bg-emerald-50/60 dark:bg-emerald-950/30")}
                         >
                           <TableCell onClick={(e) => e.stopPropagation()}>
-                            <Checkbox aria-label={`Select ${s.trackingNumber}`} />
+                            <Checkbox
+                              aria-label={`Select ${s.trackingNumber}`}
+                              checked={isSelected}
+                              onCheckedChange={() => toggleSelect(s.id)}
+                            />
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
@@ -565,24 +671,52 @@ function ShipmentDetailDrawer({
       qc.invalidateQueries({ queryKey: ["shipment", shipmentId] });
       qc.invalidateQueries({ queryKey: ["shipments"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
+      qc.invalidateQueries({ queryKey: ["notifications"] });
       toast.success("Shipment updated");
     },
     onError: (e: Error) => toast.error("Update failed", { description: e.message }),
   });
+
+  const remove = useMutation({
+    mutationFn: () => api.delete(`/api/shipments/${shipmentId}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["shipments"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      qc.invalidateQueries({ queryKey: ["notifications"] });
+      toast.success("Shipment deleted");
+      onOpenChange(false);
+    },
+    onError: (e: Error) => toast.error("Delete failed", { description: e.message }),
+  });
+
+  const [editOpen, setEditOpen] = React.useState(false);
+  const [deleteOpen, setDeleteOpen] = React.useState(false);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-xl overflow-y-auto custom-scroll p-0">
         <SheetHeader className="border-b px-5 py-4">
           <SheetDescription className="sr-only">Shipment details</SheetDescription>
-          <SheetTitle className="flex items-center gap-2 text-base">
-            {shipment ? (
-              <>
-                <Package className="h-5 w-5 text-emerald-500" />
-                <span className="font-mono">{shipment.trackingNumber}</span>
-                <StatusBadge status={shipment.status} kind="shipment" />
-              </>
-            ) : "Loading…"}
+          <SheetTitle className="flex items-center justify-between gap-2 text-base">
+            <span className="flex items-center gap-2 min-w-0">
+              {shipment ? (
+                <>
+                  <Package className="h-5 w-5 shrink-0 text-emerald-500" />
+                  <span className="font-mono truncate">{shipment.trackingNumber}</span>
+                  <StatusBadge status={shipment.status} kind="shipment" />
+                </>
+              ) : "Loading…"}
+            </span>
+            {shipment && (
+              <span className="flex shrink-0 items-center gap-1">
+                <Button size="sm" variant="ghost" className="h-8 gap-1.5 px-2 text-xs" onClick={() => setEditOpen(true)}>
+                  <Pencil className="h-3.5 w-3.5" /> Edit
+                </Button>
+                <Button size="sm" variant="ghost" className="h-8 gap-1.5 px-2 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40" onClick={() => setDeleteOpen(true)}>
+                  <Trash2 className="h-3.5 w-3.5" /> Delete
+                </Button>
+              </span>
+            )}
           </SheetTitle>
         </SheetHeader>
 
@@ -745,7 +879,192 @@ function ShipmentDetailDrawer({
           </div>
         )}
       </SheetContent>
+
+      {/* Edit dialog */}
+      {shipment && (
+        <EditShipmentDialog
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          shipment={shipment}
+          onSaved={() => {
+            qc.invalidateQueries({ queryKey: ["shipment", shipmentId] });
+            qc.invalidateQueries({ queryKey: ["shipments"] });
+            qc.invalidateQueries({ queryKey: ["dashboard"] });
+          }}
+        />
+      )}
+
+      {/* Delete confirmation */}
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Trash2 className="h-5 w-5 text-rose-500" /> Delete shipment?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete shipment <span className="font-mono font-semibold text-foreground">{shipment?.trackingNumber}</span> and all its tracking events. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-rose-600 hover:bg-rose-700 focus:ring-rose-600"
+              disabled={remove.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                remove.mutate();
+              }}
+            >
+              {remove.isPending ? "Deleting…" : "Delete shipment"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Sheet>
+  );
+}
+
+// ---------- Edit dialog ----------
+function EditShipmentDialog({
+  open, onOpenChange, shipment, onSaved,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  shipment: ShipmentDetail;
+  onSaved: () => void;
+}) {
+  const [form, setForm] = React.useState({
+    priority: shipment.priority,
+    serviceType: shipment.serviceType,
+    driverId: shipment.driver?.id || "",
+    vehicleId: shipment.vehicle?.id || "",
+    weightKg: String(shipment.weightKg),
+    pieces: String(shipment.pieces),
+    description: shipment.description || "",
+    notes: shipment.notes || "",
+  });
+
+  React.useEffect(() => {
+    if (open) {
+      setForm({
+        priority: shipment.priority,
+        serviceType: shipment.serviceType,
+        driverId: shipment.driver?.id || "",
+        vehicleId: shipment.vehicle?.id || "",
+        weightKg: String(shipment.weightKg),
+        pieces: String(shipment.pieces),
+        description: shipment.description || "",
+        notes: shipment.notes || "",
+      });
+    }
+  }, [open, shipment]);
+
+  const { data: drivers } = useQuery({
+    queryKey: ["drivers", "all"],
+    queryFn: () => api.get<{ items: { id: string; name: string; status: string }[] }>("/api/drivers"),
+    enabled: open,
+  });
+  const { data: vehicles } = useQuery({
+    queryKey: ["vehicles", "all"],
+    queryFn: () => api.get<{ items: { id: string; plateNumber: string; model: string }[] }>("/api/vehicles"),
+    enabled: open,
+  });
+
+  const save = useMutation({
+    mutationFn: () =>
+      api.patch<ShipmentDetail>(`/api/shipments/${shipment.id}`, {
+        priority: form.priority,
+        serviceType: form.serviceType,
+        driverId: form.driverId || null,
+        vehicleId: form.vehicleId || null,
+        weightKg: Number(form.weightKg) || 0,
+        pieces: Number(form.pieces) || 1,
+        description: form.description || null,
+        notes: form.notes || null,
+      }),
+    onSuccess: () => {
+      toast.success("Shipment updated");
+      onSaved();
+      onOpenChange(false);
+    },
+    onError: (e: Error) => toast.error("Update failed", { description: e.message }),
+  });
+
+  const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto custom-scroll">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2"><Pencil className="h-5 w-5 text-emerald-500" /> Edit Shipment</DialogTitle>
+          <DialogDescription>Update shipment details for <span className="font-mono">{shipment.trackingNumber}</span></DialogDescription>
+        </DialogHeader>
+
+        <div className="grid grid-cols-1 gap-4 py-2 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label>Priority</Label>
+            <Select value={form.priority} onValueChange={(v) => set("priority", v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {PRIORITIES.map((p) => <SelectItem key={p} value={p}>{PRIORITY_META[p].label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Service Type</Label>
+            <Select value={form.serviceType} onValueChange={(v) => set("serviceType", v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {SERVICE_TYPES.map((s) => <SelectItem key={s} value={s}>{SERVICE_META[s].label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Assign Driver</Label>
+            <Select value={form.driverId || "none"} onValueChange={(v) => set("driverId", v === "none" ? "" : v)}>
+              <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Unassigned</SelectItem>
+                {drivers?.items.map((d) => <SelectItem key={d.id} value={d.id}>{d.name} · {d.status}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Assign Vehicle</Label>
+            <Select value={form.vehicleId || "none"} onValueChange={(v) => set("vehicleId", v === "none" ? "" : v)}>
+              <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Unassigned</SelectItem>
+                {vehicles?.items.map((v) => <SelectItem key={v.id} value={v.id}>{v.plateNumber} · {v.model}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Weight (kg)</Label>
+            <Input type="number" value={form.weightKg} onChange={(e) => set("weightKg", e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Pieces</Label>
+            <Input type="number" value={form.pieces} onChange={(e) => set("pieces", e.target.value)} />
+          </div>
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label>Description</Label>
+            <Input value={form.description} onChange={(e) => set("description", e.target.value)} placeholder="e.g. Electronics" />
+          </div>
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label>Notes</Label>
+            <Textarea value={form.notes} onChange={(e) => set("notes", e.target.value)} rows={2} placeholder="Handling notes…" />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button disabled={save.isPending} onClick={() => save.mutate()} className="gap-1.5">
+            {save.isPending ? "Saving…" : (<><CheckCircle2 className="h-4 w-4" /> Save Changes</>)}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
