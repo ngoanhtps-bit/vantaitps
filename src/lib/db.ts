@@ -13,9 +13,10 @@ let cachedClient = globalForPrisma.prisma;
 if (cachedClient) {
   try {
     const hasNCC = !!(cachedClient as unknown as { nhaCungCap?: unknown }).nhaCungCap;
+    const hasUser = !!(cachedClient as unknown as { user?: unknown }).user;
     const shipFields = (cachedClient as unknown as { shipment?: { fields?: Record<string, unknown> } }).shipment?.fields;
     const hasTrailer = !!shipFields && 'trailerNumber' in shipFields;
-    if (!hasNCC || !hasTrailer) {
+    if (!hasNCC || !hasTrailer || !hasUser) {
       cachedClient = undefined;
       globalForPrisma.prisma = undefined;
     }

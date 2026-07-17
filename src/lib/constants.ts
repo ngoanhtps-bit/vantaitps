@@ -1,5 +1,51 @@
 // Logistics domain constants & metadata (Tiếng Việt)
 
+// ===== User Roles =====
+export const USER_ROLES = ["admin", "dieuxe", "dieuphoi", "ketoan", "thuky"] as const;
+export type UserRole = (typeof USER_ROLES)[number];
+
+export const ROLE_META: Record<UserRole, { label: string; badge: string; dot: string; moTa: string }> = {
+  admin: {
+    label: "Admin",
+    badge: "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border-rose-200 dark:border-rose-900",
+    dot: "bg-rose-500",
+    moTa: "Toàn quyền — quản lý user, xem tất cả",
+  },
+  dieuxe: {
+    label: "Điều xe",
+    badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900",
+    dot: "bg-emerald-500",
+    moTa: "Tạo/sửa đơn hàng, tạo chuyến nhanh, quản lý xe + tài xế",
+  },
+  dieuphoi: {
+    label: "Điều phối",
+    badge: "bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300 border-sky-200 dark:border-sky-900",
+    dot: "bg-sky-500",
+    moTa: "Theo dõi trực tuyến, quản lý tuyến đường",
+  },
+  ketoan: {
+    label: "Kế toán",
+    badge: "bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300 border-violet-200 dark:border-violet-900",
+    dot: "bg-violet-500",
+    moTa: "Hóa đơn, báo cáo, không tạo/sửa đơn hàng",
+  },
+  thuky: {
+    label: "Thư ký",
+    badge: "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300 border-amber-200 dark:border-amber-900",
+    dot: "bg-amber-500",
+    moTa: "Xem danh sách, không sửa/xóa",
+  },
+};
+
+// Phân quyền: mỗi role được phép xem những view nào
+export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
+  admin: ["dashboard", "shipments", "tracking", "danh-muc-xe", "nha-cung-cap", "customers", "warehouses", "routes", "invoices", "reports", "analytics", "users"],
+  dieuxe: ["dashboard", "shipments", "tracking", "danh-muc-xe", "nha-cung-cap", "customers", "warehouses", "routes"],
+  dieuphoi: ["dashboard", "shipments", "tracking", "danh-muc-xe", "routes"],
+  ketoan: ["dashboard", "shipments", "invoices", "reports", "analytics"],
+  thuky: ["dashboard", "shipments", "danh-muc-xe", "customers"],
+};
+
 export const SHIPMENT_STATUSES = [
   "pending",
   "picked_up",

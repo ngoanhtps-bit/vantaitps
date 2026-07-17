@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Menu, Search, Plus, Command, Settings as SettingsIcon, Zap } from "lucide-react";
+import { Menu, Search, Plus, Command, Settings as SettingsIcon, Zap, LogOut, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { NotificationsButton } from "@/components/notifications-button";
@@ -9,6 +9,11 @@ import { SettingsDialog } from "@/components/settings-dialog";
 import { KeyboardShortcutsDialog } from "@/components/keyboard-shortcuts-dialog";
 import { QuickTripDialog } from "@/components/quick-trip-dialog";
 import { useAppStore, type ViewKey } from "@/lib/store";
+import { useAuthStore } from "@/lib/auth-store";
+import { ROLE_META, type UserRole } from "@/lib/constants";
+import { avatarColorClass } from "@/components/avatar-color";
+import { initials } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -32,6 +37,7 @@ const VIEW_TITLES: Record<ViewKey, { title: string; subtitle: string }> = {
   invoices: { title: "Hóa đơn", subtitle: "Quản lý thanh toán và công nợ" },
   reports: { title: "Báo cáo", subtitle: "Tạo và xuất báo cáo vận hành" },
   analytics: { title: "Phân tích", subtitle: "Thông tin chi tiết và báo cáo hiệu suất" },
+  users: { title: "Người dùng", subtitle: "Quản lý tài khoản và phân quyền" },
 };
 
 export function AppTopbar() {
@@ -40,6 +46,12 @@ export function AppTopbar() {
   const [settingsOpen, setSettingsOpen] = React.useState(false);
   const [shortcutsOpen, setShortcutsOpen] = React.useState(false);
   const [quickTripOpen, setQuickTripOpen] = React.useState(false);
+  const { user: authUser, canView, logout } = useAuthStore();
+
+  const handleLogout = () => {
+    logout();
+    useAppStore.getState().setView("dashboard");
+  };
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b bg-background/80 px-4 backdrop-blur-md md:px-6">
@@ -132,8 +144,8 @@ export function AppTopbar() {
         <DropdownMenuTrigger asChild>
           <button className="flex items-center gap-2 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <Avatar className="h-9 w-9 border-2 border-emerald-500/40">
-              <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-teal-600 text-xs font-semibold text-white">
-                OP
+              <AvatarFallback className={cn("text-xs font-semibold text-white", avatarColorClass(authUser?.avatarColor || "emerald"))}>
+                {initials(authUser?.hoTen || "U")}
               </AvatarFallback>
             </Avatar>
           </button>
@@ -141,23 +153,27 @@ export function AppTopbar() {
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuLabel>
             <div className="flex flex-col">
-              <span className="text-sm font-medium">Ops Manager</span>
-              <span className="text-xs text-muted-foreground">ops@logistics.vn</span>
+              <span className="text-sm font-medium">{authUser?.hoTen || "Người dùng"}</span>
+              <span className="text-xs text-muted-foreground">@{authUser?.username} · {ROLE_META[authUser?.role as UserRole]?.label || authUser?.role}</span>
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
-              <SettingsIcon className="mr-2 h-4 w-4" /> Settings
+              <SettingsIcon className="mr-2 h-4 w-4" /> Cài đặt
             </DropdownMenuItem>
-            <DropdownMenuItem>Profile</DropdownMenuItem>
             <DropdownMenuItem onClick={() => setShortcutsOpen(true)}>
-              <Command className="mr-2 h-4 w-4" /> Keyboard shortcuts
+              <Command className="mr-2 h-4 w-4" /> Phím tắt
             </DropdownMenuItem>
+            {canView("users") && (
+              <DropdownMenuItem onClick={() => setView("users")}>
+                <UserCog className="mr-2 h-4 w-4" /> Quản lý người dùng
+              </DropdownMenuItem>
+            )}
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-rose-600 focus:text-rose-700">
-            Sign out
+          <DropdownMenuItem className="text-rose-600 focus:text-rose-700" onClick={handleLogout}>
+            <LogOut className="mr-2 h-4 w-4" /> Đăng xuất
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

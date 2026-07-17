@@ -82,7 +82,20 @@ async function main() {
   await db.driver.deleteMany();
   await db.vehicle.deleteMany();
   await db.nhaCungCap.deleteMany();
+  await db.user.deleteMany();
   await db.customer.deleteMany();
+
+  // --- Users ---
+  const userData = [
+    { username: "admin", password: "123456", hoTen: "Quản trị viên", email: "admin@logistics.vn", sdt: "0901112233", role: "admin", avatarColor: "rose" },
+    { username: "dieuxe", password: "123456", hoTen: "Nguyễn Điều Xe", email: "dieuxe@logistics.vn", sdt: "0902223344", role: "dieuxe", avatarColor: "emerald" },
+    { username: "dieuphoi", password: "123456", hoTen: "Trần Điều Phối", email: "dieuphoi@logistics.vn", sdt: "0903334455", role: "dieuphoi", avatarColor: "sky" },
+    { username: "ketoan", password: "123456", hoTen: "Lê Kế Toán", email: "ketoan@logistics.vn", sdt: "0904445566", role: "ketoan", avatarColor: "violet" },
+    { username: "thuky", password: "123456", hoTen: "Phạm Thư Ký", email: "thuky@logistics.vn", sdt: "0905556677", role: "thuky", avatarColor: "amber" },
+  ];
+  for (const u of userData) {
+    await db.user.create({ data: u });
+  }
 
   // --- Warehouses ---
   const warehouses = [];

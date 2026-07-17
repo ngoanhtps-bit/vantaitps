@@ -10,6 +10,24 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  hoTen     String
+  email     String?  @unique
+  sdt       String?
+  role      String   @default("thuky") // "admin" | "dieuxe" | "dieuphoi" | "ketoan" | "thuky"
+  active    Boolean  @default(true)
+  avatarColor String @default("emerald")
+  lastLogin String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([role])
+  @@index([active])
+}
+
 model Customer {
   id        String    @id @default(cuid())
   name      String

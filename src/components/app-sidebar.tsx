@@ -15,9 +15,11 @@ import {
   Receipt,
   FileBarChart,
   Building2,
+  UserCog,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppStore, type ViewKey } from "@/lib/store";
+import { useAuthStore } from "@/lib/auth-store";
 
 const NAV: {
   key: ViewKey;
@@ -36,10 +38,15 @@ const NAV: {
   { key: "invoices", label: "Hóa đơn", icon: Receipt },
   { key: "reports", label: "Báo cáo", icon: FileBarChart },
   { key: "analytics", label: "Phân tích", icon: BarChart3 },
+  { key: "users", label: "Người dùng", icon: UserCog },
 ];
 
 export function AppSidebar() {
   const { view, setView, setSidebarOpen } = useAppStore();
+  const { canView } = useAuthStore();
+
+  // Lọc nav theo quyền của user
+  const visibleNav = NAV.filter((item) => canView(item.key));
 
   return (
     <aside className="flex h-full w-full flex-col gap-2 border-r bg-sidebar/80 backdrop-blur-sm">
@@ -61,7 +68,7 @@ export function AppSidebar() {
         <div className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           Vận hành
         </div>
-        {NAV.map((item) => {
+        {visibleNav.map((item) => {
           const active = view === item.key;
           const Icon = item.icon;
           return (

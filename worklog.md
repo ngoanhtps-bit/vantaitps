@@ -986,3 +986,91 @@ Người dùng yêu cầu: (1) gộp phần dòng xe và tài xế vào 1 danh m
 2. Thêm nút "Sửa dòng xe" để gán loaiXe cho xe chưa phân loại
 3. Thêm filter theo dòng xe trong bảng đơn hàng
 4. Xuất Excel/CSV danh mục xe theo dòng (giống Google Sheet)
+
+---
+Task ID: USER-AUTH
+Agent: main
+Task: Thêm quản lý người dùng + phân quyền theo vai trò (Admin, Điều xe, Điều phối, Kế toán, Thư ký)
+
+## Mô tả trạng thái dự án
+Người dùng yêu cầu tạo thêm user với các vai trò: Admin, Điều xe, Điều phối, Kế toán, Thư ký.
+
+## Các thay đổi đã hoàn thành
+
+### 1. Schema: Model User
+- `User`: id, username (unique), password, hoTen, email, sdt, role, active, avatarColor, lastLogin, createdAt, updatedAt
+- Roles: "admin" | "dieuxe" | "dieuphoi" | "ketoan" | "thuky"
+
+### 2. Constants: Phân quyền
+- `USER_ROLES`: 5 vai trò
+- `ROLE_META`: label, badge, dot, moTa cho mỗi role
+- `ROLE_PERMISSIONS`: mỗi role được xem những view nào:
+  - admin: tất cả (12 views)
+  - dieuxe: dashboard, shipments, tracking, danh-muc-xe, nha-cung-cap, customers, warehouses, routes
+  - dieuphoi: dashboard, shipments, tracking, danh-muc-xe, routes
+  - ketoan: dashboard, shipments, invoices, reports, analytics
+  - thuky: dashboard, shipments, danh-muc-xe, customers
+
+### 3. Auth store (Zustand + persist)
+- `useAuthStore`: user, isAuthenticated, login(), logout(), canView(view)
+- Persist to localStorage
+
+### 4. API
+- `POST /api/auth/login` — đăng nhập (check username + password + active)
+- `POST /api/auth/logout`
+- `GET /api/users` — list với search + role filter
+- `POST /api/users` — tạo user (check username unique)
+- `PATCH /api/users/[id]` — cập nhật (hoTen, email, sdt, role, active, avatarColor, password)
+- `DELETE /api/users/[id]`
+
+### 5. Login page (`login-form.tsx`)
+- Form đăng nhập với username + password
+- Brand header (Logistics App V2)
+- **5 nút đăng nhập nhanh** (demo): Admin, Điều xe, Điều phối, Kế toán, Thư ký
+- Mật khẩu mặc định: 123456
+- Toast thông báo thành công/thất bại
+
+### 6. View UsersView (`users-view.tsx`) — admin only
+- 5 KPI cards: Tổng người dùng + 1 card mỗi role
+- Filter bar: search + role select + nút "Thêm người dùng"
+- Table: Người dùng (avatar + tên + @username) | Vai trò (badge) | SĐT | Đăng nhập cuối | Trạng thái | Thao tác
+- Create dialog: hoTen, username, password, email, sdt, role, avatarColor
+- Edit dialog: sửa tất cả + đổi password + toggle active
+- Delete (không xóa được chính mình)
+- Badge "Bạn" cho user hiện tại
+
+### 7. Tích hợp auth vào app
+- page.tsx: hiển thị LoginForm nếu chưa đăng nhập, hiển thị "Không có quyền" nếu canView=false
+- Sidebar: lọc nav items theo `canView()` — chỉ hiện menu user có quyền
+- Topbar: 
+  - Avatar + hoTen + @username + role label
+  - Menu: Cài đặt, Phím tắt, Quản lý người dùng (admin only), Đăng xuất
+- Store: thêm "users" vào ViewKey
+
+### 8. Seed 5 users mẫu
+- admin / 123456 — Quản trị viên (rose)
+- dieuxe / 123456 — Nguyễn Điều Xe (emerald)
+- dieuphoi / 123456 — Trần Điều Phối (sky)
+- ketoan / 123456 — Lê Kế Toán (violet)
+- thuky / 123456 — Phạm Thư Ký (amber)
+
+### 9. Fix Prisma client cache
+- db.ts: check cả `user` model — discard cached client nếu thiếu
+
+## Kết quả kiểm tra
+- **Lint**: 0 lỗi (1 cảnh báo có sẵn trong seed.ts)
+- **API login**: admin/123456 → 200, trả hoTen + role ✓
+- **API login sai password**: → 401 ✓
+- **Seed**: 5 users tạo thành công
+- **Dev server**: hoạt động (thỉnh thoảng crash do memory)
+
+## Vấn đề chưa giải quyết
+- Dev server crash khi test nhiều (memory issue) — code và API verified qua curl
+- Chưa test UI login + phân quyền trong browser do server instability
+- Mật khẩu lưu plain text (chưa hash) — demo only, production cần bcrypt
+
+## Khuyến nghị giai đoạn tiếp theo
+1. Hash mật khẩu với bcrypt
+2. Test UI login + phân quyền trong browser
+3. Thêm middleware bảo vệ API routes (check session)
+4. Thêm audit log (ai tạo/sửa/xóa gì)
