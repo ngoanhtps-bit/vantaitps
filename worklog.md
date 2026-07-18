@@ -1074,3 +1074,82 @@ Người dùng yêu cầu tạo thêm user với các vai trò: Admin, Điều x
 2. Test UI login + phân quyền trong browser
 3. Thêm middleware bảo vệ API routes (check session)
 4. Thêm audit log (ai tạo/sửa/xóa gì)
+
+---
+Task ID: PHAN-QUYEN-DONG
+Agent: main
+Task: Thêm phân quyền động — Admin bật/tắt quyền xem/tạo/sửa/xóa cho từng vai trò
+
+## Mô tả trạng thái dự án
+Người dùng yêu cầu Admin có thể bật/tắt phân quyền chi tiết cho từng vai trò — ẩn/hiện menu và chức năng tạo/sửa/xóa. Trước đây quyền cứng trong constants.ts (ROLE_PERMISSIONS). Giờ chuyển sang quyền động lưu trong DB.
+
+## Các thay đổi đã hoàn thành
+
+### 1. Schema: Model RolePermission
+- `RolePermission`: id, role, view, canView, canCreate, canEdit, canDelete
+- Unique constraint: [role, view] — mỗi role × view chỉ 1 record
+- Push schema thành công
+
+### 2. API Permissions
+- `GET /api/permissions` — trả ma trận quyền [role][view] = {canView, canCreate, canEdit, canDelete} + tự tạo record nếu thiếu
+- `PUT /api/permissions` — cập nhật 1 quyền (role, view, canView, canCreate, canEdit, canDelete)
+  - **Admin bị chặn** (403) — không thể sửa quyền admin
+- `POST /api/permissions` — reset tất cả về mặc định
+- `GET /api/auth/permissions?role=xxx` — trả quyền động cho 1 role (user fetch khi login)
+
+### 3. Quyền mặc định (theo mô tả user)
+- **Admin**: toàn quyền 12 views (canView + canCreate + canEdit + canDelete = true)
+- **Điều xe**: 7 views (dashboard, shipments, tracking, danh-muc-xe, nha-cung-cap, customers, routes) — tạo/sửa/xóa shipments, xe, NCC
+- **Điều phối**: 5 views (dashboard, shipments, tracking, danh-muc-xe, routes) — tạo/sửa shipments, theo dõi
+- **Kế toán**: 6 views (dashboard, shipments, customers, invoices, reports, analytics) — tạo/sửa/xóa invoices
+- **Thư ký**: 6 views — chỉ xem, không tạo/sửa/xóa
+
+### 4. Auth store cập nhật
+- Thêm `permissions` state + `setPermissions()`
+- `login(user, permissions)` — lưu cả user + permissions
+- 4 hàm check quyền: `canView(view)`, `canCreate(view)`, `canEdit(view)`, `canDelete(view)`
+- Admin luôn return true cho tất cả
+- Persist to localStorage
+
+### 5. Login flow cập nhật
+- LoginForm: sau khi login thành công → fetch `/api/auth/permissions?role=xxx` → lưu permissions vào store
+- User sẽ thấy menu theo quyền động từ DB
+
+### 6. View Quản lý phân quyền (`phan-quyen-view.tsx`) — admin only
+- Header info card: giải thích + nút "Reset mặc định"
+- **1 card per role** (5 cards):
+  - Header: icon + label + mô tả + số trang được xem (X/12)
+  - Admin: badge "Khóa" + thông báo "không thể thay đổi"
+  - Table ma trận: rows = views, columns = Xem/Tạo/Sửa/Xóa (Switch toggles)
+  - Switch disabled nếu canView=false và action != canView (không thể bật Tạo/Sửa/Xóa khi không được Xem)
+- **Tóm tắt phân quyền**: grid 5 cards, mỗi card hiển thị số view được Xem/Tạo/Sửa/Xóa
+
+### 7. Tích hợp
+- Store: thêm "phan-quyen" vào ViewKey
+- Sidebar: nav item "Phân quyền" (ShieldCheck icon) — admin only (canView check)
+- Topbar: title "Phân quyền" + subtitle
+- page.tsx: render PhanQuyenView
+- db.ts: cache-bust check thêm `rolePermission` model
+
+## Kết quả kiểm tra
+- **Lint**: 0 lỗi (1 cảnh báo có sẵn trong seed.ts)
+- **API GET /api/permissions**: 200, trả ma trận đúng:
+  - admin: 12 views ✓
+  - dieuxe: 7 views ✓
+  - dieuphoi: 5 views ✓
+  - ketoan: 6 views ✓
+  - thuky: 6 views ✓
+- **API PUT /api/permissions**: 200, cập nhật thuky/invoices canView=true ✓
+- **Admin protection**: PUT admin → 403 (chặn) ✓
+- **API POST reset**: tạo lại tất cả quyền mặc định ✓
+
+## Vấn đề chưa giải quyết
+- Dev server crash khi test nhiều (memory issue) — code và API verified qua curl
+- Chưa test UI phân quyền trong browser do server instability
+- User cần đăng nhập lại để quyền mới có hiệu lực (permissions fetch lúc login)
+
+## Khuyến nghị giai đoạn tiếp theo
+1. Test UI phân quyền trong browser
+2. Áp dụng canCreate/canEdit/canDelete vào các view (ẩn nút Tạo/Sửa/Xóa nếu không có quyền)
+3. Thêm real-time permission refresh (không cần đăng nhập lại)
+4. Thêm audit log phân quyền (ai đã thay đổi quyền gì)

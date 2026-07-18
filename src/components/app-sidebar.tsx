@@ -16,6 +16,7 @@ import {
   FileBarChart,
   Building2,
   UserCog,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppStore, type ViewKey } from "@/lib/store";
@@ -39,6 +40,7 @@ const NAV: {
   { key: "reports", label: "Báo cáo", icon: FileBarChart },
   { key: "analytics", label: "Phân tích", icon: BarChart3 },
   { key: "users", label: "Người dùng", icon: UserCog },
+  { key: "phan-quyen", label: "Phân quyền", icon: ShieldCheck },
 ];
 
 export function AppSidebar() {

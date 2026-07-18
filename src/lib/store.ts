@@ -14,6 +14,7 @@ export type ViewKey =
   | "reports"
   | "nha-cung-cap"
   | "users"
+  | "phan-quyen"
   | "analytics";
 
 interface AppState {

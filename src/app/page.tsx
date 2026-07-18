@@ -17,6 +17,7 @@ import { InvoicesView } from "@/components/views/invoices-view";
 import { ReportsView } from "@/components/views/reports-view";
 import { AnalyticsView } from "@/components/views/analytics-view";
 import { UsersView } from "@/components/views/users-view";
+import { PhanQuyenView } from "@/components/views/phan-quyen-view";
 import { Card, CardContent } from "@/components/ui/card";
 import { ShieldAlert } from "lucide-react";
 
@@ -66,6 +67,7 @@ export default function Home() {
       {view === "reports" && <ReportsView />}
       {view === "analytics" && <AnalyticsView />}
       {view === "users" && <UsersView />}
+      {view === "phan-quyen" && <PhanQuyenView />}
     </AppShell>
   );
 }

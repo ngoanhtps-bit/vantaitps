@@ -25,9 +25,14 @@ export function LoginForm() {
   const [password, setPassword] = React.useState("");
 
   const loginMutation = useMutation({
-    mutationFn: () => api.post<CurrentUser>("/api/auth/login", { username, password }),
-    onSuccess: (user) => {
-      login(user);
+    mutationFn: async () => {
+      const user = await api.post<CurrentUser>("/api/auth/login", { username, password });
+      // Fetch permissions động cho role này
+      const permRes = await api.get<{ permissions: Record<string, { canView: boolean; canCreate: boolean; canEdit: boolean; canDelete: boolean }> }>(`/api/auth/permissions?role=${user.role}`);
+      return { user, permissions: permRes.permissions };
+    },
+    onSuccess: ({ user, permissions }) => {
+      login(user, permissions);
       toast.success(`Xin chào, ${user.hoTen}!`);
     },
     onError: (e: Error) => toast.error("Đăng nhập thất bại", { description: e.message }),

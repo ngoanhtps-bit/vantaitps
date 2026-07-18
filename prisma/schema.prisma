@@ -28,6 +28,23 @@ model User {
   @@index([active])
 }
 
+// Phân quyền động: role × view × actions
+// Admin có thể bật/tắt từng quyền cho từng vai trò
+model RolePermission {
+  id        String  @id @default(cuid())
+  role      String  // "admin" | "dieuxe" | "dieuphoi" | "ketoan" | "thuky"
+  view      String  // "dashboard" | "shipments" | "tracking" | ...
+  canView   Boolean @default(false)
+  canCreate Boolean @default(false)
+  canEdit   Boolean @default(false)
+  canDelete Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([role, view])
+  @@index([role])
+}
+
 model Customer {
   id        String    @id @default(cuid())
   name      String

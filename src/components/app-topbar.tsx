@@ -38,6 +38,7 @@ const VIEW_TITLES: Record<ViewKey, { title: string; subtitle: string }> = {
   reports: { title: "Báo cáo", subtitle: "Tạo và xuất báo cáo vận hành" },
   analytics: { title: "Phân tích", subtitle: "Thông tin chi tiết và báo cáo hiệu suất" },
   users: { title: "Người dùng", subtitle: "Quản lý tài khoản và phân quyền" },
+  "phan-quyen": { title: "Phân quyền", subtitle: "Cấu hình quyền xem/tạo/sửa/xóa theo vai trò" },
 };
 
 export function AppTopbar() {
