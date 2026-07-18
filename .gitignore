@@ -52,3 +52,16 @@ prompt
 server.log
 # Skills directory
 /skills/
+# Database
+*.db
+*.db-journal
+/db/
+# Upload temp
+/upload/
+# Screenshots
+*.png
+# Claude/AI config
+.claude
+.z-ai-config
+prompt
+test
