@@ -48,6 +48,7 @@ type XeThongKe = {
 export function DanhMucXeView() {
   const qc = useQueryClient();
   const [search, setSearch] = React.useState("");
+  const [importOpen, setImportOpen] = React.useState(false);
 
   const { data, isLoading } = useQuery<XeThongKe>({
     queryKey: ["xe-thong-ke"],
@@ -102,17 +103,22 @@ export function DanhMucXeView() {
         <KpiCard title="Đang hoạt động" value={data.groups.reduce((s, g) => s + g.xes.filter((x) => x.status === "active").length, 0)} icon={Activity} accent="amber" />
       </div>
 
-      {/* Search */}
+      {/* Search + Import */}
       <Card>
         <CardContent className="p-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Tìm biển số, tài xế, SĐT, đơn vị NCC…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
-            />
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Tìm biển số, tài xế, SĐT, đơn vị NCC…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <Button size="sm" variant="outline" onClick={() => setImportOpen(true)} className="gap-1.5">
+              <Upload className="h-4 w-4" /> Import
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -137,6 +143,10 @@ export function DanhMucXeView() {
           ))
         )}
       </div>
+
+      <ImportDialog open={importOpen} onOpenChange={setImportOpen} type="danh-muc-xe" onImported={() => {
+        qc.invalidateQueries({ queryKey: ["xe-thong-ke"] });
+      }} />
     </div>
   );
 }

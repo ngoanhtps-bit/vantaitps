@@ -23,12 +23,13 @@ import {
 } from "@/components/ui/dialog";
 import {
   Building2, Search, Plus, Truck, User, Phone, MapPin, Mail, FileText,
-  PhoneCall, Car, ChevronRight, Pencil, Trash2, CheckCircle2, X,
+  PhoneCall, Car, ChevronRight, Pencil, Trash2, CheckCircle2, X, Upload,
 } from "lucide-react";
 import { LOAI_XE_OPTIONS, LOAI_XE_NHOM } from "@/lib/constants";
 import { initials } from "@/lib/format";
 import { avatarColorClass } from "@/components/avatar-color";
 import { useToast } from "@/hooks/use-toast";
+import { ImportDialog } from "@/components/import-dialog";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -56,6 +57,7 @@ export function NhaCungCapView() {
   const qc = useQueryClient();
   const [search, setSearch] = React.useState("");
   const [createOpen, setCreateOpen] = React.useState(false);
+  const [importOpen, setImportOpen] = React.useState(false);
   const [detailId, setDetailId] = React.useState<string | null>(null);
 
   const debouncedSearch = useDebounce(search, 350);
@@ -96,6 +98,9 @@ export function NhaCungCapView() {
                 className="pl-9"
               />
             </div>
+            <Button size="sm" variant="outline" onClick={() => setImportOpen(true)} className="gap-1.5">
+              <Upload className="h-4 w-4" /> Import
+            </Button>
             <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
               <Plus className="h-4 w-4" /> Thêm NCC
             </Button>
@@ -137,6 +142,10 @@ export function NhaCungCapView() {
       }} />
 
       <NCCDetailDrawer nccId={detailId} open={!!detailId} onOpenChange={(o) => { if (!o) setDetailId(null); }} />
+
+      <ImportDialog open={importOpen} onOpenChange={setImportOpen} type="nha-cung-cap" onImported={() => {
+        qc.invalidateQueries({ queryKey: ["nha-cung-cap"] });
+      }} />
     </div>
   );
 }
