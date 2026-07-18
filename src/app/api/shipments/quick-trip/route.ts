@@ -24,6 +24,9 @@ export async function POST(req: NextRequest) {
     matHang,         // Mặt hàng: PALET, ĐIỆN TỬ...
     ngayDi,          // Ngày đi (dd/mm/yyyy)
     gioDi,           // Giờ đi (HH:mm)
+    loaiXe,          // Dòng xe: CONT 40 RF, MOOC RÀO...
+    nhaCungCapId,    // ID nhà cung cấp xe
+    status,          // Trạng thái chuyến
   } = body;
 
   if (!route || !plateNumber || !driverName) {
@@ -74,7 +77,8 @@ export async function POST(req: NextRequest) {
           model: "Container",
           brand: "Container",
           type: "container",
-          loaiXe: containerNumber ? "CONT 40 HC" : null, // guess from container presence
+          loaiXe: loaiXe || (containerNumber ? "CONT 40 HC" : null),
+          nhaCungCapId: nhaCungCapId || null,
           capacityKg: 30000,
           fuelType: "diesel",
           status: "active",
@@ -134,8 +138,20 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // Generate tracking number
-  const tn = "LG" + Date.now().toString().slice(-8) + Math.floor(Math.random() * 1000).toString().padStart(3, "0");
+  // Sinh mã TPS: TPS(NGÀY ĐÓNG)(STT CHUYẾN TRONG NGÀY)
+  // VD: TPS20260718001
+  const today = new Date();
+  const dateStr = today.getFullYear().toString() +
+    (today.getMonth() + 1).toString().padStart(2, "0") +
+    today.getDate().toString().padStart(2, "0");
+
+  // Đếm số đơn hàng đã tạo hôm nay để sinh STT
+  const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+  const todayCount = await db.shipment.count({
+    where: { createdAt: { gte: startOfDay, lt: endOfDay } },
+  });
+  const tn = `TPS${dateStr}${(todayCount + 1).toString().padStart(3, "0")}`;
 
   // Parse trip date (dd/mm/yyyy → ISO)
   let tripDateIso: string | null = null;
@@ -153,7 +169,7 @@ export async function POST(req: NextRequest) {
   const shipment = await db.shipment.create({
     data: {
       trackingNumber: tn,
-      status: "in_transit",
+      status: status || "in_transit",
       priority: "high",
       serviceType: "freight",
       senderId: customer.id,
@@ -189,6 +205,7 @@ export async function POST(req: NextRequest) {
   });
 
   // Create initial tracking events
+  const finalStatus = status || "in_transit";
   await db.trackingEvent.create({
     data: {
       shipmentId: shipment.id,
@@ -197,24 +214,28 @@ export async function POST(req: NextRequest) {
       note: `Tạo chuyến nhanh — ${tn}`,
     },
   });
-  await db.trackingEvent.create({
-    data: {
-      shipmentId: shipment.id,
-      status: "picked_up",
-      location: originCity,
-      note: `Lấy hàng tại ${originCity}${containerNumber ? ` · Cont ${containerNumber}` : ""}`,
-      timestamp: new Date(),
-    },
-  });
-  await db.trackingEvent.create({
-    data: {
-      shipmentId: shipment.id,
-      status: "in_transit",
-      location: originCity,
-      note: `Khởi hành ${originCity} → ${destinationCity}${tripDate ? ` · ${tripDate}` : ""}`,
-      timestamp: new Date(),
-    },
-  });
+  if (finalStatus !== "pending") {
+    await db.trackingEvent.create({
+      data: {
+        shipmentId: shipment.id,
+        status: "picked_up",
+        location: originCity,
+        note: `Lấy hàng tại ${originCity}${containerNumber ? ` · Cont ${containerNumber}` : ""}`,
+        timestamp: new Date(),
+      },
+    });
+  }
+  if (finalStatus === "in_transit" || finalStatus === "out_for_delivery" || finalStatus === "delivered") {
+    await db.trackingEvent.create({
+      data: {
+        shipmentId: shipment.id,
+        status: "in_transit",
+        location: originCity,
+        note: `Khởi hành ${originCity} → ${destinationCity}${tripDate ? ` · ${tripDate}` : ""}`,
+        timestamp: new Date(),
+      },
+    });
+  }
 
   return NextResponse.json(shipment, { status: 201 });
 }

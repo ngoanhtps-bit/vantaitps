@@ -1311,3 +1311,38 @@ Task: Tính năng import Excel/CSV + file mẫu cho 3 loại: Danh mục xe, NCC
   - Import NCC: 1 success, 0 errors ✓
   - Import danh-muc-xe: 1 success, 0 errors ✓
   - Import shipments: 1 success, 0 errors ✓
+
+---
+Task ID: QUICK-TRIP-UPGRADE
+Agent: main
+Task: Nâng cấp Tạo chuyến nhanh — dropdown Dòng xe, NCC, Trạng thái + mã đơn TPS
+
+## Các thay đổi đã hoàn thành
+
+### 1. Mã đơn TPS (thay vì LG random)
+- Định dạng: `TPS(NGÀY ĐÓNG)(STT CHUYẾN TRONG NGÀY)` — VD: `TPS20260718001`
+- API `/api/shipments/next-tracking` — trả mã TPS tiếp theo (preview)
+- Hiển thị **real-time** ở đầu dialog tạo chuyến nhanh (badge emerald)
+- Tự động tăng STT mỗi chuyến tạo trong ngày
+
+### 2. 3 Dropdown mới trong tab Chỉnh sửa
+- **Dòng xe**: dropdown 16 loại (LOAI_XE_OPTIONS: CONT 40 RF, MOOC RÀO, XE TẢI...)
+- **Nhà cung cấp xe**: dropdown từ danh sách NCC đã có (tên + mã NCC)
+- **Trạng thái chuyến**: dropdown 8 trạng thái (Chờ xử lý, Đang vận chuyển, Đã giao...)
+
+### 3. API quick-trip cập nhật
+- Nhận thêm: `loaiXe`, `nhaCungCapId`, `status`
+- Sinh mã TPS thay vì LG
+- Tạo xe mới với `loaiXe` + `nhaCungCapId` từ form
+- Tracking events tạo theo `status` (nếu pending → chỉ 1 event, nếu in_transit → 3 events)
+- SHIPMENT_INCLUDE: thêm `loaiXe` + `nhaCungCapId` vào vehicle select
+
+### 4. QuickTripForm type + state
+- Thêm `loaiXe`, `nhaCungCapId`, `status` vào type + EMPTY_FORM + PLACEHOLDERS
+- Query fetch `next-tracking` + `nha-cung-cap` khi mở dialog
+
+## Kết quả kiểm tra
+- **Lint**: 0 lỗi
+- **API next-tracking**: TPS20260718005 ✓
+- **API quick-trip**: tạo TPS20260718005, loaiXe=CONT 45 RF, status=pending ✓
+- **Preview mã TPS**: hiển thị real-time trong dialog ✓

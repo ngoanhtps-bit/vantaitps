@@ -5,7 +5,7 @@ const SHIPMENT_INCLUDE = {
   sender: { select: { id: true, name: true, city: true, phone: true } },
   receiver: { select: { id: true, name: true, city: true, phone: true } },
   driver: { select: { id: true, name: true, avatarColor: true, status: true, phone: true } },
-  vehicle: { select: { id: true, plateNumber: true, model: true, type: true } },
+  vehicle: { select: { id: true, plateNumber: true, model: true, type: true, loaiXe: true, nhaCungCapId: true } },
   originWarehouse: { select: { id: true, name: true, city: true } },
   destinationWarehouse: { select: { id: true, name: true, city: true } },
   trackingEvents: { orderBy: { timestamp: "desc" as const }, take: 20 },

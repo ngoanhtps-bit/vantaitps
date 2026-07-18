@@ -17,8 +17,13 @@ import {
 import {
   Zap, Route as RouteIcon, Calendar, Truck, Container as ContainerIcon, User, Phone,
   Building2, UserCheck, Headphones, MapPin, CheckCircle2, Loader2,
-  ClipboardPaste, Wand2, Eraser,
+  ClipboardPaste, Wand2, Eraser, Hash,
 } from "lucide-react";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { LOAI_XE_OPTIONS, SHIPMENT_STATUSES, SHIPMENT_STATUS_META } from "@/lib/constants";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -36,6 +41,9 @@ type QuickTripForm = {
   dispatcher: string;
   matHang: string;
   gioDi: string;
+  loaiXe: string;
+  nhaCungCapId: string;
+  status: string;
   notes: string;
 };
 
@@ -53,6 +61,9 @@ const PLACEHOLDERS: QuickTripForm = {
   dispatcher: "ÁNH",
   matHang: "PALET",
   gioDi: "",
+  loaiXe: "",
+  nhaCungCapId: "",
+  status: "in_transit",
   notes: "",
 };
 
@@ -70,6 +81,9 @@ const EMPTY_FORM: QuickTripForm = {
   dispatcher: "",
   matHang: "",
   gioDi: "",
+  loaiXe: "",
+  nhaCungCapId: "",
+  status: "in_transit",
   notes: "",
 };
 
@@ -178,6 +192,20 @@ export function QuickTripDialog({
   const [pasteText, setPasteText] = React.useState("");
   const [activeTab, setActiveTab] = React.useState<"paste" | "manual">("paste");
 
+  // Fetch mã TPS preview + danh sách NCC khi mở dialog
+  const { data: trackingPreview } = useQuery<{ trackingNumber: string }>({
+    queryKey: ["next-tracking"],
+    queryFn: () => api.get("/api/shipments/next-tracking"),
+    enabled: open,
+    refetchInterval: open ? 30000 : false,
+  });
+
+  const { data: nccData } = useQuery<{ items: { id: string; tenDonVi: string; maNCC: string | null }[] }>({
+    queryKey: ["nha-cung-cap", "all"],
+    queryFn: () => api.get("/api/nha-cung-cap"),
+    enabled: open,
+  });
+
   React.useEffect(() => {
     if (open) {
       setForm(EMPTY_FORM);
@@ -265,6 +293,22 @@ export function QuickTripDialog({
             Dán tin nhắn thông tin xe vào ô bên dưới — hệ thống tự động tách các trường.
           </DialogDescription>
         </DialogHeader>
+
+        {/* Mã đơn TPS preview */}
+        {trackingPreview && (
+          <div className="flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50/50 px-4 py-2.5 dark:border-emerald-900 dark:bg-emerald-950/20">
+            <div className="flex items-center gap-2">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                <Hash className="h-3.5 w-3.5" />
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Mã đơn tiếp theo</p>
+                <p className="font-mono text-sm font-bold text-emerald-600 dark:text-emerald-400">{trackingPreview.trackingNumber}</p>
+              </div>
+            </div>
+            <span className="text-[10px] text-muted-foreground">Tự sinh: TPS + ngày + STT</span>
+          </div>
+        )}
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "paste" | "manual")}>
           <TabsList className="grid w-full grid-cols-2">
@@ -500,6 +544,58 @@ export function QuickTripDialog({
                   placeholder={PLACEHOLDERS.dispatcher}
                   className="uppercase"
                 />
+              </div>
+
+              {/* Dòng xe dropdown */}
+              <div className="space-y-1.5">
+                <Label className="flex items-center gap-1.5">
+                  <ContainerIcon className="h-3.5 w-3.5 text-violet-500" />
+                  Dòng xe
+                </Label>
+                <Select value={form.loaiXe || "none"} onValueChange={(v) => set("loaiXe", v === "none" ? "" : v)}>
+                  <SelectTrigger><SelectValue placeholder="Chọn dòng xe" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">— Chọn dòng xe —</SelectItem>
+                    {LOAI_XE_OPTIONS.map((lx) => (
+                      <SelectItem key={lx} value={lx}>{lx}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* NCC xe dropdown */}
+              <div className="space-y-1.5">
+                <Label className="flex items-center gap-1.5">
+                  <Building2 className="h-3.5 w-3.5 text-sky-500" />
+                  Nhà cung cấp xe
+                </Label>
+                <Select value={form.nhaCungCapId || "none"} onValueChange={(v) => set("nhaCungCapId", v === "none" ? "" : v)}>
+                  <SelectTrigger><SelectValue placeholder="Chọn NCC" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">— Không chọn —</SelectItem>
+                    {nccData?.items.map((ncc) => (
+                      <SelectItem key={ncc.id} value={ncc.id}>
+                        {ncc.tenDonVi}{ncc.maNCC ? ` (${ncc.maNCC})` : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Trạng thái chuyến dropdown */}
+              <div className="space-y-1.5">
+                <Label className="flex items-center gap-1.5">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                  Trạng thái chuyến
+                </Label>
+                <Select value={form.status} onValueChange={(v) => set("status", v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {SHIPMENT_STATUSES.map((s) => (
+                      <SelectItem key={s} value={s}>{SHIPMENT_STATUS_META[s].label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Mặt hàng */}
