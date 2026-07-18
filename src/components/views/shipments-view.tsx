@@ -34,7 +34,7 @@ import {
   Package, Search, Plus, Filter, Download, ArrowRight, MapPin, Truck,
   User, Calendar, DollarSign, Weight, Box, ChevronLeft, ChevronRight,
   X, Clock, CheckCircle2, AlertTriangle, PackageCheck, XCircle, RotateCcw,
-  Pencil, Trash2, Printer, Zap, Container, UserCheck, Headphones, Building2, Columns3,
+  Pencil, Trash2, Printer, Zap, Container, UserCheck, Headphones, Building2, Columns3, Upload,
 } from "lucide-react";
 import {
   SHIPMENT_STATUSES, SHIPMENT_STATUS_META, PRIORITIES, PRIORITY_META,
@@ -48,6 +48,7 @@ import { toast } from "sonner";
 import { avatarColorClass } from "@/components/avatar-color";
 import { PrintLabelDialog } from "@/components/print-label-dialog";
 import { QuickTripDialog } from "@/components/quick-trip-dialog";
+import { ImportDialog } from "@/components/import-dialog";
 import { cn } from "@/lib/utils";
 
 type ShipmentListItem = {
@@ -164,6 +165,7 @@ export function ShipmentsView() {
   const [detailOpen, setDetailOpen] = React.useState(false);
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
   const [quickTripOpen, setQuickTripOpen] = React.useState(false);
+  const [importOpen, setImportOpen] = React.useState(false);
   const [visibleColumns, setVisibleColumns] = React.useState<Set<string>>(
     new Set(COLUMN_CONFIG.filter((c) => c.defaultVisible).map((c) => c.key))
   );
@@ -390,6 +392,14 @@ export function ShipmentsView() {
                   </div>
                 </PopoverContent>
               </Popover>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setImportOpen(true)}
+                className="gap-1.5"
+              >
+                <Upload className="h-4 w-4" /> Import
+              </Button>
               <Button
                 size="sm"
                 variant="outline"
@@ -737,6 +747,12 @@ export function ShipmentsView() {
           qc.invalidateQueries({ queryKey: ["dashboard"] });
         }}
       />
+
+      {/* Import dialog */}
+      <ImportDialog open={importOpen} onOpenChange={setImportOpen} type="shipments" onImported={() => {
+        qc.invalidateQueries({ queryKey: ["shipments"] });
+        qc.invalidateQueries({ queryKey: ["dashboard"] });
+      }} />
 
       {/* Detail drawer */}
       <ShipmentDetailDrawer

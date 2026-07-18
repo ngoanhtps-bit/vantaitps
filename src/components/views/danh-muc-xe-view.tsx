@@ -15,12 +15,13 @@ import {
 } from "@/components/ui/collapsible";
 import {
   Truck, Search, ChevronDown, Car, User, Phone, Building2,
-  Container as ContainerIcon, Package, Plus, Minus, Activity,
+  Container as ContainerIcon, Package, Plus, Minus, Activity, Upload,
 } from "lucide-react";
 import { LOAI_XE_OPTIONS, LOAI_XE_NHOM } from "@/lib/constants";
 import { initials } from "@/lib/format";
 import { avatarColorClass } from "@/components/avatar-color";
 import { cn } from "@/lib/utils";
+import { ImportDialog } from "@/components/import-dialog";
 
 type XeThongKe = {
   tongXe: number;
