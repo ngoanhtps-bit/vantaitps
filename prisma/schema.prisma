@@ -1,5 +1,4 @@
-# Logistics App V2 — Prisma schema (PostgreSQL cho Vercel)
-# Khi deploy lên Vercel, đổi provider từ "sqlite" sang "postgresql"
+// Logistics App V2 - Prisma schema (PostgreSQL)
 
 generator client {
   provider = "prisma-client-js"
