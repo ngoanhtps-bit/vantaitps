@@ -238,6 +238,15 @@ model Shipment {
   tripDate        String?  // Ngày khởi hành
   customerCode    String?  // Mã khách hàng (vd: GTVD)
 
+  // Bổ sung theo bảng cũ
+  matHang         String?  // Mặt hàng: PALET, ĐIỆN TỬ, HÀNG RỜI...
+  ngayDi          String?  // Ngày đi (dd/mm/yyyy)
+  gioDi           String?  // Giờ đi (HH:mm)
+  daGuiBienBan    Boolean  @default(false)  // BB — đã gửi biên bản chưa
+  ghiChu1         String?  // Ghi chú 1
+  ghiChu2         String?  // Ghi chú 2
+  ghiChu3         String?  // Ghi chú 3
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

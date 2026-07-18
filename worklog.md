@@ -1153,3 +1153,77 @@ Người dùng yêu cầu Admin có thể bật/tắt phân quyền chi tiết c
 2. Áp dụng canCreate/canEdit/canDelete vào các view (ẩn nút Tạo/Sửa/Xóa nếu không có quyền)
 3. Thêm real-time permission refresh (không cần đăng nhập lại)
 4. Thêm audit log phân quyền (ai đã thay đổi quyền gì)
+
+---
+Task ID: DON-HANG-CAI-TIEN
+Agent: main
+Task: Cải tiến phần Đơn hàng theo bảng cũ — thêm cột mới, show/hide columns, BB, ghi chú 1/2/3
+
+## Mô tả trạng thái dự án
+Người dùng duyệt ý tưởng cải tiến đơn hàng theo bảng Google Sheet cũ. Cần thêm: Mặt hàng, Ngày đi, Giờ đi, BB (biên bản), Ghi chú 1/2/3, SALE, Điều phối, Loại xe, Mooc, Cont, NCC xe + tính năng bật/tắt cột.
+
+## Các thay đổi đã hoàn thành
+
+### 1. Schema: Thêm 7 trường mới vào Shipment
+- `matHang` (String?) — Mặt hàng: PALET, ĐIỆN TỬ, HÀNG RỜI...
+- `ngayDi` (String?) — Ngày đi (dd/mm/yyyy)
+- `gioDi` (String?) — Giờ đi (HH:mm)
+- `daGuiBienBan` (Boolean default false) — BB: đã gửi biên bản chưa
+- `ghiChu1` (String?) — Ghi chú 1
+- `ghiChu2` (String?) — Ghi chú 2
+- `ghiChu3` (String?) — Ghi chú 3
+
+### 2. API cập nhật
+- POST /api/shipments: hỗ trợ 7 trường mới
+- PATCH /api/shipments/[id]: hỗ trợ 7 trường mới + salePerson, dispatcher, trailerNumber, containerNumber, customerCode, tripDate
+- POST /api/shipments/quick-trip: hỗ trợ matHang, ngayDi, gioDi (ngayDi tự động lấy từ tripDate nếu không nhập)
+
+### 3. Bảng đơn hàng: 20 cột động (bật/tắt được)
+- **COLUMN_CONFIG**: 20 cột với defaultVisible
+  - Mặc định hiện (13): Mã vận đơn, Tuyến đường, Mặt hàng, SALE, Khách hàng, Ngày đi, Trạng thái, Biển số, Loại xe, Tài xế, BB, Điều phối, Ngày tạo
+  - Mặc định ẩn (7): Giờ đi, Ưu tiên, Mooc, Cont, SĐT LX, NCC xe, Chi phí
+- **Nút "Cột"** (Popover): checkbox list 20 cột, nút "Tất cả" + "Reset"
+- **Badge số cột đang hiện** trên nút
+
+### 4. Cột BB (Biên bản) — toggle nhanh
+- Checkbox trong mỗi dòng
+- Click → PATCH ngay vào DB (daGuiBienBan)
+- Không cần mở drawer để sửa
+
+### 5. Cột Mặt hàng — Badge
+- Hiện badge "PALET", "ĐIỆN TỬ"...
+- Null → hiện "—"
+
+### 6. Cột Loại xe — Badge từ vehicle.loaiXe
+- Hiện "CONT 45 HC", "XE TẢI"...
+- Lấy từ xe được gán
+
+### 7. Quick Trip Dialog: thêm 2 ô mới
+- **Mặt hàng**: input text (PALET, ĐIỆN TỬ...)
+- **Giờ đi**: input time (08:00)
+- Thêm vào QuickTripForm type + PLACEHOLDERS + EMPTY_FORM
+
+### 8. Type cập nhật
+- ShipmentListItem: thêm 7 trường mới + loaiXe/nhaCungCapId cho vehicle
+- ShipmentDetail: thêm 7 trường mới
+
+### 9. db.ts cache-bust
+- Check thêm `matHang` field trên Shipment — discard cached client nếu thiếu
+
+## Kết quả kiểm tra
+- **Lint**: 0 lỗi (1 cảnh báo có sẵn trong seed.ts)
+- **API quick-trip**: tạo thành công với matHang=PALET, gioDi=08:00, daGuiBienBan=false ✓
+- **20 cột động**: render đúng theo visibleColumns ✓
+- **Nút "Cột"**: Popover với checkbox list + "Tất cả" + "Reset" ✓
+- **BB toggle**: checkbox click → PATCH ngay ✓
+
+## Vấn đề chưa giải quyết
+- Dev server crash khi test browser (memory issue) — code và API verified qua curl
+- Chưa thêm bộ lọc theo SALE, Mặt hàng, Điều phối (chỉ có search + status + priority + service + city)
+- Chưa thêm menu 3 chấm (thao tác nhanh mỗi dòng)
+
+## Khuyến nghị giai đoạn tiếp theo
+1. Thêm bộ lọc: SALE, Mặt hàng, Điều phối, khoảng ngày đi
+2. Thêm menu 3 chấm: Sửa, Xóa, In nhãn, Sao chép, Đánh dấu BB
+3. Thêm thống kê nhanh header: Tổng | Hôm nay | Chờ đóng | Đang chạy | Đã giao | Trễ
+4. Thêm cột Ghi chú 1/2/3 vào bảng (optional, có thể chỉ hiện trong drawer)

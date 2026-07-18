@@ -34,6 +34,8 @@ type QuickTripForm = {
   customerName: string;
   salePerson: string;
   dispatcher: string;
+  matHang: string;
+  gioDi: string;
   notes: string;
 };
 
@@ -49,6 +51,8 @@ const PLACEHOLDERS: QuickTripForm = {
   customerName: "",
   salePerson: "HIỀN",
   dispatcher: "ÁNH",
+  matHang: "PALET",
+  gioDi: "",
   notes: "",
 };
 
@@ -64,6 +68,8 @@ const EMPTY_FORM: QuickTripForm = {
   customerName: "",
   salePerson: "",
   dispatcher: "",
+  matHang: "",
+  gioDi: "",
   notes: "",
 };
 
@@ -493,6 +499,28 @@ export function QuickTripDialog({
                   onChange={(e) => set("dispatcher", e.target.value.toUpperCase())}
                   placeholder={PLACEHOLDERS.dispatcher}
                   className="uppercase"
+                />
+              </div>
+
+              {/* Mặt hàng */}
+              <div className="space-y-1.5">
+                <Label>Mặt hàng</Label>
+                <Input
+                  value={form.matHang || ""}
+                  onChange={(e) => set("matHang", e.target.value.toUpperCase())}
+                  placeholder="PALET, ĐIỆN TỬ..."
+                  className="uppercase"
+                />
+              </div>
+
+              {/* Giờ đi */}
+              <div className="space-y-1.5">
+                <Label>Giờ đi</Label>
+                <Input
+                  value={form.gioDi || ""}
+                  onChange={(e) => set("gioDi", e.target.value)}
+                  placeholder="08:00"
+                  className="font-mono"
                 />
               </div>
 

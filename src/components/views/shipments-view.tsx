@@ -22,6 +22,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
@@ -33,7 +34,7 @@ import {
   Package, Search, Plus, Filter, Download, ArrowRight, MapPin, Truck,
   User, Calendar, DollarSign, Weight, Box, ChevronLeft, ChevronRight,
   X, Clock, CheckCircle2, AlertTriangle, PackageCheck, XCircle, RotateCcw,
-  Pencil, Trash2, Printer, Zap, Container, UserCheck, Headphones, Building2,
+  Pencil, Trash2, Printer, Zap, Container, UserCheck, Headphones, Building2, Columns3,
 } from "lucide-react";
 import {
   SHIPMENT_STATUSES, SHIPMENT_STATUS_META, PRIORITIES, PRIORITY_META,
@@ -69,7 +70,22 @@ type ShipmentListItem = {
   sender: { id: string; name: string; city: string; phone?: string };
   receiver: { id: string; name: string; city: string; phone?: string };
   driver: { id: string; name: string; avatarColor: string; status: string; phone: string } | null;
-  vehicle: { id: string; plateNumber: string; model: string; type: string } | null;
+  vehicle: { id: string; plateNumber: string; model: string; type: string; loaiXe?: string | null; nhaCungCapId?: string | null } | null;
+  // Vietnam trucking fields
+  trailerNumber: string | null;
+  containerNumber: string | null;
+  salePerson: string | null;
+  dispatcher: string | null;
+  customerCode: string | null;
+  tripDate: string | null;
+  // New fields
+  matHang: string | null;
+  ngayDi: string | null;
+  gioDi: string | null;
+  daGuiBienBan: boolean;
+  ghiChu1: string | null;
+  ghiChu2: string | null;
+  ghiChu3: string | null;
 };
 
 type ShipmentDetail = ShipmentListItem & {
@@ -91,6 +107,14 @@ type ShipmentDetail = ShipmentListItem & {
   dispatcher: string | null;
   tripDate: string | null;
   customerCode: string | null;
+  // New fields
+  matHang: string | null;
+  ngayDi: string | null;
+  gioDi: string | null;
+  daGuiBienBan: boolean;
+  ghiChu1: string | null;
+  ghiChu2: string | null;
+  ghiChu3: string | null;
   trackingEvents: Array<{
     id: string; status: string; location: string | null; note: string | null;
     lat: number | null; lng: number | null; timestamp: string;
@@ -100,6 +124,30 @@ type ShipmentDetail = ShipmentListItem & {
 const SERVICE_ICON: Record<string, React.ElementType> = {
   standard: Package, express: Truck, same_day: Clock, freight: Box, cold_chain: PackageCheck,
 };
+
+// Cấu hình cột — có thể bật/tắt
+const COLUMN_CONFIG: { key: string; label: string; defaultVisible: boolean }[] = [
+  { key: "trackingNumber", label: "Mã vận đơn", defaultVisible: true },
+  { key: "route", label: "Tuyến đường", defaultVisible: true },
+  { key: "matHang", label: "Mặt hàng", defaultVisible: true },
+  { key: "salePerson", label: "SALE", defaultVisible: true },
+  { key: "customer", label: "Khách hàng", defaultVisible: true },
+  { key: "ngayDi", label: "Ngày đi", defaultVisible: true },
+  { key: "gioDi", label: "Giờ đi", defaultVisible: false },
+  { key: "status", label: "Trạng thái", defaultVisible: true },
+  { key: "priority", label: "Ưu tiên", defaultVisible: false },
+  { key: "plateNumber", label: "Biển số", defaultVisible: true },
+  { key: "loaiXe", label: "Loại xe", defaultVisible: true },
+  { key: "trailerNumber", label: "Mooc", defaultVisible: false },
+  { key: "containerNumber", label: "Cont", defaultVisible: false },
+  { key: "driver", label: "Tài xế", defaultVisible: true },
+  { key: "driverPhone", label: "SĐT LX", defaultVisible: false },
+  { key: "daGuiBienBan", label: "BB", defaultVisible: true },
+  { key: "dispatcher", label: "Điều phối", defaultVisible: true },
+  { key: "nccXe", label: "NCC xe", defaultVisible: false },
+  { key: "cost", label: "Chi phí", defaultVisible: false },
+  { key: "createdAt", label: "Ngày tạo", defaultVisible: true },
+];
 
 export function ShipmentsView() {
   const qc = useQueryClient();
@@ -116,6 +164,22 @@ export function ShipmentsView() {
   const [detailOpen, setDetailOpen] = React.useState(false);
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
   const [quickTripOpen, setQuickTripOpen] = React.useState(false);
+  const [visibleColumns, setVisibleColumns] = React.useState<Set<string>>(
+    new Set(COLUMN_CONFIG.filter((c) => c.defaultVisible).map((c) => c.key))
+  );
+  const [columnMenuOpen, setColumnMenuOpen] = React.useState(false);
+
+  const toggleColumn = (key: string) => {
+    setVisibleColumns((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const showAllColumns = () => setVisibleColumns(new Set(COLUMN_CONFIG.map((c) => c.key)));
+  const resetColumns = () => setVisibleColumns(new Set(COLUMN_CONFIG.filter((c) => c.defaultVisible).map((c) => c.key)));
 
   // React to external "open-new-shipment" event
   React.useEffect(() => {
@@ -299,9 +363,38 @@ export function ShipmentsView() {
               </Select>
               {hasFilters && (
                 <Button variant="ghost" size="sm" onClick={resetFilters} className="gap-1 text-xs">
-                  <X className="h-3.5 w-3.5" /> Xóa
+                  <X className="h-3.5 w-3.5" /> Xóa lọc
                 </Button>
               )}
+              {/* Show/hide columns */}
+              <Popover open={columnMenuOpen} onOpenChange={setColumnMenuOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                    <Columns3 className="h-3.5 w-3.5" /> Cột
+                    <Badge variant="secondary" className="ml-0.5 h-4 px-1 text-[10px]">{visibleColumns.size}</Badge>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64 p-0" align="end">
+                  <div className="flex items-center justify-between border-b px-3 py-2">
+                    <span className="text-xs font-semibold">Hiện/ẩn cột</span>
+                    <div className="flex gap-1">
+                      <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px]" onClick={showAllColumns}>Tất cả</Button>
+                      <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px]" onClick={resetColumns}>Reset</Button>
+                    </div>
+                  </div>
+                  <div className="max-h-64 overflow-y-auto custom-scroll p-2">
+                    {COLUMN_CONFIG.map((col) => (
+                      <label key={col.key} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 hover:bg-muted">
+                        <Checkbox
+                          checked={visibleColumns.has(col.key)}
+                          onCheckedChange={() => toggleColumn(col.key)}
+                        />
+                        <span className="text-xs">{col.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
               <Button
                 size="sm"
                 variant="outline"
@@ -377,20 +470,30 @@ export function ShipmentsView() {
                           onCheckedChange={toggleSelectAll}
                         />
                       </TableHead>
-                      <TableHead className="min-w-[140px]">Mã vận đơn</TableHead>
-                      <TableHead className="min-w-[180px]">Tuyến đường</TableHead>
-                      <TableHead>Trạng thái</TableHead>
-                      <TableHead className="hidden md:table-cell">Ưu tiên</TableHead>
-                      <TableHead className="hidden lg:table-cell">Biển số</TableHead>
-                      <TableHead className="hidden lg:table-cell">Tài xế</TableHead>
-                      <TableHead className="hidden xl:table-cell">SĐT</TableHead>
-                      <TableHead className="text-right">Chi phí</TableHead>
-                      <TableHead className="hidden sm:table-cell">Ngày tạo</TableHead>
+                      {visibleColumns.has("trackingNumber") && <TableHead className="min-w-[130px]">Mã vận đơn</TableHead>}
+                      {visibleColumns.has("route") && <TableHead className="min-w-[160px]">Tuyến đường</TableHead>}
+                      {visibleColumns.has("matHang") && <TableHead>Mặt hàng</TableHead>}
+                      {visibleColumns.has("salePerson") && <TableHead>SALE</TableHead>}
+                      {visibleColumns.has("customer") && <TableHead className="hidden md:table-cell">Khách hàng</TableHead>}
+                      {visibleColumns.has("ngayDi") && <TableHead>Ngày đi</TableHead>}
+                      {visibleColumns.has("gioDi") && <TableHead className="hidden xl:table-cell">Giờ đi</TableHead>}
+                      {visibleColumns.has("status") && <TableHead>Trạng thái</TableHead>}
+                      {visibleColumns.has("priority") && <TableHead className="hidden md:table-cell">Ưu tiên</TableHead>}
+                      {visibleColumns.has("plateNumber") && <TableHead>Biển số</TableHead>}
+                      {visibleColumns.has("loaiXe") && <TableHead className="hidden lg:table-cell">Loại xe</TableHead>}
+                      {visibleColumns.has("trailerNumber") && <TableHead className="hidden xl:table-cell">Mooc</TableHead>}
+                      {visibleColumns.has("containerNumber") && <TableHead className="hidden xl:table-cell">Cont</TableHead>}
+                      {visibleColumns.has("driver") && <TableHead>Tài xế</TableHead>}
+                      {visibleColumns.has("driverPhone") && <TableHead className="hidden xl:table-cell">SĐT LX</TableHead>}
+                      {visibleColumns.has("daGuiBienBan") && <TableHead className="text-center">BB</TableHead>}
+                      {visibleColumns.has("dispatcher") && <TableHead className="hidden lg:table-cell">Điều phối</TableHead>}
+                      {visibleColumns.has("nccXe") && <TableHead className="hidden xl:table-cell">NCC xe</TableHead>}
+                      {visibleColumns.has("cost") && <TableHead className="text-right">Chi phí</TableHead>}
+                      {visibleColumns.has("createdAt") && <TableHead className="hidden sm:table-cell">Ngày tạo</TableHead>}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {data.items.map((s) => {
-                      const SIcon = SERVICE_ICON[s.serviceType] || Package;
                       const isSelected = selectedIds.has(s.id);
                       return (
                         <TableRow
@@ -405,57 +508,116 @@ export function ShipmentsView() {
                               onCheckedChange={() => toggleSelect(s.id)}
                             />
                           </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                                <SIcon className="h-4 w-4" />
+                          {visibleColumns.has("trackingNumber") && (
+                            <TableCell>
+                              <span className="font-mono text-xs font-semibold">{s.trackingNumber}</span>
+                              <p className="text-[10px] text-muted-foreground">{SERVICE_META[s.serviceType as keyof typeof SERVICE_META]?.label}</p>
+                            </TableCell>
+                          )}
+                          {visibleColumns.has("route") && (
+                            <TableCell>
+                              <div className="flex items-center gap-1.5 text-sm">
+                                <span className="font-medium">{s.originCity}</span>
+                                <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                                <span className="font-medium">{s.destinationCity}</span>
                               </div>
-                              <div className="flex flex-col">
-                                <span className="font-mono text-xs font-semibold">{s.trackingNumber}</span>
-                                <span className="text-[10px] text-muted-foreground">{SERVICE_META[s.serviceType as keyof typeof SERVICE_META]?.label}</span>
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1.5 text-sm">
-                              <span className="font-medium">{s.originCity}</span>
-                              <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                              <span className="font-medium">{s.destinationCity}</span>
-                            </div>
-                            <p className="text-[10px] text-muted-foreground">{s.sender.name} → {s.receiver.name}</p>
-                          </TableCell>
-                          <TableCell><StatusBadge status={s.status} kind="shipment" /></TableCell>
-                          <TableCell className="hidden md:table-cell"><PriorityBadge priority={s.priority} /></TableCell>
-                          <TableCell className="hidden lg:table-cell">
-                            {s.vehicle ? (
-                              <span className="font-mono text-xs font-semibold">{s.vehicle.plateNumber}</span>
-                            ) : (
-                              <span className="text-xs text-muted-foreground">—</span>
-                            )}
-                          </TableCell>
-                          <TableCell className="hidden lg:table-cell">
-                            {s.driver ? (
-                              <div className="flex items-center gap-2">
-                                <Avatar className="h-7 w-7">
-                                  <AvatarFallback className={cn("text-[10px] font-semibold text-white", avatarColorClass(s.driver.avatarColor))}>
-                                    {initials(s.driver.name)}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <span className="text-xs">{s.driver.name}</span>
-                              </div>
-                            ) : (
-                              <span className="text-xs text-muted-foreground">Chưa gán</span>
-                            )}
-                          </TableCell>
-                          <TableCell className="hidden xl:table-cell">
-                            {s.driver ? (
-                              <span className="font-mono text-xs">{s.driver.phone}</span>
-                            ) : (
-                              <span className="text-xs text-muted-foreground">—</span>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right font-semibold tabular-nums">{formatCurrency(s.cost)}</TableCell>
-                          <TableCell className="hidden sm:table-cell text-xs text-muted-foreground">{formatRelativeTime(s.createdAt)}</TableCell>
+                            </TableCell>
+                          )}
+                          {visibleColumns.has("matHang") && (
+                            <TableCell>
+                              {s.matHang ? (
+                                <Badge variant="outline" className="text-[10px]">{s.matHang}</Badge>
+                              ) : <span className="text-xs text-muted-foreground">—</span>}
+                            </TableCell>
+                          )}
+                          {visibleColumns.has("salePerson") && (
+                            <TableCell className="text-xs font-medium">{s.salePerson || "—"}</TableCell>
+                          )}
+                          {visibleColumns.has("customer") && (
+                            <TableCell className="hidden md:table-cell">
+                              <span className="text-xs">{s.sender.name}</span>
+                              {s.customerCode && <p className="text-[10px] text-muted-foreground font-mono">{s.customerCode}</p>}
+                            </TableCell>
+                          )}
+                          {visibleColumns.has("ngayDi") && (
+                            <TableCell className="text-xs">{s.ngayDi || s.tripDate || "—"}</TableCell>
+                          )}
+                          {visibleColumns.has("gioDi") && (
+                            <TableCell className="hidden xl:table-cell text-xs">{s.gioDi || "—"}</TableCell>
+                          )}
+                          {visibleColumns.has("status") && (
+                            <TableCell><StatusBadge status={s.status} kind="shipment" /></TableCell>
+                          )}
+                          {visibleColumns.has("priority") && (
+                            <TableCell className="hidden md:table-cell"><PriorityBadge priority={s.priority} /></TableCell>
+                          )}
+                          {visibleColumns.has("plateNumber") && (
+                            <TableCell>
+                              {s.vehicle ? (
+                                <span className="font-mono text-xs font-semibold">{s.vehicle.plateNumber}</span>
+                              ) : <span className="text-xs text-muted-foreground">—</span>}
+                            </TableCell>
+                          )}
+                          {visibleColumns.has("loaiXe") && (
+                            <TableCell className="hidden lg:table-cell">
+                              {s.vehicle?.loaiXe ? (
+                                <Badge variant="outline" className="text-[10px]">{s.vehicle.loaiXe}</Badge>
+                              ) : <span className="text-xs text-muted-foreground">—</span>}
+                            </TableCell>
+                          )}
+                          {visibleColumns.has("trailerNumber") && (
+                            <TableCell className="hidden xl:table-cell">
+                              {s.trailerNumber ? <span className="font-mono text-xs">{s.trailerNumber}</span> : <span className="text-xs text-muted-foreground">—</span>}
+                            </TableCell>
+                          )}
+                          {visibleColumns.has("containerNumber") && (
+                            <TableCell className="hidden xl:table-cell">
+                              {s.containerNumber ? <span className="font-mono text-xs">{s.containerNumber}</span> : <span className="text-xs text-muted-foreground">—</span>}
+                            </TableCell>
+                          )}
+                          {visibleColumns.has("driver") && (
+                            <TableCell>
+                              {s.driver ? (
+                                <div className="flex items-center gap-2">
+                                  <Avatar className="h-7 w-7">
+                                    <AvatarFallback className={cn("text-[10px] font-semibold text-white", avatarColorClass(s.driver.avatarColor))}>
+                                      {initials(s.driver.name)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <span className="text-xs">{s.driver.name}</span>
+                                </div>
+                              ) : <span className="text-xs text-muted-foreground">Chưa gán</span>}
+                            </TableCell>
+                          )}
+                          {visibleColumns.has("driverPhone") && (
+                            <TableCell className="hidden xl:table-cell">
+                              {s.driver ? <span className="font-mono text-xs">{s.driver.phone}</span> : <span className="text-xs text-muted-foreground">—</span>}
+                            </TableCell>
+                          )}
+                          {visibleColumns.has("daGuiBienBan") && (
+                            <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
+                              <Checkbox
+                                checked={s.daGuiBienBan}
+                                onCheckedChange={(v) => {
+                                  api.patch(`/api/shipments/${s.id}`, { daGuiBienBan: v });
+                                  qc.invalidateQueries({ queryKey: ["shipments"] });
+                                }}
+                                aria-label="BB"
+                              />
+                            </TableCell>
+                          )}
+                          {visibleColumns.has("dispatcher") && (
+                            <TableCell className="hidden lg:table-cell text-xs">{s.dispatcher || "—"}</TableCell>
+                          )}
+                          {visibleColumns.has("nccXe") && (
+                            <TableCell className="hidden xl:table-cell text-xs text-muted-foreground">—</TableCell>
+                          )}
+                          {visibleColumns.has("cost") && (
+                            <TableCell className="text-right font-semibold tabular-nums">{formatCurrency(s.cost)}</TableCell>
+                          )}
+                          {visibleColumns.has("createdAt") && (
+                            <TableCell className="hidden sm:table-cell text-xs text-muted-foreground">{formatRelativeTime(s.createdAt)}</TableCell>
+                          )}
                         </TableRow>
                       );
                     })}

@@ -90,6 +90,13 @@ export async function POST(req: NextRequest) {
     dispatcher,
     tripDate,
     customerCode,
+    matHang,
+    ngayDi,
+    gioDi,
+    daGuiBienBan,
+    ghiChu1,
+    ghiChu2,
+    ghiChu3,
   } = body;
 
   if (!senderId || !receiverId || !originAddress || !destinationAddress) {
@@ -131,6 +138,13 @@ export async function POST(req: NextRequest) {
       dispatcher: dispatcher || null,
       tripDate: tripDate || null,
       customerCode: customerCode || null,
+      matHang: matHang || null,
+      ngayDi: ngayDi || null,
+      gioDi: gioDi || null,
+      daGuiBienBan: daGuiBienBan || false,
+      ghiChu1: ghiChu1 || null,
+      ghiChu2: ghiChu2 || null,
+      ghiChu3: ghiChu3 || null,
     },
     include: SHIPMENT_INCLUDE,
   });

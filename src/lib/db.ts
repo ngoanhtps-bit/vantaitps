@@ -17,7 +17,8 @@ if (cachedClient) {
     const hasRolePerm = !!(cachedClient as unknown as { rolePermission?: unknown }).rolePermission;
     const shipFields = (cachedClient as unknown as { shipment?: { fields?: Record<string, unknown> } }).shipment?.fields;
     const hasTrailer = !!shipFields && 'trailerNumber' in shipFields;
-    if (!hasNCC || !hasTrailer || !hasUser || !hasRolePerm) {
+    const hasMatHang = !!shipFields && 'matHang' in shipFields;
+    if (!hasNCC || !hasTrailer || !hasUser || !hasRolePerm || !hasMatHang) {
       cachedClient = undefined;
       globalForPrisma.prisma = undefined;
     }

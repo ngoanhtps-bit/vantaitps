@@ -24,7 +24,10 @@ export async function PATCH(
 ) {
   const { id } = await params;
   const body = await req.json();
-  const { status, driverId, vehicleId, priority, notes, progress, currentLat, currentLng } = body;
+  const { status, driverId, vehicleId, priority, notes, progress, currentLat, currentLng,
+    matHang, ngayDi, gioDi, daGuiBienBan, ghiChu1, ghiChu2, ghiChu3,
+    salePerson, dispatcher, trailerNumber, containerNumber, customerCode, tripDate,
+  } = body;
 
   const existing = await db.shipment.findUnique({ where: { id } });
   if (!existing) return NextResponse.json({ error: "Shipment not found" }, { status: 404 });
@@ -38,6 +41,20 @@ export async function PATCH(
   if (progress !== undefined) data.progress = Number(progress);
   if (currentLat !== undefined) data.currentLat = Number(currentLat);
   if (currentLng !== undefined) data.currentLng = Number(currentLng);
+  // New fields
+  if (matHang !== undefined) data.matHang = matHang || null;
+  if (ngayDi !== undefined) data.ngayDi = ngayDi || null;
+  if (gioDi !== undefined) data.gioDi = gioDi || null;
+  if (daGuiBienBan !== undefined) data.daGuiBienBan = daGuiBienBan;
+  if (ghiChu1 !== undefined) data.ghiChu1 = ghiChu1 || null;
+  if (ghiChu2 !== undefined) data.ghiChu2 = ghiChu2 || null;
+  if (ghiChu3 !== undefined) data.ghiChu3 = ghiChu3 || null;
+  if (salePerson !== undefined) data.salePerson = salePerson || null;
+  if (dispatcher !== undefined) data.dispatcher = dispatcher || null;
+  if (trailerNumber !== undefined) data.trailerNumber = trailerNumber || null;
+  if (containerNumber !== undefined) data.containerNumber = containerNumber || null;
+  if (customerCode !== undefined) data.customerCode = customerCode || null;
+  if (tripDate !== undefined) data.tripDate = tripDate || null;
 
   if (status && status !== existing.status) {
     if (status === "picked_up" && !existing.pickedUpAt) {

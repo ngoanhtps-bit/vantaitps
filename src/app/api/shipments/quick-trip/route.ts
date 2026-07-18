@@ -21,6 +21,9 @@ export async function POST(req: NextRequest) {
     salePerson,      // "HIỀN"
     dispatcher,      // "ÁNH"
     notes,
+    matHang,         // Mặt hàng: PALET, ĐIỆN TỬ...
+    ngayDi,          // Ngày đi (dd/mm/yyyy)
+    gioDi,           // Giờ đi (HH:mm)
   } = body;
 
   if (!route || !plateNumber || !driverName) {
@@ -176,6 +179,9 @@ export async function POST(req: NextRequest) {
       dispatcher: dispatcher || null,
       tripDate: tripDateIso,
       customerCode: customerCode || null,
+      matHang: matHang || null,
+      ngayDi: ngayDi || tripDate || null,
+      gioDi: gioDi || null,
       progress: 10,
       pickedUpAt: tripDateIso,
     },
