@@ -18,25 +18,71 @@ export async function GET(req: NextRequest) {
   const service = searchParams.get("service");
   const city = searchParams.get("city");
   const search = searchParams.get("q")?.trim();
+  const salePerson = searchParams.get("salePerson");
+  const matHang = searchParams.get("matHang");
+  const dispatcher = searchParams.get("dispatcher");
+  const ngayDiFrom = searchParams.get("ngayDiFrom");
+  const ngayDiTo = searchParams.get("ngayDiTo");
   const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
   const pageSize = Math.min(100, Math.max(1, parseInt(searchParams.get("pageSize") || "20", 10)));
 
   const where: Record<string, unknown> = {};
-  if (status && status !== "all") where.status = status;
-  if (priority && priority !== "all") where.priority = priority;
-  if (service && service !== "all") where.serviceType = service;
+  const andConditions: Record<string, unknown>[] = [];
+
+  if (status && status !== "all") andConditions.push({ status });
+  if (priority && priority !== "all") andConditions.push({ priority });
+  if (service && service !== "all") andConditions.push({ serviceType: service });
   if (city && city !== "all") {
-    where.OR = [{ originCity: city }, { destinationCity: city }];
+    andConditions.push({ OR: [{ originCity: city }, { destinationCity: city }] });
   }
+  // Lọc theo SALE
+  if (salePerson && salePerson !== "all") {
+    andConditions.push({ salePerson: { contains: salePerson } });
+  }
+  // Lọc theo Mặt hàng
+  if (matHang && matHang !== "all") {
+    andConditions.push({ matHang: { contains: matHang } });
+  }
+  // Lọc theo Điều phối
+  if (dispatcher && dispatcher !== "all") {
+    andConditions.push({ dispatcher: { contains: dispatcher } });
+  }
+  // Lọc theo khoảng ngày đi (ngayDi là string dd/mm/yyyy nên so sánh chuỗi)
+  if (ngayDiFrom) {
+    andConditions.push({ ngayDi: { gte: ngayDiFrom } });
+  }
+  if (ngayDiTo) {
+    andConditions.push({ ngayDi: { lte: ngayDiTo } });
+  }
+
+  // Tìm đa trường: mã vận đơn, tài xế, SĐT, biển số, SALE, mooc, cont, khách hàng
   if (search) {
-    where.OR = [
-      { trackingNumber: { contains: search } },
-      { description: { contains: search } },
-      { originCity: { contains: search } },
-      { destinationCity: { contains: search } },
-      { sender: { name: { contains: search } } },
-      { receiver: { name: { contains: search } } },
-    ];
+    andConditions.push({
+      OR: [
+        { trackingNumber: { contains: search } },
+        { description: { contains: search } },
+        { originCity: { contains: search } },
+        { destinationCity: { contains: search } },
+        { sender: { name: { contains: search } } },
+        { receiver: { name: { contains: search } } },
+        { driver: { name: { contains: search } } },
+        { driver: { phone: { contains: search } } },
+        { vehicle: { plateNumber: { contains: search } } },
+        { salePerson: { contains: search } },
+        { dispatcher: { contains: search } },
+        { trailerNumber: { contains: search } },
+        { containerNumber: { contains: search } },
+        { customerCode: { contains: search } },
+        { matHang: { contains: search } },
+        { ghiChu1: { contains: search } },
+        { ghiChu2: { contains: search } },
+        { ghiChu3: { contains: search } },
+      ],
+    });
+  }
+
+  if (andConditions.length > 0) {
+    where.AND = andConditions;
   }
 
   const [total, items] = await Promise.all([

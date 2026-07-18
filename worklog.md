@@ -1227,3 +1227,47 @@ Người dùng duyệt ý tưởng cải tiến đơn hàng theo bảng Google S
 2. Thêm menu 3 chấm: Sửa, Xóa, In nhãn, Sao chép, Đánh dấu BB
 3. Thêm thống kê nhanh header: Tổng | Hôm nay | Chờ đóng | Đang chạy | Đã giao | Trễ
 4. Thêm cột Ghi chú 1/2/3 vào bảng (optional, có thể chỉ hiện trong drawer)
+
+---
+Task ID: BO-LOC-NANG-CAO
+Agent: main
+Task: Nâng cấp ô tìm kiếm đa trường + thêm bộ lọc SALE, Mặt hàng, Điều phối, khoảng ngày đi
+
+## Các thay đổi đã hoàn thành
+
+### 1. API: Tìm đa trường + lọc mới
+- Ô tìm kiếm `q` giờ tìm trên **18 trường**:
+  - Mã vận đơn, mô tả, thành phố đi/đến
+  - Tên người gửi/nhận
+  - **Tên tài xế, SĐT tài xế** ← MỚI
+  - **Biển số xe** ← MỚI
+  - **SALE, Điều phối** ← MỚI
+  - **Số Mooc, Số Cont** ← MỚI
+  - **Mã khách hàng** ← MỚI
+  - **Mặt hàng** ← MỚI
+  - **Ghi chú 1, 2, 3** ← MỚI
+- Lọc mới: `salePerson`, `matHang`, `dispatcher`, `ngayDiFrom`, `ngayDiTo`
+- Dùng `AND` conditions thay vì OR trực tiếp → kết hợp nhiều bộ lọc
+
+### 2. UI: Bộ lọc nâng cao (2 hàng)
+**Hàng 1**: Ô tìm kiếm đa trường + nút Cột + Tạo chuyến nhanh + Tạo đơn hàng
+**Hàng 2** (border-top): 7 bộ lọc
+- Trạng thái, SALE, Mặt hàng, Điều phối, Ưu tiên, Thành phố
+- Khoảng ngày đi (2 date pickers: từ → đến)
+
+### 3. Dropdown SALE/Mặt hàng/Điều phối
+- Tự động lấy danh sách duy nhất từ data hiện tại
+- `saleOptions`, `matHangOptions`, `dispatcherOptions` — useMemo từ data.items
+
+### 4. Cập nhật hasFilters + resetFilters
+- hasFilters: check thêm 5 filter mới
+- resetFilters: reset tất cả 10 filter + ngày đi
+
+## Kết quả kiểm tra
+- **Lint**: 0 lỗi
+- **API test**:
+  - Tìm "Nguyen" → 98 đơn (tên tài xế) ✓
+  - Tìm "0928" → 95 đơn (SĐT tài xế) ✓
+  - Tìm "60C" → 95 đơn (biển số xe) ✓
+  - Lọc theo SALE → hoạt động ✓
+  - Lọc theo khoảng ngày đi → hoạt động ✓

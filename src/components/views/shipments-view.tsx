@@ -168,6 +168,11 @@ export function ShipmentsView() {
     new Set(COLUMN_CONFIG.filter((c) => c.defaultVisible).map((c) => c.key))
   );
   const [columnMenuOpen, setColumnMenuOpen] = React.useState(false);
+  const [salePersonFilter, setSalePersonFilter] = React.useState("all");
+  const [matHangFilter, setMatHangFilter] = React.useState("all");
+  const [dispatcherFilter, setDispatcherFilter] = React.useState("all");
+  const [ngayDiFrom, setNgayDiFrom] = React.useState("");
+  const [ngayDiTo, setNgayDiTo] = React.useState("");
 
   const toggleColumn = (key: string) => {
     setVisibleColumns((prev) => {
@@ -219,8 +224,8 @@ export function ShipmentsView() {
   const debouncedSearch = useDebounce(search, 350);
 
   const queryKey = React.useMemo(
-    () => ["shipments", { debouncedSearch, status, priority, service, city, page, pageSize }],
-    [debouncedSearch, status, priority, service, city, page, pageSize]
+    () => ["shipments", { debouncedSearch, status, priority, service, city, salePersonFilter, matHangFilter, dispatcherFilter, ngayDiFrom, ngayDiTo, page, pageSize }],
+    [debouncedSearch, status, priority, service, city, salePersonFilter, matHangFilter, dispatcherFilter, ngayDiFrom, ngayDiTo, page, pageSize]
   );
 
   const { data, isLoading } = useQuery({
@@ -235,15 +240,40 @@ export function ShipmentsView() {
       if (priority !== "all") params.set("priority", priority);
       if (service !== "all") params.set("service", service);
       if (city !== "all") params.set("city", city);
+      if (salePersonFilter !== "all") params.set("salePerson", salePersonFilter);
+      if (matHangFilter !== "all") params.set("matHang", matHangFilter);
+      if (dispatcherFilter !== "all") params.set("dispatcher", dispatcherFilter);
+      if (ngayDiFrom) params.set("ngayDiFrom", ngayDiFrom);
+      if (ngayDiTo) params.set("ngayDiTo", ngayDiTo);
       return api.get<{ items: ShipmentListItem[]; total: number; totalPages: number }>(`/api/shipments?${params}`);
     },
   });
 
+  // Lấy danh sách SALE, Mặt hàng, Điều phối duy nhất từ data
+  const saleOptions = React.useMemo(() => {
+    const set = new Set<string>();
+    data?.items?.forEach((s) => { if (s.salePerson) set.add(s.salePerson); });
+    return Array.from(set).sort();
+  }, [data]);
+  const matHangOptions = React.useMemo(() => {
+    const set = new Set<string>();
+    data?.items?.forEach((s) => { if (s.matHang) set.add(s.matHang); });
+    return Array.from(set).sort();
+  }, [data]);
+  const dispatcherOptions = React.useMemo(() => {
+    const set = new Set<string>();
+    data?.items?.forEach((s) => { if (s.dispatcher) set.add(s.dispatcher); });
+    return Array.from(set).sort();
+  }, [data]);
+
   const resetFilters = () => {
-    setSearch(""); setStatus("all"); setPriority("all"); setService("all"); setCity("all"); setPage(1);
+    setSearch(""); setStatus("all"); setPriority("all"); setService("all"); setCity("all");
+    setSalePersonFilter("all"); setMatHangFilter("all"); setDispatcherFilter("all");
+    setNgayDiFrom(""); setNgayDiTo(""); setPage(1);
   };
 
-  const hasFilters = status !== "all" || priority !== "all" || service !== "all" || city !== "all" || search !== "";
+  const hasFilters = status !== "all" || priority !== "all" || service !== "all" || city !== "all" || search !== "" ||
+    salePersonFilter !== "all" || matHangFilter !== "all" || dispatcherFilter !== "all" || ngayDiFrom !== "" || ngayDiTo !== "";
 
   const bulkUpdate = useMutation({
     mutationFn: async (newStatus: string) => {
@@ -314,53 +344,18 @@ export function ShipmentsView() {
       {/* Filter bar */}
       <Card>
         <CardContent className="p-4">
+          {/* Hàng 1: Tìm kiếm đa trường */}
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Tìm mã vận đơn, người gửi, tuyến đường…"
+                placeholder="Tìm mã vận đơn, tài xế, SĐT, biển số, SALE, mooc, cont, khách hàng…"
                 value={search}
                 onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                 className="pl-9"
               />
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <Select value={status} onValueChange={(v) => { setStatus(v); setPage(1); }}>
-                <SelectTrigger className="w-[150px]"><SelectValue placeholder="Trạng thái" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tất cả trạng thái</SelectItem>
-                  {SHIPMENT_STATUSES.map((s) => (
-                    <SelectItem key={s} value={s}>{SHIPMENT_STATUS_META[s].label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={priority} onValueChange={(v) => { setPriority(v); setPage(1); }}>
-                <SelectTrigger className="w-[130px]"><SelectValue placeholder="Ưu tiên" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tất cả mức ưu tiên</SelectItem>
-                  {PRIORITIES.map((p) => (
-                    <SelectItem key={p} value={p}>{PRIORITY_META[p].label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={service} onValueChange={(v) => { setService(v); setPage(1); }}>
-                <SelectTrigger className="w-[140px]"><SelectValue placeholder="Dịch vụ" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tất cả dịch vụ</SelectItem>
-                  {SERVICE_TYPES.map((s) => (
-                    <SelectItem key={s} value={s}>{SERVICE_META[s].label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={city} onValueChange={(v) => { setCity(v); setPage(1); }}>
-                <SelectTrigger className="w-[150px]"><SelectValue placeholder="Thành phố" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tất cả thành phố</SelectItem>
-                  {VIETNAM_CITIES.map((c) => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
               {hasFilters && (
                 <Button variant="ghost" size="sm" onClick={resetFilters} className="gap-1 text-xs">
                   <X className="h-3.5 w-3.5" /> Xóa lọc
@@ -408,8 +403,84 @@ export function ShipmentsView() {
               </Button>
             </div>
           </div>
+
+          {/* Hàng 2: Bộ lọc nâng cao */}
+          <div className="mt-3 flex flex-wrap items-center gap-2 border-t pt-3">
+            <Select value={status} onValueChange={(v) => { setStatus(v); setPage(1); }}>
+              <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue placeholder="Trạng thái" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tất cả trạng thái</SelectItem>
+                {SHIPMENT_STATUSES.map((s) => (
+                  <SelectItem key={s} value={s}>{SHIPMENT_STATUS_META[s].label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={salePersonFilter} onValueChange={(v) => { setSalePersonFilter(v); setPage(1); }}>
+              <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder="SALE" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tất cả SALE</SelectItem>
+                {saleOptions.map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={matHangFilter} onValueChange={(v) => { setMatHangFilter(v); setPage(1); }}>
+              <SelectTrigger className="w-[130px] h-8 text-xs"><SelectValue placeholder="Mặt hàng" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tất cả mặt hàng</SelectItem>
+                {matHangOptions.map((m) => (
+                  <SelectItem key={m} value={m}>{m}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={dispatcherFilter} onValueChange={(v) => { setDispatcherFilter(v); setPage(1); }}>
+              <SelectTrigger className="w-[130px] h-8 text-xs"><SelectValue placeholder="Điều phối" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tất cả điều phối</SelectItem>
+                {dispatcherOptions.map((d) => (
+                  <SelectItem key={d} value={d}>{d}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={priority} onValueChange={(v) => { setPriority(v); setPage(1); }}>
+              <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder="Ưu tiên" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tất cả ưu tiên</SelectItem>
+                {PRIORITIES.map((p) => (
+                  <SelectItem key={p} value={p}>{PRIORITY_META[p].label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={city} onValueChange={(v) => { setCity(v); setPage(1); }}>
+              <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue placeholder="Thành phố" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tất cả thành phố</SelectItem>
+                {VIETNAM_CITIES.map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {/* Khoảng ngày đi */}
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Ngày đi:</span>
+              <Input
+                type="date"
+                value={ngayDiFrom}
+                onChange={(e) => { setNgayDiFrom(e.target.value); setPage(1); }}
+                className="h-8 w-[130px] text-xs"
+              />
+              <span className="text-xs text-muted-foreground">→</span>
+              <Input
+                type="date"
+                value={ngayDiTo}
+                onChange={(e) => { setNgayDiTo(e.target.value); setPage(1); }}
+                className="h-8 w-[130px] text-xs"
+              />
+            </div>
+          </div>
         </CardContent>
       </Card>
+
 
       {/* Bulk action bar */}
       {selectedIds.size > 0 && (
