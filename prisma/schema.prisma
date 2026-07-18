@@ -1,39 +1,38 @@
-// Logistics App V2 — Prisma schema
-// SQLite-compatible (no native enums; status fields are String with app-level constants)
+# Logistics App V2 — Prisma schema (PostgreSQL cho Vercel)
+# Khi deploy lên Vercel, đổi provider từ "sqlite" sang "postgresql"
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
+  // LOCAL: sqlite | VERCEL: postgresql
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id        String   @id @default(cuid())
-  username  String   @unique
-  password  String
-  hoTen     String
-  email     String?  @unique
-  sdt       String?
-  role      String   @default("thuky") // "admin" | "dieuxe" | "dieuphoi" | "ketoan" | "thuky"
-  active    Boolean  @default(true)
-  avatarColor String @default("emerald")
-  lastLogin String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  username    String   @unique
+  password    String
+  hoTen       String
+  email       String?  @unique
+  sdt         String?
+  role        String   @default("thuky")
+  active      Boolean  @default(true)
+  avatarColor String   @default("emerald")
+  lastLogin   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([role])
   @@index([active])
 }
 
-// Phân quyền động: role × view × actions
-// Admin có thể bật/tắt từng quyền cho từng vai trò
 model RolePermission {
   id        String  @id @default(cuid())
-  role      String  // "admin" | "dieuxe" | "dieuphoi" | "ketoan" | "thuky"
-  view      String  // "dashboard" | "shipments" | "tracking" | ...
+  role      String
+  view      String
   canView   Boolean @default(false)
   canCreate Boolean @default(false)
   canEdit   Boolean @default(false)
@@ -43,30 +42,6 @@ model RolePermission {
 
   @@unique([role, view])
   @@index([role])
-}
-
-model Customer {
-  id        String    @id @default(cuid())
-  name      String
-  email     String?
-  phone     String
-  company   String?
-  address   String
-  city      String
-  country   String    @default("Vietnam")
-  zipCode   String?
-  type      String    @default("business") // "business" | "individual"
-  status    String    @default("active")   // "active" | "inactive" | "vip"
-  notes     String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
-  shipmentsAsSender   Shipment[] @relation("SenderShipments")
-  shipmentsAsReceiver Shipment[] @relation("ReceiverShipments")
-  invoices            Invoice[]
-
-  @@index([status])
-  @@index([city])
 }
 
 model NhaCungCap {
@@ -89,6 +64,30 @@ model NhaCungCap {
   @@index([tenDonVi])
 }
 
+model Customer {
+  id        String    @id @default(cuid())
+  name      String
+  email     String?
+  phone     String
+  company   String?
+  address   String
+  city      String
+  country   String    @default("Vietnam")
+  zipCode   String?
+  type      String    @default("business")
+  status    String    @default("active")
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  shipmentsAsSender   Shipment[] @relation("SenderShipments")
+  shipmentsAsReceiver Shipment[] @relation("ReceiverShipments")
+  invoices            Invoice[]
+
+  @@index([status])
+  @@index([city])
+}
+
 model Driver {
   id            String   @id @default(cuid())
   name          String
@@ -96,10 +95,10 @@ model Driver {
   phone         String
   licenseNumber String
   licenseExpiry String?
-  status        String   @default("available") // "available" | "on_delivery" | "off_duty" | "on_leave"
+  status        String   @default("available")
   rating        Float    @default(5.0)
   totalDeliveries Int    @default(0)
-  totalDistance  Float   @default(0) // km
+  totalDistance  Float   @default(0)
   hireDate      String?
   avatarColor   String   @default("emerald")
   createdAt     DateTime @default(now())
@@ -108,7 +107,6 @@ model Driver {
   vehicleId String? @unique
   vehicle   Vehicle? @relation(fields: [vehicleId], references: [id])
 
-  // Liên kết nhà cung cấp xe
   nhaCungCapId String?
   nhaCungCap   NhaCungCap? @relation(fields: [nhaCungCapId], references: [id])
 
@@ -124,13 +122,13 @@ model Vehicle {
   plateNumber   String   @unique
   model         String
   brand         String
-  type          String   @default("truck") // "truck" | "van" | "motorbike" | "container"
-  loaiXe        String?  // Dòng xe: "CONT 40 RF", "MOOC RÀO", "XE TẢI", v.v.
+  type          String   @default("truck")
+  loaiXe        String?
   capacityKg    Float
-  fuelType      String   @default("diesel") // "diesel" | "petrol" | "electric"
-  fuelLevel     Float    @default(100) // percentage 0-100
-  mileage       Float    @default(0)   // km
-  status        String   @default("active") // "active" | "maintenance" | "retired"
+  fuelType      String   @default("diesel")
+  fuelLevel     Float    @default(100)
+  mileage       Float    @default(0)
+  status        String   @default("active")
   lastMaintenance String?
   nextMaintenance String?
   color         String   @default("slate")
@@ -141,7 +139,6 @@ model Vehicle {
   shipments Shipment[]
   routes    Route[]
 
-  // Liên kết nhà cung cấp xe
   nhaCungCapId String?
   nhaCungCap   NhaCungCap? @relation(fields: [nhaCungCapId], references: [id])
 
@@ -158,11 +155,11 @@ model Warehouse {
   address   String
   city      String
   country   String   @default("Vietnam")
-  capacity  Float    @default(1000) // m^3
+  capacity  Float    @default(1000)
   used      Float    @default(0)
   manager   String?
   phone     String?
-  status    String   @default("operational") // "operational" | "full" | "maintenance" | "closed"
+  status    String   @default("operational")
   lat       Float?
   lng       Float?
   createdAt DateTime @default(now())
@@ -179,73 +176,63 @@ model Shipment {
   id              String   @id @default(cuid())
   trackingNumber  String   @unique
   status          String   @default("pending")
-  // "pending" | "picked_up" | "in_transit" | "out_for_delivery" | "delivered" | "delayed" | "cancelled" | "returned"
-  priority        String   @default("standard") // "low" | "standard" | "high" | "express"
-  serviceType     String   @default("standard") // "standard" | "express" | "same_day" | "freight" | "cold_chain"
+  priority        String   @default("standard")
+  serviceType     String   @default("standard")
 
-  // parties
   senderId        String
   sender          Customer @relation("SenderShipments", fields: [senderId], references: [id])
   receiverId      String
   receiver        Customer @relation("ReceiverShipments", fields: [receiverId], references: [id])
 
-  // routing
   originWarehouseId      String?
   originWarehouse        Warehouse? @relation("OriginWarehouse", fields: [originWarehouseId], references: [id])
   destinationWarehouseId String?
   destinationWarehouse   Warehouse? @relation("DestinationWarehouse", fields: [destinationWarehouseId], references: [id])
 
-  // addresses
   originAddress      String
   originCity         String
   destinationAddress String
   destinationCity    String
   distanceKm         Float     @default(0)
 
-  // cargo
   weightKg   Float
   volumeM3   Float    @default(0)
   pieces     Int      @default(1)
   description String?
 
-  // assignment
   driverId  String?
   driver    Driver?  @relation(fields: [driverId], references: [id])
   vehicleId String?
   vehicle   Vehicle? @relation(fields: [vehicleId], references: [id])
 
-  // money & time
   cost          Float    @default(0)
   insurance     Float    @default(0)
   currency      String   @default("USD")
-  estimatedDelivery String? // ISO date string
+  estimatedDelivery String?
   pickedUpAt    String?
   deliveredAt   String?
 
-  // live tracking
   currentLat    Float?
   currentLng    Float?
-  progress      Float    @default(0) // 0-100 percentage
+  progress      Float    @default(0)
 
   notes         String?
-  signature     String?  // base64 or url
+  signature     String?
 
-  // Vietnam container trucking fields
-  trailerNumber   String?  // Số Mooc
-  containerNumber String?  // Số Cont
-  salePerson      String?  // SALE
-  dispatcher      String?  // DP (điều phối)
-  tripDate        String?  // Ngày khởi hành
-  customerCode    String?  // Mã khách hàng (vd: GTVD)
+  trailerNumber   String?
+  containerNumber String?
+  salePerson      String?
+  dispatcher      String?
+  tripDate        String?
+  customerCode    String?
 
-  // Bổ sung theo bảng cũ
-  matHang         String?  // Mặt hàng: PALET, ĐIỆN TỬ, HÀNG RỜI...
-  ngayDi          String?  // Ngày đi (dd/mm/yyyy)
-  gioDi           String?  // Giờ đi (HH:mm)
-  daGuiBienBan    Boolean  @default(false)  // BB — đã gửi biên bản chưa
-  ghiChu1         String?  // Ghi chú 1
-  ghiChu2         String?  // Ghi chú 2
-  ghiChu3         String?  // Ghi chú 3
+  matHang         String?
+  ngayDi          String?
+  gioDi           String?
+  daGuiBienBan    Boolean  @default(false)
+  ghiChu1         String?
+  ghiChu2         String?
+  ghiChu3         String?
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -280,7 +267,7 @@ model Route {
   driver      Driver?  @relation(fields: [driverId], references: [id])
   vehicleId   String?
   vehicle     Vehicle? @relation(fields: [vehicleId], references: [id])
-  status      String   @default("planned") // "planned" | "active" | "completed" | "cancelled"
+  status      String   @default("planned")
   stopsCount  Int      @default(0)
   distanceKm  Float    @default(0)
   durationMin Int      @default(0)
@@ -297,7 +284,7 @@ model Invoice {
   invoiceNumber String   @unique
   customerId    String
   customer      Customer @relation(fields: [customerId], references: [id])
-  status        String   @default("draft") // "draft" | "sent" | "paid" | "overdue" | "cancelled"
+  status        String   @default("draft")
   issueDate     DateTime @default(now())
   dueDate       String
   periodStart   String
