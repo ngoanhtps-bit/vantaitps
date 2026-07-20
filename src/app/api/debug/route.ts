@@ -1,52 +1,43 @@
 import { NextResponse } from "next/server";
+import { PrismaClient } from "@prisma/client";
 
-// Debug: thử tất cả cách kết nối
+// Debug: thử 4 cách kết nối với Prisma
 export async function GET() {
-  const dbUrl = process.env.DATABASE_URL || "";
   const results: string[] = [];
 
-  results.push(`Current URL (masked): ${dbUrl.replace(/:[^@]+@/, ":****@")}`);
+  const urls = [
+    { name: "direct-5432", url: "postgresql://postgres:Vantaitps%40123@db.sfpmauzfusoarpjhzvgh.supabase.co:5432/postgres" },
+    { name: "pooler-5432", url: "postgresql://postgres.sfpmauzfusoarpjhzvgh:Vantaitps%40123@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres" },
+    { name: "pooler-6543-pgbouncer", url: "postgresql://postgres.sfpmauzfusoarpjhzvgh:Vantaitps%40123@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true" },
+    { name: "pooler-6543-noparam", url: "postgresql://postgres.sfpmauzfusoarpjhzvgh:Vantaitps%40123@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres" },
+  ];
 
-  // Thử kết nối trực tiếp bằng pg (node-postgres)
-  try {
-    const { Client } = await import("pg");
-    
-    // Thử cả 3 URL
-    const urls = [
-      dbUrl,
-      "postgresql://postgres:Vantaitps%40123@db.sfpmauzfusoarpjhzvgh.supabase.co:5432/postgres",
-      "postgresql://postgres.sfpmauzfusoarpjhzvgh:Vantaitps%40123@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres",
-      "postgresql://postgres.sfpmauzfusoarpjhzvgh:Vantaitps%40123@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true",
-    ];
-
-    for (let i = 0; i < urls.length; i++) {
-      const url = urls[i];
-      const masked = url.replace(/:[^@]+@/, ":****@");
-      try {
-        const client = new Client({ connectionString: url, connectionTimeoutMillis: 5000 });
-        await client.connect();
-        const res = await client.query("SELECT current_database(), current_user");
-        results.push(`✅ URL ${i+1}: ${masked} → Connected! DB: ${res.rows[0].current_database}, User: ${res.rows[0].current_user}`);
-        
-        // Kiểm tra bảng
-        const tables = await client.query("SELECT tablename FROM pg_tables WHERE schemaname = 'public'");
-        results.push(`   Tables: ${tables.rows.map((r: { tablename: string }) => r.tablename).join(", ") || "none"}`);
-        
-        await client.end();
-        
-        // Nếu URL này hoạt động → trả về ngay
-        return NextResponse.json({
-          success: true,
-          working_url_index: i + 1,
-          working_url_masked: masked,
-          results,
-        });
-      } catch (e) {
-        results.push(`❌ URL ${i+1}: ${masked} → ${e instanceof Error ? e.message.slice(0, 100) : "failed"}`);
+  for (const { name, url } of urls) {
+    const masked = url.replace(/:[^@]+@/, ":****@");
+    try {
+      const prisma = new PrismaClient({ datasources: { db: { url } } });
+      const count = await prisma.user.count().catch(async (e) => {
+        // Nếu bảng chưa tồn tại → thử tạo
+        if (String(e.message).includes("does not exist") || String(e.message).includes("relation")) {
+          await prisma.user.create({ data: { id: "test1", username: "test1_" + Date.now(), password: "x", hoTen: "Test", role: "thuky" } }).then(async (u) => {
+            await prisma.user.delete({ where: { id: u.id } });
+            results.push(`✅ ${name}: ${masked} → Table auto-created!`);
+          }).catch((e2) => {
+            results.push(`❌ ${name}: ${masked} → create: ${e2 instanceof Error ? e2.message.slice(0, 120) : "failed"}`);
+          });
+        } else {
+          results.push(`❌ ${name}: ${masked} → ${e instanceof Error ? e.message.slice(0, 120) : "failed"}`);
+        }
+      });
+      if (typeof count === "number") {
+        results.push(`✅ ${name}: ${masked} → Connected! Users: ${count}`);
+        await prisma.$disconnect();
+        return NextResponse.json({ success: true, working: name, url_masked: masked, results });
       }
+      await prisma.$disconnect();
+    } catch (e) {
+      results.push(`❌ ${name}: ${masked} → ${e instanceof Error ? e.message.slice(0, 120) : "failed"}`);
     }
-  } catch (e) {
-    results.push(`pg import error: ${e instanceof Error ? e.message : "unknown"}`);
   }
 
   return NextResponse.json({ success: false, results });
