@@ -34,7 +34,7 @@ import {
   Package, Search, Plus, Filter, Download, ArrowRight, MapPin, Truck,
   User, Calendar, DollarSign, Weight, Box, ChevronLeft, ChevronRight,
   X, Clock, CheckCircle2, AlertTriangle, PackageCheck, XCircle, RotateCcw,
-  Pencil, Trash2, Printer, Zap, Container, UserCheck, Headphones, Building2, Columns3, Upload, Download,
+  Pencil, Trash2, Printer, Zap, Container, UserCheck, Headphones, Building2, Columns3, Upload,
 } from "lucide-react";
 import {
   SHIPMENT_STATUSES, SHIPMENT_STATUS_META, PRIORITIES, PRIORITY_META,
