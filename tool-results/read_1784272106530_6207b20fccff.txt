@@ -1,0 +1,796 @@
+     1→"use client";
+     2→
+     3→import * as React from "react";
+     4→import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+     5→import { api } from "@/lib/api-client";
+     6→import { KpiCard, EmptyState } from "@/components/kpi-card";
+     7→import { StatusBadge } from "@/components/status-badge";
+     8→import { Button } from "@/components/ui/button";
+     9→import { Input } from "@/components/ui/input";
+    10→import { Card, CardContent } from "@/components/ui/card";
+    11→import {
+    12→  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+    13→} from "@/components/ui/select";
+    14→import {
+    15→  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
+    16→} from "@/components/ui/sheet";
+    17→import {
+    18→  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+    19→} from "@/components/ui/dialog";
+    20→import { Label } from "@/components/ui/label";
+    21→import { Textarea } from "@/components/ui/textarea";
+    22→import { Badge } from "@/components/ui/badge";
+    23→import { Skeleton } from "@/components/ui/skeleton";
+    24→import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+    25→import {
+    26→  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+    27→} from "@/components/ui/table";
+    28→import {
+    29→  Users, Crown, UserCheck, Building2, Search, Plus, Mail, Phone,
+    30→  MapPin, X, ArrowRight, ArrowDownLeft, ArrowUpRight, Package, Calendar,
+    31→} from "lucide-react";
+    32→import { VIETNAM_CITIES } from "@/lib/constants";
+    33→import {
+    34→  formatNumber, formatCurrency, formatRelativeTime, formatDate, initials,
+    35→} from "@/lib/format";
+    36→import { toast } from "sonner";
+    37→import { avatarColorClass } from "@/components/avatar-color";
+    38→import { cn } from "@/lib/utils";
+    39→import { useAppStore } from "@/lib/store";
+    40→
+    41→// ---------- Customer domain meta ----------
+    42→const CUSTOMER_STATUSES = ["active", "inactive", "vip"] as const;
+    43→type CustomerStatus = (typeof CUSTOMER_STATUSES)[number];
+    44→
+    45→const CUSTOMER_STATUS_META: Record<CustomerStatus, { label: string; badge: string; dot: string }> = {
+    46→  active: {
+    47→    label: "Active",
+    48→    badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900",
+    49→    dot: "bg-emerald-500",
+    50→  },
+    51→  inactive: {
+    52→    label: "Inactive",
+    53→    badge: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-700",
+    54→    dot: "bg-slate-400",
+    55→  },
+    56→  vip: {
+    57→    label: "VIP",
+    58→    badge: "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300 border-amber-200 dark:border-amber-900",
+    59→    dot: "bg-amber-500",
+    60→  },
+    61→};
+    62→
+    63→const CUSTOMER_TYPES = ["business", "individual"] as const;
+    64→type CustomerType = (typeof CUSTOMER_TYPES)[number];
+    65→
+    66→const CUSTOMER_TYPE_META: Record<CustomerType, { label: string; badge: string }> = {
+    67→  business: { label: "Business", badge: "bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300 border-sky-200 dark:border-sky-900" },
+    68→  individual: { label: "Individual", badge: "bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300 border-violet-200 dark:border-violet-900" },
+    69→};
+    70→
+    71→function CustomerStatusBadge({ status }: { status: string }) {
+    72→  const meta = CUSTOMER_STATUS_META[status as CustomerStatus] ?? CUSTOMER_STATUS_META.active;
+    73→  return (
+    74→    <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium", meta.badge)}>
+    75→      <span className={cn("h-1.5 w-1.5 rounded-full", meta.dot)} />
+    76→      {meta.label}
+    77→    </span>
+    78→  );
+    79→}
+    80→
+    81→function CustomerTypeBadge({ type }: { type: string }) {
+    82→  const meta = CUSTOMER_TYPE_META[type as CustomerType] ?? CUSTOMER_TYPE_META.business;
+    83→  return (
+    84→    <span className={cn("inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-medium", meta.badge)}>
+    85→      {meta.label}
+    86→    </span>
+    87→  );
+    88→}
+    89→
+    90→// ---------- Types ----------
+    91→type Customer = {
+    92→  id: string;
+    93→  name: string;
+    94→  email: string | null;
+    95→  phone: string;
+    96→  company: string | null;
+    97→  address: string;
+    98→  city: string;
+    99→  country: string;
+   100→  zipCode: string | null;
+   101→  type: string;
+   102→  status: string;
+   103→  notes: string | null;
+   104→  createdAt: string;
+   105→  _count: { shipmentsAsSender: number; shipmentsAsReceiver: number };
+   106→};
+   107→
+   108→type CustomerShipment = {
+   109→  id: string;
+   110→  trackingNumber: string;
+   111→  status: string;
+   112→  originCity: string;
+   113→  destinationCity: string;
+   114→  cost: number;
+   115→  createdAt: string;
+   116→};
+   117→
+   118→type CustomerDetail = Customer & {
+   119→  shipmentsAsSender: CustomerShipment[];
+   120→  shipmentsAsReceiver: CustomerShipment[];
+   121→};
+   122→
+   123→// ---------- Component ----------
+   124→export function CustomersView() {
+   125→  const qc = useQueryClient();
+   126→  const { setSelectedShipmentId, setView } = useAppStore();
+   127→  const [search, setSearch] = React.useState("");
+   128→  const [status, setStatus] = React.useState("all");
+   129→  const [type, setType] = React.useState("all");
+   130→  const [city, setCity] = React.useState("all");
+   131→  const [selectedId, setSelectedId] = React.useState<string | null>(null);
+   132→  const [createOpen, setCreateOpen] = React.useState(false);
+   133→
+   134→  const debouncedSearch = useDebounce(search, 350);
+   135→
+   136→  const queryKey = React.useMemo(
+   137→    () => ["customers", { debouncedSearch, status, type, city }] as const,
+   138→    [debouncedSearch, status, type, city]
+   139→  );
+   140→
+   141→  const { data, isLoading } = useQuery<{ items: Customer[] }>({
+   142→    queryKey,
+   143→    queryFn: () => {
+   144→      const params = new URLSearchParams();
+   145→      if (debouncedSearch) params.set("q", debouncedSearch);
+   146→      if (status !== "all") params.set("status", status);
+   147→      if (type !== "all") params.set("type", type);
+   148→      if (city !== "all") params.set("city", city);
+   149→      return api.get(`/api/customers?${params.toString()}`);
+   150→    },
+   151→  });
+   152→
+   153→  const { data: detail, isLoading: detailLoading } = useQuery<CustomerDetail>({
+   154→    queryKey: ["customer", selectedId],
+   155→    queryFn: () => api.get(`/api/customers/${selectedId}`),
+   156→    enabled: !!selectedId,
+   157→  });
+   158→
+   159→  const createMutation = useMutation({
+   160→    mutationFn: (body: Record<string, unknown>) => api.post("/api/customers", body),
+   161→    onSuccess: () => {
+   162→      qc.invalidateQueries({ queryKey: ["customers"] });
+   163→      qc.invalidateQueries({ queryKey: ["dashboard"] });
+   164→      toast.success("Customer created successfully");
+   165→      setCreateOpen(false);
+   166→    },
+   167→    onError: (e: Error) => toast.error(e.message || "Failed to create customer"),
+   168→  });
+   169→
+   170→  const updateStatusMutation = useMutation({
+   171→    mutationFn: ({ id, status }: { id: string; status: CustomerStatus }) =>
+   172→      api.patch(`/api/customers/${id}`, { status }),
+   173→    onSuccess: () => {
+   174→      qc.invalidateQueries({ queryKey: ["customers"] });
+   175→      qc.invalidateQueries({ queryKey: ["customer", selectedId] });
+   176→      qc.invalidateQueries({ queryKey: ["dashboard"] });
+   177→      toast.success("Customer status updated");
+   178→    },
+   179→    onError: (e: Error) => toast.error(e.message || "Failed to update status"),
+   180→  });
+   181→
+   182→  const deleteMutation = useMutation({
+   183→    mutationFn: (id: string) => api.delete(`/api/customers/${id}`),
+   184→    onSuccess: () => {
+   185→      qc.invalidateQueries({ queryKey: ["customers"] });
+   186→      qc.invalidateQueries({ queryKey: ["dashboard"] });
+   187→      toast.success("Customer deleted");
+   188→      setSelectedId(null);
+   189→    },
+   190→    onError: (e: Error) => toast.error(e.message || "Failed to delete customer"),
+   191→  });
+   192→
+   193→  const customers = data?.items ?? [];
+   194→
+   195→  const stats = React.useMemo(() => {
+   196→    const total = customers.length;
+   197→    const vip = customers.filter((c) => c.status === "vip").length;
+   198→    const active = customers.filter((c) => c.status === "active").length;
+   199→    const business = customers.filter((c) => c.type === "business").length;
+   200→    return { total, vip, active, business };
+   201→  }, [customers]);
+   202→
+   203→  const hasFilters = search !== "" || status !== "all" || type !== "all" || city !== "all";
+   204→  const resetFilters = () => {
+   205→    setSearch(""); setStatus("all"); setType("all"); setCity("all");
+   206→  };
+   207→
+   208→  return (
+   209→    <div className="space-y-4">
+   210→      {/* KPI row */}
+   211→      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+   212→        <KpiCard
+   213→          title="Total Customers"
+   214→          value={formatNumber(stats.total)}
+   215→          icon={Users}
+   216→          accent="emerald"
+   217→          footer={`${stats.vip} VIP · ${stats.business} business`}
+   218→        />
+   219→        <KpiCard
+   220→          title="VIP Customers"
+   221→          value={formatNumber(stats.vip)}
+   222→          icon={Crown}
+   223→          accent="amber"
+   224→          footer="High priority tier"
+   225→        />
+   226→        <KpiCard
+   227→          title="Active"
+   228→          value={formatNumber(stats.active)}
+   229→          icon={UserCheck}
+   230→          accent="sky"
+   231→          footer="Currently trading"
+   232→        />
+   233→        <KpiCard
+   234→          title="Business Type"
+   235→          value={formatNumber(stats.business)}
+   236→          icon={Building2}
+   237→          accent="violet"
+   238→          footer="B2B accounts"
+   239→        />
+   240→      </div>
+   241→
+   242→      {/* Filter bar */}
+   243→      <Card>
+   244→        <CardContent className="p-4">
+   245→          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+   246→            <div className="relative flex-1">
+   247→              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+   248→              <Input
+   249→                placeholder="Search name, phone, email, company…"
+   250→                value={search}
+   251→                onChange={(e) => setSearch(e.target.value)}
+   252→                className="pl-9"
+   253→              />
+   254→            </div>
+   255→            <div className="flex flex-wrap items-center gap-2">
+   256→              <Select value={status} onValueChange={setStatus}>
+   257→                <SelectTrigger className="w-[140px]">
+   258→                  <SelectValue placeholder="Status" />
+   259→                </SelectTrigger>
+   260→                <SelectContent>
+   261→                  <SelectItem value="all">All statuses</SelectItem>
+   262→                  {CUSTOMER_STATUSES.map((s) => (
+   263→                    <SelectItem key={s} value={s}>{CUSTOMER_STATUS_META[s].label}</SelectItem>
+   264→                  ))}
+   265→                </SelectContent>
+   266→              </Select>
+   267→              <Select value={type} onValueChange={setType}>
+   268→                <SelectTrigger className="w-[140px]">
+   269→                  <SelectValue placeholder="Type" />
+   270→                </SelectTrigger>
+   271→                <SelectContent>
+   272→                  <SelectItem value="all">All types</SelectItem>
+   273→                  {CUSTOMER_TYPES.map((t) => (
+   274→                    <SelectItem key={t} value={t}>{CUSTOMER_TYPE_META[t].label}</SelectItem>
+   275→                  ))}
+   276→                </SelectContent>
+   277→              </Select>
+   278→              <Select value={city} onValueChange={setCity}>
+   279→                <SelectTrigger className="w-[160px]">
+   280→                  <SelectValue placeholder="City" />
+   281→                </SelectTrigger>
+   282→                <SelectContent>
+   283→                  <SelectItem value="all">All cities</SelectItem>
+   284→                  {VIETNAM_CITIES.map((c) => (
+   285→                    <SelectItem key={c} value={c}>{c}</SelectItem>
+   286→                  ))}
+   287→                </SelectContent>
+   288→              </Select>
+   289→              {hasFilters && (
+   290→                <Button variant="ghost" size="sm" onClick={resetFilters} className="gap-1 text-xs">
+   291→                  <X className="h-3.5 w-3.5" /> Clear
+   292→                </Button>
+   293→              )}
+   294→              <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
+   295→                <Plus className="h-4 w-4" /> Add Customer
+   296→              </Button>
+   297→            </div>
+   298→          </div>
+   299→        </CardContent>
+   300→      </Card>
+   301→
+   302→      {/* Table */}
+   303→      <Card>
+   304→        <CardContent className="p-0">
+   305→          {isLoading ? (
+   306→            <div className="space-y-2 p-4">
+   307→              {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-14 w-full" />)}
+   308→            </div>
+   309→          ) : customers.length === 0 ? (
+   310→            <EmptyState
+   311→              icon={Users}
+   312→              title="No customers found"
+   313→              description="Try adjusting filters or add a new customer to your directory."
+   314→              action={<Button size="sm" variant="outline" onClick={resetFilters}>Reset filters</Button>}
+   315→              className="mx-4 my-6"
+   316→            />
+   317→          ) : (
+   318→            <div className="overflow-x-auto custom-scroll">
+   319→              <Table>
+   320→                <TableHeader>
+   321→                  <TableRow className="bg-muted/40 hover:bg-muted/40">
+   322→                    <TableHead className="min-w-[200px]">Customer</TableHead>
+   323→                    <TableHead className="hidden md:table-cell min-w-[160px]">Company</TableHead>
+   324→                    <TableHead className="hidden lg:table-cell">City</TableHead>
+   325→                    <TableHead className="hidden sm:table-cell">Phone</TableHead>
+   326→                    <TableHead className="text-center">Shipments</TableHead>
+   327→                    <TableHead>Status</TableHead>
+   328→                    <TableHead className="hidden sm:table-cell text-right">Created</TableHead>
+   329→                  </TableRow>
+   330→                </TableHeader>
+   331→                <TableBody>
+   332→                  {customers.map((c) => {
+   333→                    const sent = c._count?.shipmentsAsSender ?? 0;
+   334→                    const received = c._count?.shipmentsAsReceiver ?? 0;
+   335→                    return (
+   336→                      <TableRow
+   337→                        key={c.id}
+   338→                        onClick={() => setSelectedId(c.id)}
+   339→                        className="cursor-pointer transition-colors hover:bg-muted/50"
+   340→                      >
+   341→                        <TableCell>
+   342→                          <div className="flex items-center gap-2.5">
+   343→                            <Avatar className="h-9 w-9">
+   344→                              <AvatarFallback className={cn("text-xs font-semibold text-white", avatarColorClass(c.id))}>
+   345→                                {initials(c.name)}
+   346→                              </AvatarFallback>
+   347→                            </Avatar>
+   348→                            <div className="min-w-0">
+   349→                              <p className="truncate font-medium">{c.name}</p>
+   350→                              <div className="mt-0.5"><CustomerTypeBadge type={c.type} /></div>
+   351→                            </div>
+   352→                          </div>
+   353→                        </TableCell>
+   354→                        <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+   355→                          {c.company || <span className="italic">—</span>}
+   356→                        </TableCell>
+   357→                        <TableCell className="hidden lg:table-cell text-sm">{c.city}</TableCell>
+   358→                        <TableCell className="hidden sm:table-cell text-sm text-muted-foreground font-mono text-xs">
+   359→                          {c.phone}
+   360→                        </TableCell>
+   361→                        <TableCell className="text-center">
+   362→                          <div className="flex items-center justify-center gap-1.5 text-xs">
+   363→                            <span className="inline-flex items-center gap-0.5 rounded-md bg-emerald-500/10 px-1.5 py-0.5 font-medium text-emerald-700 dark:text-emerald-300">
+   364→                              <ArrowUpRight className="h-3 w-3" />{sent}
+   365→                            </span>
+   366→                            <span className="inline-flex items-center gap-0.5 rounded-md bg-sky-500/10 px-1.5 py-0.5 font-medium text-sky-700 dark:text-sky-300">
+   367→                              <ArrowDownLeft className="h-3 w-3" />{received}
+   368→                            </span>
+   369→                          </div>
+   370→                        </TableCell>
+   371→                        <TableCell><CustomerStatusBadge status={c.status} /></TableCell>
+   372→                        <TableCell className="hidden sm:table-cell text-right text-xs text-muted-foreground">
+   373→                          {formatRelativeTime(c.createdAt)}
+   374→                        </TableCell>
+   375→                      </TableRow>
+   376→                    );
+   377→                  })}
+   378→                </TableBody>
+   379→              </Table>
+   380→            </div>
+   381→          )}
+   382→        </CardContent>
+   383→      </Card>
+   384→
+   385→      {/* Detail drawer */}
+   386→      <Sheet
+   387→        open={!!selectedId}
+   388→        onOpenChange={(o) => { if (!o) setSelectedId(null); }}
+   389→      >
+   390→        <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-lg">
+   391→          <SheetHeader className="border-b p-4">
+   392→            <SheetTitle>Customer details</SheetTitle>
+   393→            <SheetDescription>Profile, contact info, and shipment history.</SheetDescription>
+   394→          </SheetHeader>
+   395→          <div className="flex-1 overflow-y-auto">
+   396→            {detailLoading || !detail ? (
+   397→              <div className="space-y-3 p-4">
+   398→                <Skeleton className="h-24 w-full" />
+   399→                <Skeleton className="h-48 w-full" />
+   400→                <Skeleton className="h-32 w-full" />
+   401→              </div>
+   402→            ) : (
+   403→              <CustomerDetailContent
+   404→                customer={detail}
+   405→                onStatusChange={(s) => updateStatusMutation.mutate({ id: detail.id, status: s })}
+   406→                onDelete={() => deleteMutation.mutate(detail.id)}
+   407→                updating={updateStatusMutation.isPending}
+   408→                deleting={deleteMutation.isPending}
+   409→                onShipmentClick={(id) => {
+   410→                  setSelectedShipmentId(id);
+   411→                  setSelectedId(null);
+   412→                  setView("shipments");
+   413→                }}
+   414→              />
+   415→            )}
+   416→          </div>
+   417→        </SheetContent>
+   418→      </Sheet>
+   419→
+   420→      {/* Create dialog */}
+   421→      <CreateCustomerDialog
+   422→        open={createOpen}
+   423→        onOpenChange={setCreateOpen}
+   424→        onSubmit={(body) => createMutation.mutate(body)}
+   425→        submitting={createMutation.isPending}
+   426→      />
+   427→    </div>
+   428→  );
+   429→}
+   430→
+   431→// ---------- Detail content ----------
+   432→function DetailRow({
+   433→  icon: Icon, label, value, mono,
+   434→}: {
+   435→  icon: React.ElementType; label: string; value: string; mono?: boolean;
+   436→}) {
+   437→  return (
+   438→    <div className="flex items-center gap-2 text-sm">
+   439→      <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+   440→      <span className="w-24 shrink-0 text-xs text-muted-foreground">{label}</span>
+   441→      <span className={cn("min-w-0 flex-1 truncate font-medium", mono && "font-mono text-xs")}>{value || "—"}</span>
+   442→    </div>
+   443→  );
+   444→}
+   445→
+   446→function CustomerDetailContent({
+   447→  customer,
+   448→  onStatusChange,
+   449→  onDelete,
+   450→  updating,
+   451→  deleting,
+   452→  onShipmentClick,
+   453→}: {
+   454→  customer: CustomerDetail;
+   455→  onStatusChange: (s: CustomerStatus) => void;
+   456→  onDelete: () => void;
+   457→  updating: boolean;
+   458→  deleting: boolean;
+   459→  onShipmentClick: (id: string) => void;
+   460→}) {
+   461→  const [confirmDelete, setConfirmDelete] = React.useState(false);
+   462→
+   463→  const sent = customer.shipmentsAsSender ?? [];
+   464→  const received = customer.shipmentsAsReceiver ?? [];
+   465→
+   466→  return (
+   467→    <div className="flex flex-col gap-4 p-4">
+   468→      {/* Header */}
+   469→      <div className="flex items-start gap-3">
+   470→        <Avatar className="h-16 w-16">
+   471→          <AvatarFallback className={cn("text-lg font-semibold text-white", avatarColorClass(customer.id))}>
+   472→            {initials(customer.name)}
+   473→          </AvatarFallback>
+   474→        </Avatar>
+   475→        <div className="min-w-0 flex-1">
+   476→          <h3 className="truncate text-lg font-semibold">{customer.name}</h3>
+   477→          <div className="mt-1.5 flex flex-wrap items-center gap-2">
+   478→            <CustomerStatusBadge status={customer.status} />
+   479→            <CustomerTypeBadge type={customer.type} />
+   480→          </div>
+   481→          <p className="mt-1 text-xs text-muted-foreground">
+   482→            Customer since {formatDate(customer.createdAt)}
+   483→          </p>
+   484→        </div>
+   485→      </div>
+   486→
+   487→      {/* Contact */}
+   488→      <div className="grid grid-cols-1 gap-2">
+   489→        {customer.email && <DetailRow icon={Mail} label="Email" value={customer.email} />}
+   490→        <DetailRow icon={Phone} label="Phone" value={customer.phone} mono />
+   491→        {customer.company && <DetailRow icon={Building2} label="Company" value={customer.company} />}
+   492→        <DetailRow icon={MapPin} label="Address" value={customer.address} />
+   493→        <DetailRow
+   494→          icon={MapPin}
+   495→          label="City"
+   496→          value={[customer.city, customer.country].filter(Boolean).join(", ")}
+   497→        />
+   498→        {customer.zipCode && <DetailRow icon={MapPin} label="ZIP" value={customer.zipCode} mono />}
+   499→      </div>
+   500→
+   501→      {/* Stats */}
+   502→      <div className="grid grid-cols-2 gap-2">
+   503→        <div className="rounded-lg bg-emerald-500/10 p-3">
+   504→          <div className="flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-300">
+   505→            <ArrowUpRight className="h-3.5 w-3.5" /> Sent
+   506→          </div>
+   507→          <p className="mt-1 text-2xl font-bold tabular-nums text-emerald-700 dark:text-emerald-300">
+   508→            {customer._count?.shipmentsAsSender ?? 0}
+   509→          </p>
+   510→        </div>
+   511→        <div className="rounded-lg bg-sky-500/10 p-3">
+   512→          <div className="flex items-center gap-1.5 text-xs text-sky-700 dark:text-sky-300">
+   513→            <ArrowDownLeft className="h-3.5 w-3.5" /> Received
+   514→          </div>
+   515→          <p className="mt-1 text-2xl font-bold tabular-nums text-sky-700 dark:text-sky-300">
+   516→            {customer._count?.shipmentsAsReceiver ?? 0}
+   517→          </p>
+   518→        </div>
+   519→      </div>
+   520→
+   521→      {/* Status change */}
+   522→      <div>
+   523→        <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">Change status</p>
+   524→        <Select
+   525→          value={customer.status}
+   526→          onValueChange={(v) => onStatusChange(v as CustomerStatus)}
+   527→          disabled={updating}
+   528→        >
+   529→          <SelectTrigger className="w-full">
+   530→            <SelectValue placeholder="Select status" />
+   531→          </SelectTrigger>
+   532→          <SelectContent>
+   533→            {CUSTOMER_STATUSES.map((s) => (
+   534→              <SelectItem key={s} value={s}>{CUSTOMER_STATUS_META[s].label}</SelectItem>
+   535→            ))}
+   536→          </SelectContent>
+   537→        </Select>
+   538→      </div>
+   539→
+   540→      {/* Notes */}
+   541→      {customer.notes && (
+   542→        <div>
+   543→          <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">Notes</p>
+   544→          <div className="rounded-lg border bg-muted/30 p-3 text-xs text-muted-foreground">
+   545→            {customer.notes}
+   546→          </div>
+   547→        </div>
+   548→      )}
+   549→
+   550→      {/* Sent shipments */}
+   551→      <ShipmentList
+   552→        title="Sent Shipments"
+   553→        icon={ArrowUpRight}
+   554→        iconClass="text-emerald-600 dark:text-emerald-400"
+   555→        shipments={sent}
+   556→        totalCount={customer._count?.shipmentsAsSender ?? 0}
+   557→        onShipmentClick={onShipmentClick}
+   558→      />
+   559→
+   560→      {/* Received shipments */}
+   561→      <ShipmentList
+   562→        title="Received Shipments"
+   563→        icon={ArrowDownLeft}
+   564→        iconClass="text-sky-600 dark:text-sky-400"
+   565→        shipments={received}
+   566→        totalCount={customer._count?.shipmentsAsReceiver ?? 0}
+   567→        onShipmentClick={onShipmentClick}
+   568→      />
+   569→
+   570→      {/* Delete */}
+   571→      <div className="border-t pt-3">
+   572→        {confirmDelete ? (
+   573→          <div className="flex items-center gap-2">
+   574→            <Button
+   575→              variant="destructive"
+   576→              size="sm"
+   577→              className="gap-1.5"
+   578→              onClick={onDelete}
+   579→              disabled={deleting}
+   580→            >
+   581→              {deleting ? "Deleting…" : "Confirm delete"}
+   582→            </Button>
+   583→            <Button variant="outline" size="sm" onClick={() => setConfirmDelete(false)}>
+   584→              Cancel
+   585→            </Button>
+   586→          </div>
+   587→        ) : (
+   588→          <Button
+   589→            variant="ghost"
+   590→            size="sm"
+   591→            className="gap-1.5 text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-950/40"
+   592→            onClick={() => setConfirmDelete(true)}
+   593→          >
+   594→            Delete customer
+   595→          </Button>
+   596→        )}
+   597→      </div>
+   598→    </div>
+   599→  );
+   600→}
+   601→
+   602→function ShipmentList({
+   603→  title, icon: Icon, iconClass, shipments, totalCount, onShipmentClick,
+   604→}: {
+   605→  title: string;
+   606→  icon: React.ElementType;
+   607→  iconClass: string;
+   608→  shipments: CustomerShipment[];
+   609→  totalCount: number;
+   610→  onShipmentClick: (id: string) => void;
+   611→}) {
+   612→  return (
+   613→    <div>
+   614→      <div className="mb-2 flex items-center justify-between">
+   615→        <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+   616→          <Icon className={cn("h-3.5 w-3.5", iconClass)} /> {title}
+   617→        </p>
+   618→        <Badge variant="secondary" className="text-[10px]">{totalCount} total</Badge>
+   619→      </div>
+   620→      {shipments.length === 0 ? (
+   621→        <p className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
+   622→          No shipments yet
+   623→        </p>
+   624→      ) : (
+   625→        <div className="space-y-1.5">
+   626→          {shipments.map((s) => (
+   627→            <button
+   628→              key={s.id}
+   629→              onClick={() => onShipmentClick(s.id)}
+   630→              className="flex w-full items-center gap-2 rounded-lg border p-2.5 text-left transition-colors hover:bg-muted/50"
+   631→            >
+   632→              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+   633→                <Package className="h-3.5 w-3.5" />
+   634→              </div>
+   635→              <div className="min-w-0 flex-1">
+   636→                <p className="truncate font-mono text-xs font-semibold">{s.trackingNumber}</p>
+   637→                <p className="truncate text-[10px] text-muted-foreground">
+   638→                  {s.originCity} → {s.destinationCity}
+   639→                </p>
+   640→              </div>
+   641→              <div className="flex flex-col items-end gap-1">
+   642→                <span className="text-[10px] font-medium tabular-nums">{formatCurrency(s.cost)}</span>
+   643→                <StatusBadge status={s.status} kind="shipment" />
+   644→              </div>
+   645→            </button>
+   646→          ))}
+   647→        </div>
+   648→      )}
+   649→    </div>
+   650→  );
+   651→}
+   652→
+   653→// ---------- Create dialog ----------
+   654→function CreateCustomerDialog({
+   655→  open, onOpenChange, onSubmit, submitting,
+   656→}: {
+   657→  open: boolean;
+   658→  onOpenChange: (o: boolean) => void;
+   659→  onSubmit: (body: Record<string, unknown>) => void;
+   660→  submitting: boolean;
+   661→}) {
+   662→  const [name, setName] = React.useState("");
+   663→  const [email, setEmail] = React.useState("");
+   664→  const [phone, setPhone] = React.useState("");
+   665→  const [company, setCompany] = React.useState("");
+   666→  const [address, setAddress] = React.useState("");
+   667→  const [city, setCity] = React.useState("");
+   668→  const [type, setType] = React.useState<CustomerType>("business");
+   669→  const [status, setStatus] = React.useState<CustomerStatus>("active");
+   670→  const [notes, setNotes] = React.useState("");
+   671→
+   672→  React.useEffect(() => {
+   673→    if (!open) {
+   674→      setName(""); setEmail(""); setPhone(""); setCompany("");
+   675→      setAddress(""); setCity(""); setType("business"); setStatus("active"); setNotes("");
+   676→    }
+   677→  }, [open]);
+   678→
+   679→  const submit = (e: React.FormEvent) => {
+   680→    e.preventDefault();
+   681→    if (!name || !phone || !address || !city) {
+   682→      toast.error("Name, phone, address and city are required");
+   683→      return;
+   684→    }
+   685→    onSubmit({
+   686→      name,
+   687→      email: email || undefined,
+   688→      phone,
+   689→      company: company || undefined,
+   690→      address,
+   691→      city,
+   692→      type,
+   693→      status,
+   694→      notes: notes || undefined,
+   695→    });
+   696→  };
+   697→
+   698→  return (
+   699→    <Dialog open={open} onOpenChange={onOpenChange}>
+   700→      <DialogContent className="sm:max-w-md">
+   701→        <DialogHeader>
+   702→          <DialogTitle>Add new customer</DialogTitle>
+   703→          <DialogDescription>
+   704→            Register a new customer (sender or recipient) for your shipments.
+   705→          </DialogDescription>
+   706→        </DialogHeader>
+   707→        <form onSubmit={submit} className="space-y-3">
+   708→          <div className="space-y-1.5">
+   709→            <Label htmlFor="c-name">Full name *</Label>
+   710→            <Input id="c-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nguyen Van A" required />
+   711→          </div>
+   712→          <div className="grid grid-cols-2 gap-3">
+   713→            <div className="space-y-1.5">
+   714→              <Label htmlFor="c-email">Email</Label>
+   715→              <Input id="c-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="a@company.com" />
+   716→            </div>
+   717→            <div className="space-y-1.5">
+   718→              <Label htmlFor="c-phone">Phone *</Label>
+   719→              <Input id="c-phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+84 90x xxx xxx" required />
+   720→            </div>
+   721→          </div>
+   722→          <div className="space-y-1.5">
+   723→            <Label htmlFor="c-company">Company</Label>
+   724→            <Input id="c-company" value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Acme Logistics Co." />
+   725→          </div>
+   726→          <div className="space-y-1.5">
+   727→            <Label htmlFor="c-address">Address *</Label>
+   728→            <Input id="c-address" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="123 Le Loi, District 1" required />
+   729→          </div>
+   730→          <div className="grid grid-cols-2 gap-3">
+   731→            <div className="space-y-1.5">
+   732→              <Label htmlFor="c-city">City *</Label>
+   733→              <Select value={city} onValueChange={setCity}>
+   734→                <SelectTrigger id="c-city" className="w-full">
+   735→                  <SelectValue placeholder="Select city" />
+   736→                </SelectTrigger>
+   737→                <SelectContent>
+   738→                  {VIETNAM_CITIES.map((c) => (
+   739→                    <SelectItem key={c} value={c}>{c}</SelectItem>
+   740→                  ))}
+   741→                </SelectContent>
+   742→              </Select>
+   743→            </div>
+   744→            <div className="space-y-1.5">
+   745→              <Label htmlFor="c-type">Type</Label>
+   746→              <Select value={type} onValueChange={(v) => setType(v as CustomerType)}>
+   747→                <SelectTrigger id="c-type" className="w-full">
+   748→                  <SelectValue placeholder="Select type" />
+   749→                </SelectTrigger>
+   750→                <SelectContent>
+   751→                  {CUSTOMER_TYPES.map((t) => (
+   752→                    <SelectItem key={t} value={t}>{CUSTOMER_TYPE_META[t].label}</SelectItem>
+   753→                  ))}
+   754→                </SelectContent>
+   755→              </Select>
+   756→            </div>
+   757→          </div>
+   758→          <div className="space-y-1.5">
+   759→            <Label htmlFor="c-status">Status</Label>
+   760→            <Select value={status} onValueChange={(v) => setStatus(v as CustomerStatus)}>
+   761→              <SelectTrigger id="c-status" className="w-full">
+   762→                <SelectValue placeholder="Select status" />
+   763→              </SelectTrigger>
+   764→              <SelectContent>
+   765→                {CUSTOMER_STATUSES.map((s) => (
+   766→                  <SelectItem key={s} value={s}>{CUSTOMER_STATUS_META[s].label}</SelectItem>
+   767→                ))}
+   768→              </SelectContent>
+   769→            </Select>
+   770→          </div>
+   771→          <div className="space-y-1.5">
+   772→            <Label htmlFor="c-notes">Notes</Label>
+   773→            <Textarea id="c-notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional notes about this customer…" rows={2} />
+   774→          </div>
+   775→          <DialogFooter>
+   776→            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+   777→            <Button type="submit" disabled={submitting} className="gap-1.5">
+   778→              {submitting ? "Creating…" : (<><Plus className="h-4 w-4" /> Create</>)}
+   779→            </Button>
+   780→          </DialogFooter>
+   781→        </form>
+   782→      </DialogContent>
+   783→    </Dialog>
+   784→  );
+   785→}
+   786→
+   787→// ---------- hook ----------
+   788→function useDebounce<T>(value: T, delay: number): T {
+   789→  const [v, setV] = React.useState(value);
+   790→  React.useEffect(() => {
+   791→    const t = setTimeout(() => setV(value), delay);
+   792→    return () => clearTimeout(t);
+   793→  }, [value, delay]);
+   794→  return v;
+   795→}
+   796→

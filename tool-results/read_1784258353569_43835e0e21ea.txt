@@ -1,0 +1,771 @@
+     1→"use client";
+     2→
+     3→import * as React from "react";
+     4→import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+     5→import { api } from "@/lib/api-client";
+     6→import { StatusBadge, PriorityBadge } from "@/components/status-badge";
+     7→import { Button } from "@/components/ui/button";
+     8→import { Input } from "@/components/ui/input";
+     9→import { Card, CardContent } from "@/components/ui/card";
+    10→import {
+    11→  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+    12→} from "@/components/ui/select";
+    13→import {
+    14→  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
+    15→} from "@/components/ui/sheet";
+    16→import {
+    17→  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+    18→} from "@/components/ui/dialog";
+    19→import { Label } from "@/components/ui/label";
+    20→import { Textarea } from "@/components/ui/textarea";
+    21→import { Badge } from "@/components/ui/badge";
+    22→import { Skeleton } from "@/components/ui/skeleton";
+    23→import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+    24→import { Progress } from "@/components/ui/progress";
+    25→import {
+    26→  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+    27→} from "@/components/ui/table";
+    28→import { Checkbox } from "@/components/ui/checkbox";
+    29→import {
+    30→  Package, Search, Plus, Filter, Download, ArrowRight, MapPin, Truck,
+    31→  User, Calendar, DollarSign, Weight, Box, ChevronLeft, ChevronRight,
+    32→  X, Clock, CheckCircle2, AlertTriangle, PackageCheck, XCircle, RotateCcw,
+    33→} from "lucide-react";
+    34→import {
+    35→  SHIPMENT_STATUSES, SHIPMENT_STATUS_META, PRIORITIES, PRIORITY_META,
+    36→  SERVICE_TYPES, SERVICE_META, VIETNAM_CITIES,
+    37→} from "@/lib/constants";
+    38→import {
+    39→  formatCurrency, formatRelativeTime, formatDateTime, formatWeight, initials,
+    40→} from "@/lib/format";
+    41→import { useAppStore } from "@/lib/store";
+    42→import { useToast } from "@/hooks/use-toast";
+    43→import { toast } from "sonner";
+    44→import { avatarColorClass } from "@/components/avatar-color";
+    45→import { cn } from "@/lib/utils";
+    46→
+    47→type ShipmentListItem = {
+    48→  id: string;
+    49→  trackingNumber: string;
+    50→  status: string;
+    51→  priority: string;
+    52→  serviceType: string;
+    53→  originCity: string;
+    54→  destinationCity: string;
+    55→  originAddress: string;
+    56→  destinationAddress: string;
+    57→  distanceKm: number;
+    58→  weightKg: number;
+    59→  pieces: number;
+    60→  cost: number;
+    61→  createdAt: string;
+    62→  estimatedDelivery: string | null;
+    63→  progress: number;
+    64→  sender: { id: string; name: string; city: string };
+    65→  receiver: { id: string; name: string; city: string };
+    66→  driver: { id: string; name: string; avatarColor: string; status: string } | null;
+    67→  vehicle: { id: string; plateNumber: string; model: string; type: string } | null;
+    68→};
+    69→
+    70→type ShipmentDetail = ShipmentListItem & {
+    71→  volumeM3: number;
+    72→  description: string | null;
+    73→  notes: string | null;
+    74→  insurance: number;
+    75→  currency: string;
+    76→  pickedUpAt: string | null;
+    77→  deliveredAt: string | null;
+    78→  currentLat: number | null;
+    79→  currentLng: number | null;
+    80→  originWarehouse: { id: string; name: string; city: string } | null;
+    81→  destinationWarehouse: { id: string; name: string; city: string } | null;
+    82→  trackingEvents: Array<{
+    83→    id: string; status: string; location: string | null; note: string | null;
+    84→    lat: number | null; lng: number | null; timestamp: string;
+    85→  }>;
+    86→};
+    87→
+    88→const SERVICE_ICON: Record<string, React.ElementType> = {
+    89→  standard: Package, express: Truck, same_day: Clock, freight: Box, cold_chain: PackageCheck,
+    90→};
+    91→
+    92→export function ShipmentsView() {
+    93→  const { toast: legacyToast } = useToast();
+    94→  const qc = useQueryClient();
+    95→  const { selectedShipmentId, setSelectedShipmentId, shipmentsFilter, setShipmentsFilter } = useAppStore();
+    96→
+    97→  const [search, setSearch] = React.useState("");
+    98→  const [status, setStatus] = React.useState(shipmentsFilter || "all");
+    99→  const [priority, setPriority] = React.useState("all");
+   100→  const [service, setService] = React.useState("all");
+   101→  const [city, setCity] = React.useState("all");
+   102→  const [page, setPage] = React.useState(1);
+   103→  const [pageSize] = React.useState(12);
+   104→  const [createOpen, setCreateOpen] = React.useState(false);
+   105→  const [detailOpen, setDetailOpen] = React.useState(false);
+   106→
+   107→  // React to external "open-new-shipment" event
+   108→  React.useEffect(() => {
+   109→    const handler = () => setCreateOpen(true);
+   110→    window.addEventListener("open-new-shipment", handler);
+   111→    return () => window.removeEventListener("open-new-shipment", handler);
+   112→  }, []);
+   113→
+   114→  // Open detail when a shipment is selected
+   115→  React.useEffect(() => {
+   116→    if (selectedShipmentId) setDetailOpen(true);
+   117→    else setDetailOpen(false);
+   118→  }, [selectedShipmentId]);
+   119→
+   120→  // Reset filter state when shipmentsFilter changes externally
+   121→  React.useEffect(() => {
+   122→    if (shipmentsFilter) {
+   123→      setStatus(shipmentsFilter);
+   124→      setShipmentsFilter(null);
+   125→      setPage(1);
+   126→    }
+   127→  }, [shipmentsFilter, setShipmentsFilter]);
+   128→
+   129→  const debouncedSearch = useDebounce(search, 350);
+   130→
+   131→  const queryKey = React.useMemo(
+   132→    () => ["shipments", { debouncedSearch, status, priority, service, city, page, pageSize }],
+   133→    [debouncedSearch, status, priority, service, city, page, pageSize]
+   134→  );
+   135→
+   136→  const { data, isLoading } = useQuery({
+   137→    queryKey,
+   138→    queryFn: () => {
+   139→      const params = new URLSearchParams({
+   140→        page: String(page),
+   141→        pageSize: String(pageSize),
+   142→      });
+   143→      if (debouncedSearch) params.set("q", debouncedSearch);
+   144→      if (status !== "all") params.set("status", status);
+   145→      if (priority !== "all") params.set("priority", priority);
+   146→      if (service !== "all") params.set("service", service);
+   147→      if (city !== "all") params.set("city", city);
+   148→      return api.get<{ items: ShipmentListItem[]; total: number; totalPages: number }>(`/api/shipments?${params}`);
+   149→    },
+   150→  });
+   151→
+   152→  const resetFilters = () => {
+   153→    setSearch(""); setStatus("all"); setPriority("all"); setService("all"); setCity("all"); setPage(1);
+   154→  };
+   155→
+   156→  const hasFilters = status !== "all" || priority !== "all" || service !== "all" || city !== "all" || search !== "";
+   157→
+   158→  return (
+   159→    <div className="space-y-4">
+   160→      {/* Filter bar */}
+   161→      <Card>
+   162→        <CardContent className="p-4">
+   163→          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+   164→            <div className="relative flex-1">
+   165→              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+   166→              <Input
+   167→                placeholder="Search tracking #, sender, route…"
+   168→                value={search}
+   169→                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+   170→                className="pl-9"
+   171→              />
+   172→            </div>
+   173→            <div className="flex flex-wrap items-center gap-2">
+   174→              <Select value={status} onValueChange={(v) => { setStatus(v); setPage(1); }}>
+   175→                <SelectTrigger className="w-[150px]"><SelectValue placeholder="Status" /></SelectTrigger>
+   176→                <SelectContent>
+   177→                  <SelectItem value="all">All statuses</SelectItem>
+   178→                  {SHIPMENT_STATUSES.map((s) => (
+   179→                    <SelectItem key={s} value={s}>{SHIPMENT_STATUS_META[s].label}</SelectItem>
+   180→                  ))}
+   181→                </SelectContent>
+   182→              </Select>
+   183→              <Select value={priority} onValueChange={(v) => { setPriority(v); setPage(1); }}>
+   184→                <SelectTrigger className="w-[130px]"><SelectValue placeholder="Priority" /></SelectTrigger>
+   185→                <SelectContent>
+   186→                  <SelectItem value="all">All priority</SelectItem>
+   187→                  {PRIORITIES.map((p) => (
+   188→                    <SelectItem key={p} value={p}>{PRIORITY_META[p].label}</SelectItem>
+   189→                  ))}
+   190→                </SelectContent>
+   191→              </Select>
+   192→              <Select value={service} onValueChange={(v) => { setService(v); setPage(1); }}>
+   193→                <SelectTrigger className="w-[140px]"><SelectValue placeholder="Service" /></SelectTrigger>
+   194→                <SelectContent>
+   195→                  <SelectItem value="all">All services</SelectItem>
+   196→                  {SERVICE_TYPES.map((s) => (
+   197→                    <SelectItem key={s} value={s}>{SERVICE_META[s].label}</SelectItem>
+   198→                  ))}
+   199→                </SelectContent>
+   200→              </Select>
+   201→              <Select value={city} onValueChange={(v) => { setCity(v); setPage(1); }}>
+   202→                <SelectTrigger className="w-[150px]"><SelectValue placeholder="City" /></SelectTrigger>
+   203→                <SelectContent>
+   204→                  <SelectItem value="all">All cities</SelectItem>
+   205→                  {VIETNAM_CITIES.map((c) => (
+   206→                    <SelectItem key={c} value={c}>{c}</SelectItem>
+   207→                  ))}
+   208→                </SelectContent>
+   209→              </Select>
+   210→              {hasFilters && (
+   211→                <Button variant="ghost" size="sm" onClick={resetFilters} className="gap-1 text-xs">
+   212→                  <X className="h-3.5 w-3.5" /> Clear
+   213→                </Button>
+   214→              )}
+   215→              <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
+   216→                <Plus className="h-4 w-4" /> New
+   217→              </Button>
+   218→            </div>
+   219→          </div>
+   220→        </CardContent>
+   221→      </Card>
+   222→
+   223→      {/* Table */}
+   224→      <Card>
+   225→        <CardContent className="p-0">
+   226→          {isLoading ? (
+   227→            <div className="space-y-2 p-4">
+   228→              {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-14 w-full" />)}
+   229→            </div>
+   230→          ) : !data?.items?.length ? (
+   231→            <div className="flex flex-col items-center justify-center gap-3 p-12 text-center">
+   232→              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
+   233→                <Package className="h-6 w-6" />
+   234→              </div>
+   235→              <div>
+   236→                <p className="text-sm font-medium">No shipments found</p>
+   237→                <p className="text-xs text-muted-foreground">Try adjusting filters or create a new shipment.</p>
+   238→              </div>
+   239→              <Button size="sm" variant="outline" onClick={resetFilters}>Reset filters</Button>
+   240→            </div>
+   241→          ) : (
+   242→            <>
+   243→              <div className="overflow-x-auto custom-scroll">
+   244→                <Table>
+   245→                  <TableHeader>
+   246→                    <TableRow className="bg-muted/40 hover:bg-muted/40">
+   247→                      <TableHead className="w-[40px]"><Checkbox aria-label="Select all" /></TableHead>
+   248→                      <TableHead className="min-w-[140px]">Tracking #</TableHead>
+   249→                      <TableHead className="min-w-[200px]">Route</TableHead>
+   250→                      <TableHead>Status</TableHead>
+   251→                      <TableHead className="hidden md:table-cell">Priority</TableHead>
+   252→                      <TableHead className="hidden lg:table-cell">Driver</TableHead>
+   253→                      <TableHead className="text-right">Cost</TableHead>
+   254→                      <TableHead className="hidden sm:table-cell">Created</TableHead>
+   255→                    </TableRow>
+   256→                  </TableHeader>
+   257→                  <TableBody>
+   258→                    {data.items.map((s) => {
+   259→                      const SIcon = SERVICE_ICON[s.serviceType] || Package;
+   260→                      return (
+   261→                        <TableRow
+   262→                          key={s.id}
+   263→                          onClick={() => setSelectedShipmentId(s.id)}
+   264→                          className="cursor-pointer transition-colors hover:bg-muted/50"
+   265→                        >
+   266→                          <TableCell onClick={(e) => e.stopPropagation()}>
+   267→                            <Checkbox aria-label={`Select ${s.trackingNumber}`} />
+   268→                          </TableCell>
+   269→                          <TableCell>
+   270→                            <div className="flex items-center gap-2">
+   271→                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+   272→                                <SIcon className="h-4 w-4" />
+   273→                              </div>
+   274→                              <div className="flex flex-col">
+   275→                                <span className="font-mono text-xs font-semibold">{s.trackingNumber}</span>
+   276→                                <span className="text-[10px] text-muted-foreground">{SERVICE_META[s.serviceType as keyof typeof SERVICE_META]?.label}</span>
+   277→                              </div>
+   278→                            </div>
+   279→                          </TableCell>
+   280→                          <TableCell>
+   281→                            <div className="flex items-center gap-1.5 text-sm">
+   282→                              <span className="font-medium">{s.originCity}</span>
+   283→                              <ArrowRight className="h-3 w-3 text-muted-foreground" />
+   284→                              <span className="font-medium">{s.destinationCity}</span>
+   285→                            </div>
+   286→                            <p className="text-[10px] text-muted-foreground">{s.sender.name} → {s.receiver.name}</p>
+   287→                          </TableCell>
+   288→                          <TableCell><StatusBadge status={s.status} kind="shipment" /></TableCell>
+   289→                          <TableCell className="hidden md:table-cell"><PriorityBadge priority={s.priority} /></TableCell>
+   290→                          <TableCell className="hidden lg:table-cell">
+   291→                            {s.driver ? (
+   292→                              <div className="flex items-center gap-2">
+   293→                                <Avatar className="h-7 w-7">
+   294→                                  <AvatarFallback className={cn("text-[10px] font-semibold text-white", avatarColorClass(s.driver.avatarColor))}>
+   295→                                    {initials(s.driver.name)}
+   296→                                  </AvatarFallback>
+   297→                                </Avatar>
+   298→                                <span className="text-xs">{s.driver.name}</span>
+   299→                              </div>
+   300→                            ) : (
+   301→                              <span className="text-xs text-muted-foreground">Unassigned</span>
+   302→                            )}
+   303→                          </TableCell>
+   304→                          <TableCell className="text-right font-semibold tabular-nums">{formatCurrency(s.cost)}</TableCell>
+   305→                          <TableCell className="hidden sm:table-cell text-xs text-muted-foreground">{formatRelativeTime(s.createdAt)}</TableCell>
+   306→                        </TableRow>
+   307→                      );
+   308→                    })}
+   309→                  </TableBody>
+   310→                </Table>
+   311→              </div>
+   312→
+   313→              {/* Pagination */}
+   314→              <div className="flex items-center justify-between gap-3 border-t px-4 py-3">
+   315→                <p className="text-xs text-muted-foreground">
+   316→                  Showing <span className="font-medium text-foreground">{(page - 1) * pageSize + 1}</span>–
+   317→                  <span className="font-medium text-foreground">{Math.min(page * pageSize, data.total)}</span> of{" "}
+   318→                  <span className="font-medium text-foreground">{data.total}</span>
+   319→                </p>
+   320→                <div className="flex items-center gap-1">
+   321→                  <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))} className="gap-1">
+   322→                    <ChevronLeft className="h-3.5 w-3.5" /> Prev
+   323→                  </Button>
+   324→                  <span className="px-2 text-xs text-muted-foreground">{page} / {data.totalPages || 1}</span>
+   325→                  <Button variant="outline" size="sm" disabled={page >= data.totalPages} onClick={() => setPage((p) => p + 1)} className="gap-1">
+   326→                    Next <ChevronRight className="h-3.5 w-3.5" />
+   327→                  </Button>
+   328→                </div>
+   329→              </div>
+   330→            </>
+   331→          )}
+   332→        </CardContent>
+   333→      </Card>
+   334→
+   335→      {/* Create dialog */}
+   336→      <CreateShipmentDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={(s) => {
+   337→        setSelectedShipmentId(s.id);
+   338→        qc.invalidateQueries({ queryKey: ["shipments"] });
+   339→        qc.invalidateQueries({ queryKey: ["dashboard"] });
+   340→        toast.success("Shipment created", { description: s.trackingNumber });
+   341→      }} />
+   342→
+   343→      {/* Detail drawer */}
+   344→      <ShipmentDetailDrawer
+   345→        shipmentId={selectedShipmentId}
+   346→        open={detailOpen}
+   347→        onOpenChange={(o) => { setDetailOpen(o); if (!o) setSelectedShipmentId(null); }}
+   348→      />
+   349→    </div>
+   350→  );
+   351→}
+   352→
+   353→// ---------- Create dialog ----------
+   354→function CreateShipmentDialog({
+   355→  open, onOpenChange, onCreated,
+   356→}: {
+   357→  open: boolean;
+   358→  onOpenChange: (o: boolean) => void;
+   359→  onCreated: (s: ShipmentListItem) => void;
+   360→}) {
+   361→  const qc = useQueryClient();
+   362→  const [form, setForm] = React.useState({
+   363→    senderId: "", receiverId: "", originAddress: "", originCity: "",
+   364→    destinationAddress: "", destinationCity: "", weightKg: "", pieces: "1",
+   365→    description: "", priority: "standard", serviceType: "standard",
+   366→    driverId: "", vehicleId: "", notes: "",
+   367→  });
+   368→
+   369→  const { data: customers } = useQuery({
+   370→    queryKey: ["customers", "all"],
+   371→    queryFn: () => api.get<{ items: { id: string; name: string; city: string }[] }>("/api/customers?pageSize=100"),
+   372→    enabled: open,
+   373→  });
+   374→  const { data: drivers } = useQuery({
+   375→    queryKey: ["drivers", "all"],
+   376→    queryFn: () => api.get<{ items: { id: string; name: string; status: string }[] }>("/api/drivers"),
+   377→    enabled: open,
+   378→  });
+   379→  const { data: vehicles } = useQuery({
+   380→    queryKey: ["vehicles", "all"],
+   381→    queryFn: () => api.get<{ items: { id: string; plateNumber: string; model: string }[] }>("/api/vehicles"),
+   382→    enabled: open,
+   383→  });
+   384→
+   385→  const create = useMutation({
+   386→    mutationFn: () => api.post<ShipmentListItem>("/api/shipments", {
+   387→      ...form,
+   388→      weightKg: Number(form.weightKg) || 0,
+   389→      pieces: Number(form.pieces) || 1,
+   390→      cost: (Number(form.weightKg) || 1) * 0.5 + 20,
+   391→    }),
+   392→    onSuccess: (s) => {
+   393→      onCreated(s);
+   394→      onOpenChange(false);
+   395→      setForm({ senderId: "", receiverId: "", originAddress: "", originCity: "", destinationAddress: "", destinationCity: "", weightKg: "", pieces: "1", description: "", priority: "standard", serviceType: "standard", driverId: "", vehicleId: "", notes: "" });
+   396→    },
+   397→    onError: (e: Error) => toast.error("Failed to create shipment", { description: e.message }),
+   398→  });
+   399→
+   400→  const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
+   401→
+   402→  return (
+   403→    <Dialog open={open} onOpenChange={onOpenChange}>
+   404→      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto custom-scroll">
+   405→        <DialogHeader>
+   406→          <DialogTitle className="flex items-center gap-2"><Plus className="h-5 w-5 text-emerald-500" /> Create New Shipment</DialogTitle>
+   407→          <DialogDescription>Fill in the shipment details. Tracking number is auto-generated.</DialogDescription>
+   408→        </DialogHeader>
+   409→
+   410→        <div className="grid grid-cols-1 gap-4 py-2 sm:grid-cols-2">
+   411→          <div className="space-y-1.5 sm:col-span-2">
+   412→            <Label>Service Type</Label>
+   413→            <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+   414→              {SERVICE_TYPES.map((s) => {
+   415→                const Icon = SERVICE_ICON[s] || Package;
+   416→                const active = form.serviceType === s;
+   417→                return (
+   418→                  <button
+   419→                    key={s}
+   420→                    type="button"
+   421→                    onClick={() => set("serviceType", s)}
+   422→                    className={cn(
+   423→                      "flex flex-col items-center gap-1 rounded-lg border p-2 text-xs transition-all",
+   424→                      active ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300" : "hover:bg-muted"
+   425→                    )}
+   426→                  >
+   427→                    <Icon className="h-4 w-4" />
+   428→                    {SERVICE_META[s].label}
+   429→                  </button>
+   430→                );
+   431→              })}
+   432→            </div>
+   433→          </div>
+   434→
+   435→          <div className="space-y-1.5">
+   436→            <Label>Sender *</Label>
+   437→            <Select value={form.senderId} onValueChange={(v) => set("senderId", v)}>
+   438→              <SelectTrigger><SelectValue placeholder="Select sender" /></SelectTrigger>
+   439→              <SelectContent>
+   440→                {customers?.items.map((c) => <SelectItem key={c.id} value={c.id}>{c.name} · {c.city}</SelectItem>)}
+   441→              </SelectContent>
+   442→            </Select>
+   443→          </div>
+   444→          <div className="space-y-1.5">
+   445→            <Label>Receiver *</Label>
+   446→            <Select value={form.receiverId} onValueChange={(v) => set("receiverId", v)}>
+   447→              <SelectTrigger><SelectValue placeholder="Select receiver" /></SelectTrigger>
+   448→              <SelectContent>
+   449→                {customers?.items.map((c) => <SelectItem key={c.id} value={c.id}>{c.name} · {c.city}</SelectItem>)}
+   450→              </SelectContent>
+   451→            </Select>
+   452→          </div>
+   453→
+   454→          <div className="space-y-1.5">
+   455→            <Label>Origin Address *</Label>
+   456→            <Input value={form.originAddress} onChange={(e) => set("originAddress", e.target.value)} placeholder="Street address" />
+   457→          </div>
+   458→          <div className="space-y-1.5">
+   459→            <Label>Origin City *</Label>
+   460→            <Select value={form.originCity} onValueChange={(v) => set("originCity", v)}>
+   461→              <SelectTrigger><SelectValue placeholder="Select city" /></SelectTrigger>
+   462→              <SelectContent>
+   463→                {VIETNAM_CITIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+   464→              </SelectContent>
+   465→            </Select>
+   466→          </div>
+   467→
+   468→          <div className="space-y-1.5">
+   469→            <Label>Destination Address *</Label>
+   470→            <Input value={form.destinationAddress} onChange={(e) => set("destinationAddress", e.target.value)} placeholder="Street address" />
+   471→          </div>
+   472→          <div className="space-y-1.5">
+   473→            <Label>Destination City *</Label>
+   474→            <Select value={form.destinationCity} onValueChange={(v) => set("destinationCity", v)}>
+   475→              <SelectTrigger><SelectValue placeholder="Select city" /></SelectTrigger>
+   476→              <SelectContent>
+   477→                {VIETNAM_CITIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+   478→              </SelectContent>
+   479→            </Select>
+   480→          </div>
+   481→
+   482→          <div className="space-y-1.5">
+   483→            <Label>Weight (kg)</Label>
+   484→            <Input type="number" value={form.weightKg} onChange={(e) => set("weightKg", e.target.value)} placeholder="0.0" />
+   485→          </div>
+   486→          <div className="space-y-1.5">
+   487→            <Label>Pieces</Label>
+   488→            <Input type="number" value={form.pieces} onChange={(e) => set("pieces", e.target.value)} placeholder="1" />
+   489→          </div>
+   490→
+   491→          <div className="space-y-1.5">
+   492→            <Label>Priority</Label>
+   493→            <Select value={form.priority} onValueChange={(v) => set("priority", v)}>
+   494→              <SelectTrigger><SelectValue /></SelectTrigger>
+   495→              <SelectContent>
+   496→                {PRIORITIES.map((p) => <SelectItem key={p} value={p}>{PRIORITY_META[p].label}</SelectItem>)}
+   497→              </SelectContent>
+   498→            </Select>
+   499→          </div>
+   500→          <div className="space-y-1.5">
+   501→            <Label>Description</Label>
+   502→            <Input value={form.description} onChange={(e) => set("description", e.target.value)} placeholder="e.g. Electronics" />
+   503→          </div>
+   504→
+   505→          <div className="space-y-1.5">
+   506→            <Label>Assign Driver</Label>
+   507→            <Select value={form.driverId} onValueChange={(v) => set("driverId", v)}>
+   508→              <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
+   509→              <SelectContent>
+   510→                <SelectItem value="">Unassigned</SelectItem>
+   511→                {drivers?.items.map((d) => <SelectItem key={d.id} value={d.id}>{d.name} · {d.status}</SelectItem>)}
+   512→              </SelectContent>
+   513→            </Select>
+   514→          </div>
+   515→          <div className="space-y-1.5">
+   516→            <Label>Assign Vehicle</Label>
+   517→            <Select value={form.vehicleId} onValueChange={(v) => set("vehicleId", v)}>
+   518→              <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
+   519→              <SelectContent>
+   520→                <SelectItem value="">Unassigned</SelectItem>
+   521→                {vehicles?.items.map((v) => <SelectItem key={v.id} value={v.id}>{v.plateNumber} · {v.model}</SelectItem>)}
+   522→              </SelectContent>
+   523→            </Select>
+   524→          </div>
+   525→
+   526→          <div className="space-y-1.5 sm:col-span-2">
+   527→            <Label>Notes</Label>
+   528→            <Textarea value={form.notes} onChange={(e) => set("notes", e.target.value)} placeholder="Optional handling notes…" rows={2} />
+   529→          </div>
+   530→        </div>
+   531→
+   532→        <DialogFooter>
+   533→          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+   534→          <Button
+   535→            disabled={create.isPending || !form.senderId || !form.receiverId || !form.originAddress || !form.destinationAddress}
+   536→            onClick={() => create.mutate()}
+   537→            className="gap-1.5"
+   538→          >
+   539→            {create.isPending ? "Creating…" : (<><Plus className="h-4 w-4" /> Create Shipment</>)}
+   540→          </Button>
+   541→        </DialogFooter>
+   542→      </DialogContent>
+   543→    </Dialog>
+   544→  );
+   545→}
+   546→
+   547→// ---------- Detail drawer ----------
+   548→function ShipmentDetailDrawer({
+   549→  shipmentId, open, onOpenChange,
+   550→}: {
+   551→  shipmentId: string | null;
+   552→  open: boolean;
+   553→  onOpenChange: (o: boolean) => void;
+   554→}) {
+   555→  const qc = useQueryClient();
+   556→  const { data: shipment, isLoading } = useQuery({
+   557→    queryKey: ["shipment", shipmentId],
+   558→    queryFn: () => api.get<ShipmentDetail>(`/api/shipments/${shipmentId}`),
+   559→    enabled: !!shipmentId && open,
+   560→  });
+   561→
+   562→  const update = useMutation({
+   563→    mutationFn: (body: Record<string, unknown>) => api.patch<ShipmentDetail>(`/api/shipments/${shipmentId}`, body),
+   564→    onSuccess: () => {
+   565→      qc.invalidateQueries({ queryKey: ["shipment", shipmentId] });
+   566→      qc.invalidateQueries({ queryKey: ["shipments"] });
+   567→      qc.invalidateQueries({ queryKey: ["dashboard"] });
+   568→      toast.success("Shipment updated");
+   569→    },
+   570→    onError: (e: Error) => toast.error("Update failed", { description: e.message }),
+   571→  });
+   572→
+   573→  return (
+   574→    <Sheet open={open} onOpenChange={onOpenChange}>
+   575→      <SheetContent className="w-full sm:max-w-xl overflow-y-auto custom-scroll p-0">
+   576→        <SheetHeader className="border-b px-5 py-4">
+   577→          <SheetDescription className="sr-only">Shipment details</SheetDescription>
+   578→          <SheetTitle className="flex items-center gap-2 text-base">
+   579→            {shipment ? (
+   580→              <>
+   581→                <Package className="h-5 w-5 text-emerald-500" />
+   582→                <span className="font-mono">{shipment.trackingNumber}</span>
+   583→                <StatusBadge status={shipment.status} kind="shipment" />
+   584→              </>
+   585→            ) : "Loading…"}
+   586→          </SheetTitle>
+   587→        </SheetHeader>
+   588→
+   589→        {isLoading || !shipment ? (
+   590→          <div className="space-y-3 p-5">
+   591→            <Skeleton className="h-24 w-full" />
+   592→            <Skeleton className="h-48 w-full" />
+   593→          </div>
+   594→        ) : (
+   595→          <div className="space-y-5 p-5">
+   596→            {/* Route */}
+   597→            <div className="rounded-xl border bg-muted/30 p-4">
+   598→              <div className="flex items-center justify-between gap-3">
+   599→                <div className="flex-1">
+   600→                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">From</p>
+   601→                  <p className="font-semibold">{shipment.originCity}</p>
+   602→                  <p className="text-xs text-muted-foreground">{shipment.originAddress}</p>
+   603→                </div>
+   604→                <div className="flex flex-col items-center">
+   605→                  <ArrowRight className="h-5 w-5 text-emerald-500" />
+   606→                  <span className="mt-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+   607→                    {shipment.distanceKm} km
+   608→                  </span>
+   609→                </div>
+   610→                <div className="flex-1 text-right">
+   611→                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">To</p>
+   612→                  <p className="font-semibold">{shipment.destinationCity}</p>
+   613→                  <p className="text-xs text-muted-foreground">{shipment.destinationAddress}</p>
+   614→                </div>
+   615→              </div>
+   616→              {shipment.status !== "pending" && shipment.status !== "cancelled" && (
+   617→                <div className="mt-3">
+   618→                  <div className="mb-1 flex items-center justify-between text-xs">
+   619→                    <span className="text-muted-foreground">Progress</span>
+   620→                    <span className="font-semibold tabular-nums">{shipment.progress}%</span>
+   621→                  </div>
+   622→                  <Progress value={shipment.progress} className="h-2" />
+   623→                </div>
+   624→              )}
+   625→            </div>
+   626→
+   627→            {/* Quick actions */}
+   628→            <div className="flex flex-wrap gap-2">
+   629→              {shipment.status !== "delivered" && shipment.status !== "cancelled" && (
+   630→                <>
+   631→                  <Button size="sm" variant="outline" disabled={update.isPending} onClick={() => update.mutate({ status: "picked_up" })} className="gap-1.5">
+   632→                    <PackageCheck className="h-3.5 w-3.5" /> Pick Up
+   633→                  </Button>
+   634→                  <Button size="sm" variant="outline" disabled={update.isPending} onClick={() => update.mutate({ status: "in_transit" })} className="gap-1.5">
+   635→                    <Truck className="h-3.5 w-3.5" /> In Transit
+   636→                  </Button>
+   637→                  <Button size="sm" variant="outline" disabled={update.isPending} onClick={() => update.mutate({ status: "out_for_delivery" })} className="gap-1.5">
+   638→                    <MapPin className="h-3.5 w-3.5" /> Out for Delivery
+   639→                  </Button>
+   640→                  <Button size="sm" disabled={update.isPending} onClick={() => update.mutate({ status: "delivered", progress: 100 })} className="gap-1.5 bg-emerald-600 hover:bg-emerald-700">
+   641→                    <CheckCircle2 className="h-3.5 w-3.5" /> Mark Delivered
+   642→                  </Button>
+   643→                </>
+   644→              )}
+   645→              {shipment.status !== "delayed" && shipment.status !== "cancelled" && shipment.status !== "delivered" && (
+   646→                <Button size="sm" variant="outline" disabled={update.isPending} onClick={() => update.mutate({ status: "delayed" })} className="gap-1.5 text-orange-600">
+   647→                  <AlertTriangle className="h-3.5 w-3.5" /> Delay
+   648→                </Button>
+   649→              )}
+   650→              {shipment.status !== "cancelled" && shipment.status !== "delivered" && (
+   651→                <Button size="sm" variant="outline" disabled={update.isPending} onClick={() => update.mutate({ status: "cancelled" })} className="gap-1.5 text-rose-600">
+   652→                  <XCircle className="h-3.5 w-3.5" /> Cancel
+   653→                </Button>
+   654→              )}
+   655→              {shipment.status === "delivered" && (
+   656→                <Button size="sm" variant="outline" disabled={update.isPending} onClick={() => update.mutate({ status: "returned" })} className="gap-1.5">
+   657→                  <RotateCcw className="h-3.5 w-3.5" /> Mark Returned
+   658→                </Button>
+   659→              )}
+   660→            </div>
+   661→
+   662→            {/* Parties */}
+   663→            <div className="grid grid-cols-2 gap-3">
+   664→              <div className="rounded-lg border p-3">
+   665→                <p className="mb-1 flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground"><User className="h-3 w-3" /> Sender</p>
+   666→                <p className="text-sm font-medium">{shipment.sender.name}</p>
+   667→                <p className="text-xs text-muted-foreground">{shipment.sender.city}</p>
+   668→              </div>
+   669→              <div className="rounded-lg border p-3">
+   670→                <p className="mb-1 flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground"><User className="h-3 w-3" /> Receiver</p>
+   671→                <p className="text-sm font-medium">{shipment.receiver.name}</p>
+   672→                <p className="text-xs text-muted-foreground">{shipment.receiver.city}</p>
+   673→              </div>
+   674→            </div>
+   675→
+   676→            {/* Cargo & cost grid */}
+   677→            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+   678→              <Stat label="Weight" value={formatWeight(shipment.weightKg)} icon={Weight} />
+   679→              <Stat label="Pieces" value={String(shipment.pieces)} icon={Box} />
+   680→              <Stat label="Cost" value={formatCurrency(shipment.cost)} icon={DollarSign} />
+   681→              <Stat label="Insurance" value={formatCurrency(shipment.insurance)} icon={DollarSign} />
+   682→            </div>
+   683→
+   684→            {/* Driver / Vehicle */}
+   685→            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+   686→              <div className="rounded-lg border p-3">
+   687→                <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">Assigned Driver</p>
+   688→                {shipment.driver ? (
+   689→                  <div className="flex items-center gap-2">
+   690→                    <Avatar className="h-8 w-8">
+   691→                      <AvatarFallback className="bg-emerald-500 text-xs font-semibold text-white">{initials(shipment.driver.name)}</AvatarFallback>
+   692→                    </Avatar>
+   693→                    <div>
+   694→                      <p className="text-sm font-medium">{shipment.driver.name}</p>
+   695→                      <p className="text-xs text-muted-foreground capitalize">{shipment.driver.status.replace("_", " ")}</p>
+   696→                    </div>
+   697→                  </div>
+   698→                ) : <p className="text-xs text-muted-foreground">Unassigned</p>}
+   699→              </div>
+   700→              <div className="rounded-lg border p-3">
+   701→                <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">Vehicle</p>
+   702→                {shipment.vehicle ? (
+   703→                  <div className="flex items-center gap-2">
+   704→                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400">
+   705→                      <Truck className="h-4 w-4" />
+   706→                    </div>
+   707→                    <div>
+   708→                      <p className="text-sm font-medium">{shipment.vehicle.plateNumber}</p>
+   709→                      <p className="text-xs text-muted-foreground">{shipment.vehicle.model}</p>
+   710→                    </div>
+   711→                  </div>
+   712→                ) : <p className="text-xs text-muted-foreground">Unassigned</p>}
+   713→              </div>
+   714→            </div>
+   715→
+   716→            {/* Tracking timeline */}
+   717→            <div>
+   718→              <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold">
+   719→                <Clock className="h-4 w-4 text-muted-foreground" /> Tracking History
+   720→              </h4>
+   721→              <div className="relative space-y-3 border-l-2 border-muted pl-4">
+   722→                {shipment.trackingEvents.map((ev, i) => {
+   723→                  const meta = SHIPMENT_STATUS_META[ev.status as keyof typeof SHIPMENT_STATUS_META];
+   724→                  return (
+   725→                    <div key={ev.id} className="relative">
+   726→                      <span className={cn("absolute -left-[21px] top-1 h-3 w-3 rounded-full border-2 border-background", meta?.dot || "bg-slate-400")} />
+   727→                      <div className="flex items-center justify-between gap-2">
+   728→                        <span className="text-sm font-medium">{meta?.label || ev.status}</span>
+   729→                        <span className="text-[10px] text-muted-foreground">{formatDateTime(ev.timestamp)}</span>
+   730→                      </div>
+   731→                      {ev.note && <p className="text-xs text-muted-foreground">{ev.note}</p>}
+   732→                      {ev.location && <p className="text-[10px] text-muted-foreground">📍 {ev.location}</p>}
+   733→                    </div>
+   734→                  );
+   735→                })}
+   736→              </div>
+   737→            </div>
+   738→
+   739→            {shipment.notes && (
+   740→              <div className="rounded-lg border bg-amber-50 dark:bg-amber-950/20 p-3">
+   741→                <p className="mb-1 text-[10px] uppercase tracking-wider text-amber-700 dark:text-amber-400">Notes</p>
+   742→                <p className="text-xs">{shipment.notes}</p>
+   743→              </div>
+   744→            )}
+   745→          </div>
+   746→        )}
+   747→      </SheetContent>
+   748→    </Sheet>
+   749→  );
+   750→}
+   751→
+   752→function Stat({ label, value, icon: Icon }: { label: string; value: string; icon: React.ElementType }) {
+   753→  return (
+   754→    <div className="rounded-lg border p-3">
+   755→      <p className="mb-1 flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+   756→        <Icon className="h-3 w-3" /> {label}
+   757→      </p>
+   758→      <p className="text-sm font-semibold tabular-nums">{value}</p>
+   759→    </div>
+   760→  );
+   761→}
+   762→
+   763→function useDebounce<T>(value: T, delay: number): T {
+   764→  const [v, setV] = React.useState(value);
+   765→  React.useEffect(() => {
+   766→    const t = setTimeout(() => setV(value), delay);
+   767→    return () => clearTimeout(t);
+   768→  }, [value, delay]);
+   769→  return v;
+   770→}
+   771→
