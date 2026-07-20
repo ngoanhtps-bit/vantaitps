@@ -34,7 +34,7 @@ import {
   Package, Search, Plus, Filter, Download, ArrowRight, MapPin, Truck,
   User, Calendar, DollarSign, Weight, Box, ChevronLeft, ChevronRight,
   X, Clock, CheckCircle2, AlertTriangle, PackageCheck, XCircle, RotateCcw,
-  Pencil, Trash2, Printer, Zap, Container, UserCheck, Headphones, Building2, Columns3, Upload,
+  Pencil, Trash2, Printer, Zap, Container, UserCheck, Headphones, Building2, Columns3, Upload, Download,
 } from "lucide-react";
 import {
   SHIPMENT_STATUSES, SHIPMENT_STATUS_META, PRIORITIES, PRIORITY_META,
@@ -49,6 +49,7 @@ import { avatarColorClass } from "@/components/avatar-color";
 import { PrintLabelDialog } from "@/components/print-label-dialog";
 import { QuickTripDialog } from "@/components/quick-trip-dialog";
 import { ImportDialog } from "@/components/import-dialog";
+import { useAuthStore } from "@/lib/auth-store";
 import { cn } from "@/lib/utils";
 
 type ShipmentListItem = {
@@ -126,33 +127,37 @@ const SERVICE_ICON: Record<string, React.ElementType> = {
   standard: Package, express: Truck, same_day: Clock, freight: Box, cold_chain: PackageCheck,
 };
 
-// Cấu hình cột — có thể bật/tắt
+// Cấu hình cột — theo file cũ: month, shipper, cargo, pickup, delivery, date, departure_time,
+// driver, truck, mooc, container, phone, vehicle_type, status, bb, dispatch, supplier, note_2, note_3
 const COLUMN_CONFIG: { key: string; label: string; defaultVisible: boolean }[] = [
-  { key: "trackingNumber", label: "Mã vận đơn", defaultVisible: true },
-  { key: "route", label: "Tuyến đường", defaultVisible: true },
-  { key: "matHang", label: "Mặt hàng", defaultVisible: true },
+  { key: "trackingNumber", label: "ID", defaultVisible: true },
   { key: "salePerson", label: "SALE", defaultVisible: true },
-  { key: "customer", label: "Khách hàng", defaultVisible: true },
+  { key: "matHang", label: "Mặt hàng", defaultVisible: true },
+  { key: "route", label: "Điểm đóng → Điểm trả", defaultVisible: true },
   { key: "ngayDi", label: "Ngày đi", defaultVisible: true },
-  { key: "gioDi", label: "Giờ đi", defaultVisible: false },
-  { key: "status", label: "Trạng thái", defaultVisible: true },
-  { key: "priority", label: "Ưu tiên", defaultVisible: false },
-  { key: "plateNumber", label: "Biển số", defaultVisible: true },
+  { key: "gioDi", label: "Giờ đi", defaultVisible: true },
+  { key: "driver", label: "Tên LX", defaultVisible: true },
+  { key: "plateNumber", label: "BKS", defaultVisible: true },
+  { key: "trailerNumber", label: "Mooc", defaultVisible: true },
+  { key: "containerNumber", label: "Cont", defaultVisible: true },
+  { key: "driverPhone", label: "SĐT LX", defaultVisible: true },
   { key: "loaiXe", label: "Loại xe", defaultVisible: true },
-  { key: "trailerNumber", label: "Mooc", defaultVisible: false },
-  { key: "containerNumber", label: "Cont", defaultVisible: false },
-  { key: "driver", label: "Tài xế", defaultVisible: true },
-  { key: "driverPhone", label: "SĐT LX", defaultVisible: false },
+  { key: "status", label: "Trạng thái", defaultVisible: true },
   { key: "daGuiBienBan", label: "BB", defaultVisible: true },
   { key: "dispatcher", label: "Điều phối", defaultVisible: true },
-  { key: "nccXe", label: "NCC xe", defaultVisible: false },
+  { key: "nccXe", label: "NCC xe", defaultVisible: true },
+  { key: "ghiChu1", label: "Ghi chú 1", defaultVisible: false },
+  { key: "ghiChu2", label: "Ghi chú 2", defaultVisible: false },
+  { key: "ghiChu3", label: "Ghi chú 3", defaultVisible: false },
   { key: "cost", label: "Chi phí", defaultVisible: false },
-  { key: "createdAt", label: "Ngày tạo", defaultVisible: true },
+  { key: "createdAt", label: "Ngày tạo", defaultVisible: false },
 ];
 
 export function ShipmentsView() {
   const qc = useQueryClient();
   const { selectedShipmentId, setSelectedShipmentId, shipmentsFilter, setShipmentsFilter } = useAppStore();
+  const { canView: canViewShipments } = useAuthStore();
+  const isAdmin = useAuthStore((s) => s.user?.role === "admin");
 
   const [search, setSearch] = React.useState("");
   const [status, setStatus] = React.useState(shipmentsFilter || "all");
@@ -392,6 +397,53 @@ export function ShipmentsView() {
                   </div>
                 </PopoverContent>
               </Popover>
+              {/* Export button - tất cả user */}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  if (!data) return;
+                  const rows = [
+                    ["ID", "SALE", "Mat hang", "Diem dong", "Diem tra", "Ngay di", "Gio di", "Ten LX", "BKS", "Mooc", "Cont", "SDT LX", "Loai xe", "Trang thai", "BB", "Dieu phoi", "NCC xe", "Ghi chu 1", "Ghi chu 2", "Ghi chu 3"],
+                    ...data.items.map((s) => [
+                      s.trackingNumber,
+                      s.salePerson || "",
+                      s.matHang || "",
+                      s.originCity,
+                      s.destinationCity,
+                      s.ngayDi || s.tripDate || "",
+                      s.gioDi || "",
+                      s.driver?.name || "",
+                      s.vehicle?.plateNumber || "",
+                      s.trailerNumber || "",
+                      s.containerNumber || "",
+                      s.driver?.phone || "",
+                      s.vehicle?.loaiXe || "",
+                      s.status,
+                      s.daGuiBienBan ? "x" : "",
+                      s.dispatcher || "",
+                      "",
+                      s.ghiChu1 || "",
+                      s.ghiChu2 || "",
+                      s.ghiChu3 || "",
+                    ]),
+                  ];
+                  const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+                  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `don-hang-${new Date().toISOString().slice(0, 10)}.csv`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  toast.success(`Đã xuất ${data.items.length} đơn hàng`);
+                }}
+                className="gap-1.5"
+              >
+                <Download className="h-4 w-4" /> Export
+              </Button>
+              {/* Import button - chỉ admin */}
+              {isAdmin && (
               <Button
                 size="sm"
                 variant="outline"
@@ -400,6 +452,7 @@ export function ShipmentsView() {
               >
                 <Upload className="h-4 w-4" /> Import
               </Button>
+              )}
               <Button
                 size="sm"
                 variant="outline"
@@ -551,26 +604,27 @@ export function ShipmentsView() {
                           onCheckedChange={toggleSelectAll}
                         />
                       </TableHead>
-                      {visibleColumns.has("trackingNumber") && <TableHead className="min-w-[130px]">Mã vận đơn</TableHead>}
-                      {visibleColumns.has("route") && <TableHead className="min-w-[160px]">Tuyến đường</TableHead>}
-                      {visibleColumns.has("matHang") && <TableHead>Mặt hàng</TableHead>}
+                      {visibleColumns.has("trackingNumber") && <TableHead className="min-w-[120px]">ID</TableHead>}
                       {visibleColumns.has("salePerson") && <TableHead>SALE</TableHead>}
-                      {visibleColumns.has("customer") && <TableHead className="hidden md:table-cell">Khách hàng</TableHead>}
+                      {visibleColumns.has("matHang") && <TableHead>Mặt hàng</TableHead>}
+                      {visibleColumns.has("route") && <TableHead className="min-w-[160px]">Điểm đóng → Điểm trả</TableHead>}
                       {visibleColumns.has("ngayDi") && <TableHead>Ngày đi</TableHead>}
-                      {visibleColumns.has("gioDi") && <TableHead className="hidden xl:table-cell">Giờ đi</TableHead>}
+                      {visibleColumns.has("gioDi") && <TableHead>Giờ đi</TableHead>}
+                      {visibleColumns.has("driver") && <TableHead>Tên LX</TableHead>}
+                      {visibleColumns.has("plateNumber") && <TableHead>BKS</TableHead>}
+                      {visibleColumns.has("trailerNumber") && <TableHead>Mooc</TableHead>}
+                      {visibleColumns.has("containerNumber") && <TableHead>Cont</TableHead>}
+                      {visibleColumns.has("driverPhone") && <TableHead>SĐT LX</TableHead>}
+                      {visibleColumns.has("loaiXe") && <TableHead>Loại xe</TableHead>}
                       {visibleColumns.has("status") && <TableHead>Trạng thái</TableHead>}
-                      {visibleColumns.has("priority") && <TableHead className="hidden md:table-cell">Ưu tiên</TableHead>}
-                      {visibleColumns.has("plateNumber") && <TableHead>Biển số</TableHead>}
-                      {visibleColumns.has("loaiXe") && <TableHead className="hidden lg:table-cell">Loại xe</TableHead>}
-                      {visibleColumns.has("trailerNumber") && <TableHead className="hidden xl:table-cell">Mooc</TableHead>}
-                      {visibleColumns.has("containerNumber") && <TableHead className="hidden xl:table-cell">Cont</TableHead>}
-                      {visibleColumns.has("driver") && <TableHead>Tài xế</TableHead>}
-                      {visibleColumns.has("driverPhone") && <TableHead className="hidden xl:table-cell">SĐT LX</TableHead>}
                       {visibleColumns.has("daGuiBienBan") && <TableHead className="text-center">BB</TableHead>}
-                      {visibleColumns.has("dispatcher") && <TableHead className="hidden lg:table-cell">Điều phối</TableHead>}
-                      {visibleColumns.has("nccXe") && <TableHead className="hidden xl:table-cell">NCC xe</TableHead>}
+                      {visibleColumns.has("dispatcher") && <TableHead>Điều phối</TableHead>}
+                      {visibleColumns.has("nccXe") && <TableHead>NCC xe</TableHead>}
+                      {visibleColumns.has("ghiChu1") && <TableHead>Ghi chú 1</TableHead>}
+                      {visibleColumns.has("ghiChu2") && <TableHead>Ghi chú 2</TableHead>}
+                      {visibleColumns.has("ghiChu3") && <TableHead>Ghi chú 3</TableHead>}
                       {visibleColumns.has("cost") && <TableHead className="text-right">Chi phí</TableHead>}
-                      {visibleColumns.has("createdAt") && <TableHead className="hidden sm:table-cell">Ngày tạo</TableHead>}
+                      {visibleColumns.has("createdAt") && <TableHead>Ngày tạo</TableHead>}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -592,7 +646,16 @@ export function ShipmentsView() {
                           {visibleColumns.has("trackingNumber") && (
                             <TableCell>
                               <span className="font-mono text-xs font-semibold">{s.trackingNumber}</span>
-                              <p className="text-[10px] text-muted-foreground">{SERVICE_META[s.serviceType as keyof typeof SERVICE_META]?.label}</p>
+                            </TableCell>
+                          )}
+                          {visibleColumns.has("salePerson") && (
+                            <TableCell className="text-xs font-medium">{s.salePerson || "—"}</TableCell>
+                          )}
+                          {visibleColumns.has("matHang") && (
+                            <TableCell>
+                              {s.matHang ? (
+                                <Badge variant="outline" className="text-[10px]">{s.matHang}</Badge>
+                              ) : <span className="text-xs text-muted-foreground">—</span>}
                             </TableCell>
                           )}
                           {visibleColumns.has("route") && (
@@ -604,33 +667,18 @@ export function ShipmentsView() {
                               </div>
                             </TableCell>
                           )}
-                          {visibleColumns.has("matHang") && (
-                            <TableCell>
-                              {s.matHang ? (
-                                <Badge variant="outline" className="text-[10px]">{s.matHang}</Badge>
-                              ) : <span className="text-xs text-muted-foreground">—</span>}
-                            </TableCell>
-                          )}
-                          {visibleColumns.has("salePerson") && (
-                            <TableCell className="text-xs font-medium">{s.salePerson || "—"}</TableCell>
-                          )}
-                          {visibleColumns.has("customer") && (
-                            <TableCell className="hidden md:table-cell">
-                              <span className="text-xs">{s.sender.name}</span>
-                              {s.customerCode && <p className="text-[10px] text-muted-foreground font-mono">{s.customerCode}</p>}
-                            </TableCell>
-                          )}
                           {visibleColumns.has("ngayDi") && (
                             <TableCell className="text-xs">{s.ngayDi || s.tripDate || "—"}</TableCell>
                           )}
                           {visibleColumns.has("gioDi") && (
-                            <TableCell className="hidden xl:table-cell text-xs">{s.gioDi || "—"}</TableCell>
+                            <TableCell className="text-xs">{s.gioDi || "—"}</TableCell>
                           )}
-                          {visibleColumns.has("status") && (
-                            <TableCell><StatusBadge status={s.status} kind="shipment" /></TableCell>
-                          )}
-                          {visibleColumns.has("priority") && (
-                            <TableCell className="hidden md:table-cell"><PriorityBadge priority={s.priority} /></TableCell>
+                          {visibleColumns.has("driver") && (
+                            <TableCell>
+                              {s.driver ? (
+                                <span className="text-xs">{s.driver.name}</span>
+                              ) : <span className="text-xs text-muted-foreground">—</span>}
+                            </TableCell>
                           )}
                           {visibleColumns.has("plateNumber") && (
                             <TableCell>
@@ -639,41 +687,30 @@ export function ShipmentsView() {
                               ) : <span className="text-xs text-muted-foreground">—</span>}
                             </TableCell>
                           )}
+                          {visibleColumns.has("trailerNumber") && (
+                            <TableCell>
+                              {s.trailerNumber ? <span className="font-mono text-xs">{s.trailerNumber}</span> : <span className="text-xs text-muted-foreground">—</span>}
+                            </TableCell>
+                          )}
+                          {visibleColumns.has("containerNumber") && (
+                            <TableCell>
+                              {s.containerNumber ? <span className="font-mono text-xs">{s.containerNumber}</span> : <span className="text-xs text-muted-foreground">—</span>}
+                            </TableCell>
+                          )}
+                          {visibleColumns.has("driverPhone") && (
+                            <TableCell>
+                              {s.driver ? <span className="font-mono text-xs">{s.driver.phone}</span> : <span className="text-xs text-muted-foreground">—</span>}
+                            </TableCell>
+                          )}
                           {visibleColumns.has("loaiXe") && (
-                            <TableCell className="hidden lg:table-cell">
+                            <TableCell>
                               {s.vehicle?.loaiXe ? (
                                 <Badge variant="outline" className="text-[10px]">{s.vehicle.loaiXe}</Badge>
                               ) : <span className="text-xs text-muted-foreground">—</span>}
                             </TableCell>
                           )}
-                          {visibleColumns.has("trailerNumber") && (
-                            <TableCell className="hidden xl:table-cell">
-                              {s.trailerNumber ? <span className="font-mono text-xs">{s.trailerNumber}</span> : <span className="text-xs text-muted-foreground">—</span>}
-                            </TableCell>
-                          )}
-                          {visibleColumns.has("containerNumber") && (
-                            <TableCell className="hidden xl:table-cell">
-                              {s.containerNumber ? <span className="font-mono text-xs">{s.containerNumber}</span> : <span className="text-xs text-muted-foreground">—</span>}
-                            </TableCell>
-                          )}
-                          {visibleColumns.has("driver") && (
-                            <TableCell>
-                              {s.driver ? (
-                                <div className="flex items-center gap-2">
-                                  <Avatar className="h-7 w-7">
-                                    <AvatarFallback className={cn("text-[10px] font-semibold text-white", avatarColorClass(s.driver.avatarColor))}>
-                                      {initials(s.driver.name)}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <span className="text-xs">{s.driver.name}</span>
-                                </div>
-                              ) : <span className="text-xs text-muted-foreground">Chưa gán</span>}
-                            </TableCell>
-                          )}
-                          {visibleColumns.has("driverPhone") && (
-                            <TableCell className="hidden xl:table-cell">
-                              {s.driver ? <span className="font-mono text-xs">{s.driver.phone}</span> : <span className="text-xs text-muted-foreground">—</span>}
-                            </TableCell>
+                          {visibleColumns.has("status") && (
+                            <TableCell><StatusBadge status={s.status} kind="shipment" /></TableCell>
                           )}
                           {visibleColumns.has("daGuiBienBan") && (
                             <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
@@ -688,10 +725,19 @@ export function ShipmentsView() {
                             </TableCell>
                           )}
                           {visibleColumns.has("dispatcher") && (
-                            <TableCell className="hidden lg:table-cell text-xs">{s.dispatcher || "—"}</TableCell>
+                            <TableCell className="text-xs">{s.dispatcher || "—"}</TableCell>
                           )}
                           {visibleColumns.has("nccXe") && (
-                            <TableCell className="hidden xl:table-cell text-xs text-muted-foreground">—</TableCell>
+                            <TableCell className="text-xs text-muted-foreground">—</TableCell>
+                          )}
+                          {visibleColumns.has("ghiChu1") && (
+                            <TableCell className="text-xs">{s.ghiChu1 || "—"}</TableCell>
+                          )}
+                          {visibleColumns.has("ghiChu2") && (
+                            <TableCell className="text-xs">{s.ghiChu2 || "—"}</TableCell>
+                          )}
+                          {visibleColumns.has("ghiChu3") && (
+                            <TableCell className="text-xs">{s.ghiChu3 || "—"}</TableCell>
                           )}
                           {visibleColumns.has("cost") && (
                             <TableCell className="text-right font-semibold tabular-nums">{formatCurrency(s.cost)}</TableCell>
