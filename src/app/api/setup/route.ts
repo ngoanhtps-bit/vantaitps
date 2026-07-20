@@ -1,81 +1,62 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { PrismaClient } from "@prisma/client";
 
-// Dùng Prisma ORM thay vì raw SQL (hoạt động tốt hơn với pgbouncer)
 export async function GET() {
-  const results: { tables: string[]; users: number; error: string | null } = {
-    tables: [],
-    users: 0,
-    error: null,
-  };
+  const pass = "Vantaitps%40123";
+  const ref = "sfpmauzfusoarpjhzvgh";
+  const url = `postgresql://postgres.${ref}:${pass}@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true`;
+
+  const results: string[] = [];
 
   try {
-    // Thử tạo user bằng Prisma ORM (không dùng raw SQL)
-    const existingUsers = await db.user.count().catch((e) => {
-      results.error = `count users: ${e.message}`;
-      return -1;
-    });
+    const prisma = new PrismaClient({ datasources: { db: { url } } });
 
-    if (existingUsers === -1) {
-      // Nếu không count được → tables chưa tồn tại
-      // Thử tạo user trực tiếp (Prisma sẽ tự báo lỗi chi tiết)
-      const testUser = await db.user.create({
-        data: {
-          id: "test-" + Date.now(),
-          username: "test_" + Date.now(),
-          password: "test",
-          hoTen: "Test User",
-          role: "thuky",
-        },
-      }).catch((e) => {
-        results.error = `create user: ${e.message}`;
-        return null;
-      });
+    // Check existing users
+    const userCount = await prisma.user.count().catch(() => -1);
+    results.push(`Users: ${userCount}`);
 
-      if (testUser) {
-        results.tables.push("User (table auto-created by Prisma)");
-        // Xóa test user
-        await db.user.delete({ where: { id: testUser.id } }).catch(() => {});
+    // Check existing tables
+    const tables = await prisma.$queryRawUnsafe("SELECT tablename FROM pg_tables WHERE schemaname = 'public'") as Array<{ tablename: string }>;
+    const tableNames = tables.map(t => t.tablename);
+    results.push(`Existing tables: ${tableNames.join(", ") || "none"}`);
+
+    // Create tables using raw SQL if they don't exist
+    const createSQL = [
+      { name: "Customer", sql: `CREATE TABLE IF NOT EXISTS "Customer" (id TEXT PRIMARY KEY, name TEXT NOT NULL, email TEXT, phone TEXT NOT NULL, company TEXT, address TEXT NOT NULL, city TEXT NOT NULL, country TEXT DEFAULT 'Vietnam', "zipCode" TEXT, type TEXT DEFAULT 'business', status TEXT DEFAULT 'active', notes TEXT, "createdAt" TIMESTAMP DEFAULT NOW(), "updatedAt" TIMESTAMP DEFAULT NOW())` },
+      { name: "NhaCungCap", sql: `CREATE TABLE IF NOT EXISTS "NhaCungCap" (id TEXT PRIMARY KEY, "tenDonVi" TEXT NOT NULL, "maNCC" TEXT UNIQUE, sdt TEXT, email TEXT, "diaChi" TEXT, "nguoiLienHe" TEXT, "sdtLienHe" TEXT, "msThue" TEXT, "ghiChu" TEXT, "createdAt" TIMESTAMP DEFAULT NOW(), "updatedAt" TIMESTAMP DEFAULT NOW())` },
+      { name: "Vehicle", sql: `CREATE TABLE IF NOT EXISTS "Vehicle" (id TEXT PRIMARY KEY, "plateNumber" TEXT UNIQUE NOT NULL, model TEXT NOT NULL, brand TEXT NOT NULL, type TEXT DEFAULT 'truck', "loaiXe" TEXT, "capacityKg" DOUBLE PRECISION DEFAULT 0, "fuelType" TEXT DEFAULT 'diesel', "fuelLevel" DOUBLE PRECISION DEFAULT 100, mileage DOUBLE PRECISION DEFAULT 0, status TEXT DEFAULT 'active', "lastMaintenance" TEXT, "nextMaintenance" TEXT, color TEXT DEFAULT 'slate', "nhaCungCapId" TEXT, "createdAt" TIMESTAMP DEFAULT NOW(), "updatedAt" TIMESTAMP DEFAULT NOW())` },
+      { name: "Driver", sql: `CREATE TABLE IF NOT EXISTS "Driver" (id TEXT PRIMARY KEY, name TEXT NOT NULL, email TEXT UNIQUE, phone TEXT NOT NULL, "licenseNumber" TEXT NOT NULL, "licenseExpiry" TEXT, status TEXT DEFAULT 'available', rating DOUBLE PRECISION DEFAULT 5.0, "totalDeliveries" INTEGER DEFAULT 0, "totalDistance" DOUBLE PRECISION DEFAULT 0, "hireDate" TEXT, "avatarColor" TEXT DEFAULT 'emerald', "vehicleId" TEXT UNIQUE, "nhaCungCapId" TEXT, "createdAt" TIMESTAMP DEFAULT NOW(), "updatedAt" TIMESTAMP DEFAULT NOW())` },
+      { name: "Warehouse", sql: `CREATE TABLE IF NOT EXISTS "Warehouse" (id TEXT PRIMARY KEY, name TEXT NOT NULL, code TEXT UNIQUE NOT NULL, address TEXT NOT NULL, city TEXT NOT NULL, country TEXT DEFAULT 'Vietnam', capacity DOUBLE PRECISION DEFAULT 1000, used DOUBLE PRECISION DEFAULT 0, manager TEXT, phone TEXT, status TEXT DEFAULT 'operational', lat DOUBLE PRECISION, lng DOUBLE PRECISION, "createdAt" TIMESTAMP DEFAULT NOW(), "updatedAt" TIMESTAMP DEFAULT NOW())` },
+      { name: "Shipment", sql: `CREATE TABLE IF NOT EXISTS "Shipment" (id TEXT PRIMARY KEY, "trackingNumber" TEXT UNIQUE NOT NULL, status TEXT DEFAULT 'pending', priority TEXT DEFAULT 'standard', "serviceType" TEXT DEFAULT 'standard', "senderId" TEXT NOT NULL, "receiverId" TEXT NOT NULL, "originWarehouseId" TEXT, "destinationWarehouseId" TEXT, "originAddress" TEXT NOT NULL, "originCity" TEXT NOT NULL, "destinationAddress" TEXT NOT NULL, "destinationCity" TEXT NOT NULL, "distanceKm" DOUBLE PRECISION DEFAULT 0, "weightKg" DOUBLE PRECISION NOT NULL, "volumeM3" DOUBLE PRECISION DEFAULT 0, pieces INTEGER DEFAULT 1, description TEXT, "driverId" TEXT, "vehicleId" TEXT, cost DOUBLE PRECISION DEFAULT 0, insurance DOUBLE PRECISION DEFAULT 0, currency TEXT DEFAULT 'USD', "estimatedDelivery" TEXT, "pickedUpAt" TEXT, "deliveredAt" TEXT, "currentLat" DOUBLE PRECISION, "currentLng" DOUBLE PRECISION, progress DOUBLE PRECISION DEFAULT 0, notes TEXT, signature TEXT, "trailerNumber" TEXT, "containerNumber" TEXT, "salePerson" TEXT, dispatcher TEXT, "tripDate" TEXT, "customerCode" TEXT, "matHang" TEXT, "ngayDi" TEXT, "gioDi" TEXT, "daGuiBienBan" BOOLEAN DEFAULT false, "ghiChu1" TEXT, "ghiChu2" TEXT, "ghiChu3" TEXT, "createdAt" TIMESTAMP DEFAULT NOW(), "updatedAt" TIMESTAMP DEFAULT NOW())` },
+      { name: "TrackingEvent", sql: `CREATE TABLE IF NOT EXISTS "TrackingEvent" (id TEXT PRIMARY KEY, "shipmentId" TEXT NOT NULL, status TEXT NOT NULL, location TEXT, lat DOUBLE PRECISION, lng DOUBLE PRECISION, note TEXT, timestamp TIMESTAMP DEFAULT NOW())` },
+      { name: "Route", sql: `CREATE TABLE IF NOT EXISTS "Route" (id TEXT PRIMARY KEY, name TEXT NOT NULL, "driverId" TEXT, "vehicleId" TEXT, status TEXT DEFAULT 'planned', "stopsCount" INTEGER DEFAULT 0, "distanceKm" DOUBLE PRECISION DEFAULT 0, "durationMin" INTEGER DEFAULT 0, "startedAt" TEXT, "endedAt" TEXT, "createdAt" TIMESTAMP DEFAULT NOW(), "updatedAt" TIMESTAMP DEFAULT NOW())` },
+      { name: "Invoice", sql: `CREATE TABLE IF NOT EXISTS "Invoice" (id TEXT PRIMARY KEY, "invoiceNumber" TEXT UNIQUE NOT NULL, "customerId" TEXT NOT NULL, status TEXT DEFAULT 'draft', "issueDate" TIMESTAMP DEFAULT NOW(), "dueDate" TEXT, "periodStart" TEXT, "periodEnd" TEXT, subtotal DOUBLE PRECISION DEFAULT 0, "taxRate" DOUBLE PRECISION DEFAULT 0.1, "taxAmount" DOUBLE PRECISION DEFAULT 0, total DOUBLE PRECISION DEFAULT 0, currency TEXT DEFAULT 'USD', notes TEXT, "paidAt" TEXT, "createdAt" TIMESTAMP DEFAULT NOW(), "updatedAt" TIMESTAMP DEFAULT NOW())` },
+      { name: "RolePermission", sql: `CREATE TABLE IF NOT EXISTS "RolePermission" (id TEXT PRIMARY KEY, role TEXT NOT NULL, view TEXT NOT NULL, "canView" BOOLEAN DEFAULT false, "canCreate" BOOLEAN DEFAULT false, "canEdit" BOOLEAN DEFAULT false, "canDelete" BOOLEAN DEFAULT false, "createdAt" TIMESTAMP DEFAULT NOW(), "updatedAt" TIMESTAMP DEFAULT NOW(), UNIQUE(role, view))` },
+    ];
+
+    for (const t of createSQL) {
+      if (!tableNames.includes(t.name)) {
+        await prisma.$executeRawUnsafe(t.sql);
+        results.push(`✅ Created table: ${t.name}`);
       } else {
-        return NextResponse.json({
-          success: false,
-          error: results.error,
-          fix: "DATABASE_URL cần dùng pooler port 5432 (session mode), KHÔNG dùng port 6543 (transaction mode). Đổi thành: postgresql://postgres.sfpmauzfusoarpjhzvgh:Vantaitps%40123@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres"
-        }, { status: 500 });
+        results.push(`⏭️ Table exists: ${t.name}`);
       }
     }
 
-    // Seed 5 users nếu chưa có
-    if (existingUsers === 0) {
-      const users = [
-        { id: "u1", username: "admin", password: "123456", hoTen: "Quản trị viên", email: "admin@logistics.vn", sdt: "0901112233", role: "admin", avatarColor: "rose" },
-        { id: "u2", username: "dieuxe", password: "123456", hoTen: "Nguyễn Điều Xe", email: "dieuxe@logistics.vn", sdt: "0902223344", role: "dieuxe", avatarColor: "emerald" },
-        { id: "u3", username: "dieuphoi", password: "123456", hoTen: "Trần Điều Phối", email: "dieuphoi@logistics.vn", sdt: "0903334455", role: "dieuphoi", avatarColor: "sky" },
-        { id: "u4", username: "ketoan", password: "123456", hoTen: "Lê Kế Toán", email: "ketoan@logistics.vn", sdt: "0904445566", role: "ketoan", avatarColor: "violet" },
-        { id: "u5", username: "thuky", password: "123456", hoTen: "Phạm Thư Ký", email: "thuky@logistics.vn", sdt: "0905556677", role: "thuky", avatarColor: "amber" },
-      ];
-      
-      for (const u of users) {
-        await db.user.create({ data: u }).catch((e) => {
-          results.error = `seed ${u.username}: ${e.message}`;
-        });
-      }
-      results.users = 5;
-    } else {
-      results.users = existingUsers;
-    }
+    await prisma.$disconnect();
 
     return NextResponse.json({
       success: true,
-      message: existingUsers > 0 ? "Users đã tồn tại" : "Đã tạo 5 user thành công!",
-      usersCount: results.users,
-      error: results.error,
+      message: "Tất cả bảng đã sẵn sàng!",
+      users: userCount,
+      results,
+      correct_DATABASE_URL: `postgresql://postgres.${ref}:${pass}@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true`
     });
   } catch (e) {
     return NextResponse.json({
       success: false,
-      error: e instanceof Error ? e.message : "Unknown error",
-      fix: "Đổi DATABASE_URL sang: postgresql://postgres.sfpmauzfusoarpjhzvgh:Vantaitps%40123@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres"
+      error: e instanceof Error ? e.message : "unknown",
+      results,
     }, { status: 500 });
   }
 }
